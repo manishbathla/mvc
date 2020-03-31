@@ -19,7 +19,6 @@ class RegisterController extends BaseController
 
     public function indexAction()
     {
-
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             if ($this->AntiCSRF->validateRequest()) {
                 echo $this->purifier->purify($this->request->post['first_name']);
