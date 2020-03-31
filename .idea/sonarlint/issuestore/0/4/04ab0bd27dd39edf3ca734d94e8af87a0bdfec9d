@@ -1,13 +1,7 @@
 
-’
-AXERcUB3TDEovOUoGhZi	php:S1192"KDefine a constant instead of duplicating this literal "first_name" 9 times.(ï·•2manishbathla@github8 ÿ¨‹‘.
-–
-AXERcUB3TDEovOUoGhZe	php:S11926"JDefine a constant instead of duplicating this literal "Required!" 4 times.(‰ø¦úûÿÿÿÿ2manishbathla@github8 ÿ¨‹‘.
-–
-AXERcUB3TDEovOUoGhZf	php:S1192"JDefine a constant instead of duplicating this literal "last_name" 5 times.(­‰¯Ïşÿÿÿÿ2manishbathla@github8 ÿ¨‹‘.
-•
-AXERcUB3TDEovOUoGhZh	php:S1192"NDefine a constant instead of duplicating this literal "mobile_number" 7 times.(‡ÄÖ2manishbathla@github8 ÿ¨‹‘.
-’
-AXERcUB3TDEovOUoGhZj	php:S1192"FDefine a constant instead of duplicating this literal "email" 6 times.(ß°­üÿÿÿÿ2manishbathla@github8 ÿ¨‹‘.
-•
-AXERcUB3TDEovOUoGhZg	php:S1192"IDefine a constant instead of duplicating this literal "password" 6 times.(Á®ÿÓÿÿÿÿÿ2manishbathla@github8 ÿ¨‹‘.
+k	php:S11929"JDefine a constant instead of duplicating this literal "Required!" 3 times.(‰ø¦úûÿÿÿÿ8³¡Õ…“.
+j	php:S1192"IDefine a constant instead of duplicating this literal "password" 4 times.(Ü”¥“üÿÿÿÿ8ÛÈ«“.
+f	php:S1192"JDefine a constant instead of duplicating this literal "last_name" 7 times.(ñ¢¨å8ÛÈ«“.
+l	php:S1192"KDefine a constant instead of duplicating this literal "first_name" 7 times.(òìı¢øÿÿÿÿ8ÛÈ«“.
+b	php:S1192"FDefine a constant instead of duplicating this literal "email" 8 times.(Ğãà§8ÛÈ«“.
+o	php:S1192"NDefine a constant instead of duplicating this literal "mobile_number" 9 times.(ëá°üÿÿÿÿ8ÛÈ«“.

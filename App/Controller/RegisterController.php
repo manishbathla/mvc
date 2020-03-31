@@ -44,7 +44,7 @@ class RegisterController extends BaseController
 
         $data['base_url'] = BASE_URL;
 
-        View::renderTemplate('register/register.twig', $data);
+        View::renderTemplate('Register/register.twig', $data);
     }
 
     protected function validate()

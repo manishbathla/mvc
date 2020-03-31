@@ -2,9 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9f565960-c1b5-428c-b055-043fd76eb32a" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/Controller/HomeController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/HomeController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/Controller/LoginController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/LoginController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/Controller/RegisterController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/RegisterController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/css/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/404.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/404.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/500.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/500.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/Home/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Home/index.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/In/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/In/index.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/Items/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Items/index.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/Login/new.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Login/new.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/Register/register.twig" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Register/register.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/base.twig" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,17 +31,7 @@
     <favorites_list name="mvc" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/App/View/template/base.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="6" column="44" selection-start-line="6" selection-start-column="44" selection-end-line="6" selection-end-column="44" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -55,8 +54,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/System/Core/Sample.php" />
-        <option value="$PROJECT_DIR$/App/View/template/Home/index.twig" />
-        <option value="$PROJECT_DIR$/App/View/template/Login/new.twig" />
         <option value="$PROJECT_DIR$/App/View/template/Home/home.twig" />
         <option value="$PROJECT_DIR$/App/View/template/In/in.twig" />
         <option value="$PROJECT_DIR$/config.php" />
@@ -77,8 +74,6 @@
         <option value="$PROJECT_DIR$/App/Flash.php" />
         <option value="$PROJECT_DIR$/App/FlashMessage.php" />
         <option value="$PROJECT_DIR$/App/Token.php" />
-        <option value="$PROJECT_DIR$/App/Controller/HomeController.php" />
-        <option value="$PROJECT_DIR$/App/Controller/LoginController.php" />
         <option value="$PROJECT_DIR$/System/Core/BaseController.php" />
         <option value="$PROJECT_DIR$/System/Core/ErrorHandler.php" />
         <option value="$PROJECT_DIR$/System/Library/MyPDO.php" />
@@ -90,9 +85,16 @@
         <option value="$PROJECT_DIR$/public/index.php" />
         <option value="$PROJECT_DIR$/composer.json" />
         <option value="$PROJECT_DIR$/System/Core/View.php" />
-        <option value="$PROJECT_DIR$/App/View/template/Register/register.twig" />
-        <option value="$PROJECT_DIR$/App/Controller/RegisterController.php" />
         <option value="$PROJECT_DIR$/App/View/template/base.html" />
+        <option value="$PROJECT_DIR$/App/View/template/Home/index.twig" />
+        <option value="$PROJECT_DIR$/App/View/template/500.twig" />
+        <option value="$PROJECT_DIR$/App/View/template/404.twig" />
+        <option value="$PROJECT_DIR$/App/View/template/Login/new.twig" />
+        <option value="$PROJECT_DIR$/App/View/template/In/index.twig" />
+        <option value="$PROJECT_DIR$/App/Controller/HomeController.php" />
+        <option value="$PROJECT_DIR$/App/Controller/LoginController.php" />
+        <option value="$PROJECT_DIR$/App/Controller/RegisterController.php" />
+        <option value="$PROJECT_DIR$/App/View/template/Register/register.twig" />
       </list>
     </option>
   </component>
@@ -185,6 +187,46 @@
             <path>
               <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
               <item name="mvc" type="462c0819:PsiDirectoryNode" />
+              <item name="App" type="462c0819:PsiDirectoryNode" />
+              <item name="View" type="462c0819:PsiDirectoryNode" />
+              <item name="template" type="462c0819:PsiDirectoryNode" />
+              <item name="Home" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mvc" type="462c0819:PsiDirectoryNode" />
+              <item name="App" type="462c0819:PsiDirectoryNode" />
+              <item name="View" type="462c0819:PsiDirectoryNode" />
+              <item name="template" type="462c0819:PsiDirectoryNode" />
+              <item name="In" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mvc" type="462c0819:PsiDirectoryNode" />
+              <item name="App" type="462c0819:PsiDirectoryNode" />
+              <item name="View" type="462c0819:PsiDirectoryNode" />
+              <item name="template" type="462c0819:PsiDirectoryNode" />
+              <item name="Items" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mvc" type="462c0819:PsiDirectoryNode" />
+              <item name="App" type="462c0819:PsiDirectoryNode" />
+              <item name="View" type="462c0819:PsiDirectoryNode" />
+              <item name="template" type="462c0819:PsiDirectoryNode" />
+              <item name="Login" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mvc" type="462c0819:PsiDirectoryNode" />
+              <item name="App" type="462c0819:PsiDirectoryNode" />
+              <item name="View" type="462c0819:PsiDirectoryNode" />
+              <item name="template" type="462c0819:PsiDirectoryNode" />
+              <item name="Register" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mvc" type="462c0819:PsiDirectoryNode" />
               <item name="public" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -203,22 +245,22 @@
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$USER_HOME$/Downloads/phpunit-7.5.20.phar" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/App/View/template/Items" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\mvc\App\View\template\Items" />
+      <recent name="C:\xampp\htdocs\mvc\App\View\template" />
+      <recent name="C:\xampp\htdocs\mvc\App\View\template\Login" />
+      <recent name="C:\xampp\htdocs\mvc\App\View\template\In" />
+      <recent name="C:\xampp\htdocs\mvc\App\View\template\Home" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\xampp\htdocs\mvc\App" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\xampp\htdocs\mvc\App\Controller" />
-      <recent name="C:\xampp\htdocs\mvc\App\View\template\Home" />
-      <recent name="C:\xampp\htdocs\mvc\public" />
-      <recent name="C:\xampp\htdocs\mvc\App\View\template\In" />
-      <recent name="C:\xampp\htdocs\mvc\App\View\Login" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -256,16 +298,15 @@
       <workItem from="1585133376047" duration="467000" />
       <workItem from="1585482524883" duration="5357000" />
       <workItem from="1585546391661" duration="2182000" />
-      <workItem from="1585659722962" duration="10586000" />
+      <workItem from="1585659722962" duration="11472000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="78889000" />
+    <option name="totallyTimeSpent" value="79775000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49918166" visible="true" weight="0.28744328" />
       <window_info id="Structure" order="1" sideWeight="0.5008183" side_tool="true" weight="0.26172465" />
@@ -319,35 +360,12 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/App/View/Items/index.html" />
-    <entry file="file://$PROJECT_DIR$/App/View/Items/index.twig" />
-    <entry file="file://$PROJECT_DIR$/App/View/Login/new.html" />
-    <entry file="file://$PROJECT_DIR$/App/View/Login/new.twig" />
-    <entry file="file://$PROJECT_DIR$/App/View/template/Login/new.twig" />
-    <entry file="file://$PROJECT_DIR$/App/Controller/121212.php" />
-    <entry file="file://$PROJECT_DIR$/App/View/template/In/in.twig" />
-    <entry file="file://$PROJECT_DIR$/App/Model/RememberedLoginModel.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="526">
-          <caret line="65" column="1" lean-forward="true" selection-start-line="65" selection-start-column="1" selection-end-line="65" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/public/indexSKEL.php" />
-    <entry file="file://$PROJECT_DIR$/System/Core/Error.php" />
     <entry file="file://$PROJECT_DIR$/App/View/template/Home/new.html" />
     <entry file="file://$PROJECT_DIR$/App/View/template/Home/home.html" />
     <entry file="file://$PROJECT_DIR$/App/View/template/home/home.twig" />
     <entry file="file://$PROJECT_DIR$/App/Controller/New folder/HomeController.php" />
     <entry file="file://$PROJECT_DIR$/App/View/template/user/login.twig" />
     <entry file="file://$PROJECT_DIR$/App/Controller/UserController.php" />
-    <entry file="file://$PROJECT_DIR$/App/View/template/In/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" selection-start-line="10" selection-end-line="10" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/App/Controller/In.php" />
     <entry file="file://$PROJECT_DIR$/App/Controller/Controller/InController.php" />
     <entry file="file://$PROJECT_DIR$/App/Controller/Controller/HomeController.php" />
@@ -452,16 +470,6 @@
     <entry file="file://$PROJECT_DIR$/System/Library/AntiCSRF.php">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/App/Controller/ItemController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="194">
-          <caret line="12" column="6" selection-start-line="12" selection-start-column="6" selection-end-line="12" selection-end-column="6" />
-          <folding>
-            <element signature="e#34#56#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/App/Auth.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="527">
@@ -469,20 +477,6 @@
           <folding>
             <element signature="e#7#131#0#PHP" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="16" column="14" selection-end-line="16" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Login/new.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="29" selection-end-line="29" />
         </state>
       </provider>
     </entry>
@@ -514,36 +508,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/App/Controller/RegisterController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret lean-forward="true" />
-          <folding>
-            <element signature="e#175#206#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/Controller/HomeController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="19" column="48" selection-start-line="19" selection-end-line="19" selection-end-column="48" />
-          <folding>
-            <element signature="e#171#202#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/Controller/LoginController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="194">
-          <caret line="18" column="6" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="6" />
-          <folding>
-            <element signature="e#7#142#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/public/index.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="373">
@@ -554,20 +518,131 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Register/register.twig">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="34" lean-forward="true" selection-start-line="5" selection-start-column="34" selection-end-line="5" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/public/css/styles.css">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/base.html">
+    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
-          <caret line="6" column="44" selection-start-line="6" selection-start-column="44" selection-end-line="6" selection-end-column="44" />
+          <caret line="6" column="16" lean-forward="true" selection-start-line="6" selection-start-column="16" selection-end-line="6" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/base.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="47" selection-start-line="47" selection-end-line="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/In/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Login/new.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="29" selection-end-line="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/404.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/500.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/base.twig">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="21" selection-start-column="21" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/In/index.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="21" selection-start-column="21" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Login/new.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="21" selection-start-column="21" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/404.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="21" selection-start-column="21" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/500.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="21" selection-start-column="21" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Items/index.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Items/index.twig">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/Controller/HomeController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="20" column="5" lean-forward="true" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="5" />
+          <folding>
+            <element signature="e#171#202#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/Controller/ItemController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret lean-forward="true" />
+          <folding>
+            <element signature="e#34#56#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/Controller/LoginController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="24" column="5" lean-forward="true" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
+          <folding>
+            <element signature="e#7#142#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/Controller/RegisterController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="58" lean-forward="true" selection-start-line="58" selection-end-line="58" />
+          <folding>
+            <element signature="e#175#206#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Register/register.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="52" lean-forward="true" selection-start-line="12" selection-start-column="52" selection-end-line="12" selection-end-column="52" />
         </state>
       </provider>
     </entry>

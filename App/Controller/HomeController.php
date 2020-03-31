@@ -17,6 +17,6 @@ class HomeController extends BaseController
 {
     public function indexAction()
     {
-        View::renderTemplate('Home/index.html');
+        View::renderTemplate('Home/index.twig');
     }
 }

@@ -21,7 +21,7 @@ class LoginController extends BaseController
 
     public function indexAction()
     {
-        View::renderTemplate('Login/new.html');
+        View::renderTemplate('Login/new.twig');
     }
 
     public function createAction()
@@ -35,7 +35,7 @@ class LoginController extends BaseController
             $this->redirect(Auth::getReturnToPage());
         } else {
             FlashMessage::addMessage('Login unsuccessful, please try again', FlashMessage::WARNING);
-            View::renderTemplate('Login/new.html', [
+            View::renderTemplate('Login/new.twig', [
                 'email' => $_POST['email'],
                 'remember_me' => $remember_me
             ]);
