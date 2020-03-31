@@ -21,11 +21,15 @@ class RegisterController extends BaseController
     {
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
-            echo $this->purifier->purify($this->request->post['first_name']);
-            echo $this->purifier->purify($this->request->post['last_name']);
-            echo $this->purifier->purify($this->request->post['mobile_number']);
-            echo $this->purifier->purify($this->request->post['email']);
-            echo $this->purifier->purify($this->request->post['password']);
+            if ($this->AntiCSRF->validateRequest()) {
+                echo $this->purifier->purify($this->request->post['first_name']);
+                echo $this->purifier->purify($this->request->post['last_name']);
+                echo $this->purifier->purify($this->request->post['mobile_number']);
+                echo $this->purifier->purify($this->request->post['email']);
+                echo $this->purifier->purify($this->request->post['password']);
+            } else {
+                echo 'Log a CSRF attack attempt';
+            }
         }
 
         $data['error_first_name'] = $this->error['first_name'] ?? '';

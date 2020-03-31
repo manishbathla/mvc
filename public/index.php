@@ -47,7 +47,6 @@ $registry->set('AntiCSRF', new AntiCSRF());
 $config = HTMLPurifier_Config::createDefault();
 $registry->set('purifier', new HTMLPurifier($config));
 
-
 // Router AltoRouter (wwww.altorouter.com)
 $router = new Router();
 

@@ -11,6 +11,8 @@
 namespace System\Core;
 
 use App\Auth;
+use ParagonIE\AntiCSRF\AntiCSRF;
+use Twig\TwigFunction;
 
 class View
 {
@@ -22,6 +24,13 @@ class View
             $loader = new \Twig\Loader\FilesystemLoader(TEMP_DIR);
             $twig = new \Twig\Environment($loader);
             $twig->addGlobal('current_user', Auth::getUser());
+            $twig->addFunction(new TwigFunction('form_token', function ($lock_to = null) {
+                static $csrf;
+                if ($csrf === null) {
+                    $csrf = new AntiCSRF;
+                }
+                return $csrf->insertToken($lock_to, false);
+            }, ['is_safe' => ['html']]));
         }
 
         echo $twig->render($template, $args);

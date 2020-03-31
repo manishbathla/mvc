@@ -3,6 +3,7 @@
 {% block body %}
     <h1>Register</h1>
     <form action="register" method="post">
+        {{ form_token("register.php") }}
         <div>
             <label for="firstname">First name:</label>
             <input type="text" id="firstname" name="first_name" placeholder="First name" autofocus value="{{ first_name }}" />
