@@ -17,9 +17,6 @@ class RegisterController extends BaseController
 {
     private $error = array();
 
-    /**
-     *
-     */
     public function indexAction()
     {
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
