@@ -2,36 +2,831 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9f565960-c1b5-428c-b055-043fd76eb32a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/php-test-framework.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sonarlint-state.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sonarlint.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/App/Controller/RegisterController.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/App/View/template/Register/register.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/mvc.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/mvc.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/.appveyor.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/.github/CONTRIBUTING.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/ChangeLogs/ChangeLog-2.0.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/LICENSE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/demo/CustomSecureHeaders.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Error.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/ExposesErrors.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Header.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/HeaderBag.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/HeaderFactory.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Headers/AbstractHeader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Headers/CSPHeader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Headers/RegularHeader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Http/GlobalHttpAdapter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Http/HttpAdapter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Http/Psr7Adapter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Http/StringHttpAdapter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operation.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/AddHeader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/ApplySafeMode.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/CompileCSP.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/CompileExpectCT.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/CompileHPKP.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/CompileHSTS.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/InjectStrictDynamic.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/ModifyCookies.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/OperationWithErrors.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/RemoveCookies.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Operations/RemoveHeaders.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/SecureHeaders.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Util/TypeError.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Util/Types.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/Validator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/ValidatorDelegate.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/ValidatorDelegates/CSPBadFlags.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/ValidatorDelegates/CSPRODestination.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/aidantwoods/secureheaders/src/ValidatorDelegates/CSPWildcards.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/autoload.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/kahlan" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/kahlan.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/pdepend" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/pdepend.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phan" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phan.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phan_client" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phan_client.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phpcbf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phpcbf.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phpcs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phpcs.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phpmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/phpmd.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/tocheckstyle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/bin/tocheckstyle.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/ClassLoader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_files.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_namespaces.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_psr4.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_real.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/autoload_static.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/installed.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Comparator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Constraint/AbstractConstraint.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Constraint/Constraint.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Constraint/ConstraintInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Constraint/EmptyConstraint.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Constraint/MultiConstraint.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/Semver.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/semver/src/VersionParser.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/src/PhpConfig.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/src/Process.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/src/Status.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/composer/xdebug-handler/src/XdebugHandler.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/CREDITS" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/INSTALL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/INSTALL.fr.utf8" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/NEWS" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/TODO" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/VERSION" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/WHATSNEW" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/WYSIWYG" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/ConfigDoc/HTMLXSLTProcessor.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/FSTools.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/FSTools/File.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/HTMLPurifierExtras.auto.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/HTMLPurifierExtras.autoload-legacy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/HTMLPurifierExtras.autoload.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/HTMLPurifierExtras.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/extras/README" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.auto.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.autoload-legacy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.autoload.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.composer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.func.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.includes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.kses.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.path.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier.safe-includes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Arborize.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrCollections.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/AlphaValue.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Background.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/BackgroundPosition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Border.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Color.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Composite.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/DenyElementDecorator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Filter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Font.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/FontFamily.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Ident.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/ImportantDecorator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Length.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/ListStyle.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Multiple.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Number.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/Percentage.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/TextDecoration.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/CSS/URI.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/Clone.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/Enum.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/Bool.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/Class.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/Color.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/FrameTarget.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/ID.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/Length.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/LinkTypes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/MultiLength.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/Nmtokens.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/HTML/Pixels.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/Integer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/Lang.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/Switch.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/Text.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/URI.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/URI/Email.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/URI/Email/SimpleCheck.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/URI/Host.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/URI/IPv4.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrDef/URI/IPv6.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Background.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/BdoDir.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/BgColor.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/BoolToCSS.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Border.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/EnumToCSS.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/ImgRequired.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/ImgSpace.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Input.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Lang.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Length.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Name.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/NameSync.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Nofollow.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/SafeEmbed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/SafeObject.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/SafeParam.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/ScriptRequired.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/TargetBlank.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/TargetNoopener.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/TargetNoreferrer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTransform/Textarea.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrTypes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/AttrValidator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Bootstrap.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/CSSDefinition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/Chameleon.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/Custom.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/Empty.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/List.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/Optional.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/Required.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/StrictBlockquote.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ChildDef/Table.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Config.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Builder/ConfigSchema.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Builder/Xml.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Exception.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Interchange.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Interchange/Directive.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Interchange/Id.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/InterchangeBuilder.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/Validator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/ValidatorAtom.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema.ser" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.AllowedClasses.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.AllowedFrameTargets.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.AllowedRel.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.AllowedRev.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.ClassUseCDATA.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.DefaultImageAlt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.DefaultInvalidImage.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.DefaultInvalidImageAlt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.DefaultTextDir.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.EnableID.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.ForbiddenClasses.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.ID.HTML5.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.IDBlacklist.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.IDBlacklistRegexp.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.IDPrefix.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Attr.IDPrefixLocal.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.AutoParagraph.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.Custom.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.DisplayLinkURI.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.Linkify.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.PurifierLinkify.DocURL.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.PurifierLinkify.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.RemoveEmpty.Predicate.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.RemoveEmpty.RemoveNbsp.Exceptions.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.RemoveEmpty.RemoveNbsp.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.RemoveEmpty.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/AutoFormat.RemoveSpansWithoutAttributes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.AllowDuplicates.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.AllowImportant.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.AllowTricky.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.AllowedFonts.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.AllowedProperties.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.DefinitionRev.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.ForbiddenProperties.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.MaxImgLength.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.Proprietary.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/CSS.Trusted.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Cache.DefinitionImpl.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Cache.SerializerPath.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Cache.SerializerPermissions.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.AggressivelyFixLt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.AggressivelyRemoveScript.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.AllowHostnameUnderscore.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.AllowParseManyTags.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.CollectErrors.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.ColorKeywords.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.ConvertDocumentToFragment.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.DirectLexLineNumberSyncInterval.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.DisableExcludes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.EnableIDNA.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.Encoding.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.EscapeInvalidChildren.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.EscapeInvalidTags.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.EscapeNonASCIICharacters.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.HiddenElements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.Language.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.LegacyEntityDecoder.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.LexerImpl.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.MaintainLineNumbers.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.NormalizeNewlines.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.RemoveInvalidImg.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.RemoveProcessingInstructions.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Core.RemoveScriptContents.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Filter.Custom.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Filter.ExtractStyleBlocks.Escaping.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Filter.ExtractStyleBlocks.Scope.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Filter.ExtractStyleBlocks.TidyImpl.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Filter.ExtractStyleBlocks.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Filter.YouTube.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Allowed.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.AllowedAttributes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.AllowedComments.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.AllowedCommentsRegexp.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.AllowedElements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.AllowedModules.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Attr.Name.UseCDATA.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.BlockWrapper.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.CoreModules.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.CustomDoctype.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.DefinitionID.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.DefinitionRev.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Doctype.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.FlashAllowFullScreen.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.ForbiddenAttributes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.ForbiddenElements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.MaxImgLength.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Nofollow.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Parent.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Proprietary.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.SafeEmbed.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.SafeIframe.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.SafeObject.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.SafeScripting.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Strict.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.TargetBlank.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.TargetNoopener.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.TargetNoreferrer.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.TidyAdd.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.TidyLevel.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.TidyRemove.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.Trusted.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/HTML.XHTML.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Output.CommentScriptContents.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Output.FixInnerHTML.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Output.FlashCompat.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Output.Newline.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Output.SortAttr.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Output.TidyFormat.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/Test.ForceNoIconv.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.AllowedSchemes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.Base.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.DefaultScheme.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.DefinitionID.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.DefinitionRev.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.Disable.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.DisableExternal.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.DisableExternalResources.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.DisableResources.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.Host.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.HostBlacklist.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.MakeAbsolute.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.Munge.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.MungeResources.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.MungeSecretKey.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.OverrideAllowedSchemes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/URI.SafeIframeRegexp.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ConfigSchema/schema/info.ini" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ContentSets.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Context.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Definition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Decorator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Decorator/Cleanup.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Decorator/Memory.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Decorator/Template.php.in" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Null.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Serializer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Serializer/README" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCacheFactory.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Doctype.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/DoctypeRegistry.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ElementDef.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Encoder.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/EntityLookup.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/EntityLookup/entities.ser" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/EntityParser.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ErrorCollector.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/ErrorStruct.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Exception.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Filter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Filter/ExtractStyleBlocks.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Filter/YouTube.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Generator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLDefinition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Bdo.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/CommonAttributes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Edit.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Forms.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Hypertext.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Iframe.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Image.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Legacy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/List.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Name.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Nofollow.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/NonXMLCommonAttributes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Object.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Presentation.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Proprietary.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Ruby.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/SafeEmbed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/SafeObject.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/SafeScripting.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Scripting.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/StyleAttribute.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tables.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Target.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/TargetBlank.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/TargetNoopener.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/TargetNoreferrer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Text.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy/Name.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy/Proprietary.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy/Strict.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy/Transitional.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy/XHTML.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/Tidy/XHTMLAndHTML4.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModule/XMLCommonAttributes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/HTMLModuleManager.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/IDAccumulator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/AutoParagraph.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/DisplayLinkURI.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/Linkify.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/PurifierLinkify.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/RemoveEmpty.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/RemoveSpansWithoutAttributes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Injector/SafeObject.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Language.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Language/classes/en-x-test.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Language/messages/en-x-test.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Language/messages/en-x-testmini.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Language/messages/en.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/LanguageFactory.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Length.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Lexer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Lexer/DOMLex.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Lexer/DirectLex.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Lexer/PH5P.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Node.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Node/Comment.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Node/Element.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Node/Text.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/PercentEncoder.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Printer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Printer/CSSDefinition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Printer/ConfigForm.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Printer/ConfigForm.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Printer/ConfigForm.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Printer/HTMLDefinition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/PropertyList.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/PropertyListIterator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Queue.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy/Composite.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy/Core.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy/FixNesting.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy/MakeWellFormed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy/RemoveForeignElements.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Strategy/ValidateAttributes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/StringHash.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/StringHashParser.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/TagTransform.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/TagTransform/Font.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/TagTransform/Simple.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token/Comment.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token/Empty.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token/End.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token/Start.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token/Tag.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Token/Text.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/TokenFactory.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URI.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIDefinition.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/DisableExternal.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/DisableExternalResources.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/DisableResources.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/HostBlacklist.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/MakeAbsolute.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/Munge.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIFilter/SafeIframe.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIParser.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/data.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/file.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/ftp.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/http.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/https.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/mailto.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/news.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/nntp.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URIScheme/tel.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/URISchemeRegistry.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/UnitConverter.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/VarParser.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/VarParser/Flexible.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/VarParser/Native.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/VarParserException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/library/HTMLPurifier/Zipper.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/.htaccess" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/PH5P.patch" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/PH5P.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/add-vimline.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/common.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/compile-doxygen.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/config-scanner.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/flush-definition-cache.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/flush.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/generate-entity-file.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/generate-includes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/generate-ph5p-patch.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/generate-schema-cache.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/generate-standalone.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/merge-library.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/old-extract-schema.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/old-remove-require-once.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/old-remove-schema-def.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/regenerate-docs.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/remove-trailing-whitespace.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/maintenance/rename-config.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/package.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/phpdoc.ini" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/modx.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/Changelog" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/INSTALL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/README" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/config.default.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/htmlpurifier.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/info.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/init-config.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/migrate.bbcode.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/settings.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/settings/form.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/settings/migrate-sigs-form.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/settings/migrate-sigs.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/plugins/phorum/settings/save.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/test-settings.sample.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/test-settings.travis.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/tests/path2class.func.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/ezyang/htmlpurifier/update-for-release" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/.travis.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/Dispatcher.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/Error.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/ErrorCode.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/ErrorResponse.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/Message.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/Notification.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/Request.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/Response.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/felixfbecker/advanced-json-rpc/lib/SuccessResponse.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/.scrutinizer.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/.travis.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/LICENSE.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/autoload.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/bin/kahlan" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/composer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/docs/assets/code_coverage.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/docs/assets/custom_reporter.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/docs/assets/dot_reporter.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/docs/assets/logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/docs/assets/verbose_reporter.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/docs/assets/warning.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/kahlan-config.travis.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/phpcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/Closure.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/Closure.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/Heredoc.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/Heredoc.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/NoNamespace.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/NoNamespace.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/Sample.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/Sample.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/SampleClass.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/ScalarTypeHintsClass.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/String.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Analysis/String.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Extensions/Childs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Extensions/file.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Extensions/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Extensions/index.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Nested/Childs/child1.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Nested/nested_file1.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/Nested/nested_file2.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Dir/file1.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Filter/FilterExample.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassA.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassA/empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassB.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassC.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassCached.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassD.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassE.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassF.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassHh.hh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassToCache.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Interceptor/ClassToNotLoad.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/AlternativeControlStructures.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/AlternativeControlStructures.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/AnonymousClass.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/AnonymousClass.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/ArrowFunction.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/ArrowFunction.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/CharAtSyntax.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/CharAtSyntax.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Closure.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Closure.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/DeclareStrictTypes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/DeclareStrictTypes.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/DeclareTicksAsBlock.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/DeclareTicksAsBlock.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Extends.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Function.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Generator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Heredoc.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Heredoc.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Implements.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Interface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Interface.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/NoNamespace.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/NoNamespace.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Nowdoc.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Nowdoc.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Rebase.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/RebaseProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Sample.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Sample.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/StaticClassKeyword.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/StaticClassKeyword.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/String.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/String.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Switch.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Switch.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Uses.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Parser/Uses.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/FinalClass/FinalClass.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/FinalClass/FinalClassProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Layer/Layer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/Class.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/ClassProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/ClassProcessedLegacy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/DeclareStrictTypes.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/DeclareStrictTypesProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/Errored.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/ErroredProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/MixedNamespaces.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/MixedNamespacesProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/Plain.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/PlainProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/PlainProcessedLegacy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/Trait.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/TraitProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/Use.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Monkey/UseProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Pointcut/Simple.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Pointcut/SimpleProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Pointcut/SimpleTrait.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Pointcut/SimpleTraitProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Quit/File.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Jit/Patcher/Quit/FileProcessed.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Kahlan/Spec/FailTest.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Kahlan/Spec/PassTest.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Kahlan/kahlan-config.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/AbstractDoz.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/ConstrDoz.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/Doz.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/DozInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/NullableInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/ReturnTypesInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Double/VariadicInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Monkey/Mon.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Monkey/User.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Pointcut/Bar.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Pointcut/Foo.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Pointcut/SubBar.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Pointcut/SubTrait.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Plugin/Quit/Foo.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/Exception.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/Expectation.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/Log.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/Suite.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/Summary.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/end.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/specEnd.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/start.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Console/suiteStart.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/CodeCoverage.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/ExtraEmptyLine.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/Functions.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/GlobalFunctions.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/ImplementsCoverage.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/ImplementsCoverageInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Fixture/Reporter/Coverage/NoEmptyLine.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Mock/Collection.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Mock/Patcher.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Mock/Plugin/Double/HelloTrait.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Mock/Plugin/Monkey/MyDateTime.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Mock/Plugin/Monkey/MyString.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Mock/Traversable.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Proxy/Autoloader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Allow.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Analysis/Debugger.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Analysis/Inspector.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Arg.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Block.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Block/Group.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Block/Specification.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Box/Box.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Box/Wrapper.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Cli/Cli.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Cli/CommandLine.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Cli/Kahlan.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Code/Code.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Dir/Dir.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Expectation.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Filter/Filters.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Given.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/ClassLoader.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Node/FunctionDef.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Parser.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Patcher/FinalClass.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Patcher/Layer.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Patcher/Monkey.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Patcher/Pointcut.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Patcher/Quit.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/Patchers.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Jit/TokenStream.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Legacy/Monkey.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Legacy/Specification.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Legacy/Suite.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Log.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBe.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeA.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeAnInstanceOf.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeCalled.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeCloseTo.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeFalsy.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeGreaterThan.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeLessThan.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeNull.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToBeTruthy.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToContain.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToContainKey.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToEcho.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToEqual.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToHaveLength.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToMatch.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToMatchEcho.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToReceive.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Matcher/ToThrow.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Call/Calls.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Call/Message.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Double.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Monkey.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Quit.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Stub.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Plugin/Stub/Method.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Collector.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Exporter/Clover.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Exporter/CodeClimate.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Exporter/Coveralls.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Exporter/Istanbul.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Exporter/Lcov.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Coverage/Metrics.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Terminal.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporter/Tree.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Reporters.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Suite.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Summary.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/spec/Suite/Util/Text.spec.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Allow.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Analysis/Debugger.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Analysis/Inspector.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Arg.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Block.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Block/Group.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Block/Specification.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Box/Box.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Box/BoxException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Box/Wrapper.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Cli/Cli.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Cli/CommandLine.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Cli/Kahlan.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Code/Code.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Code/TimeoutException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Dir/Dir.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Expectation.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Filter/Filters.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Given.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/ClassLoader.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/JitException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Node/BlockDef.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Node/FunctionDef.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Node/NodeDef.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Parser.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Patcher/FinalClass.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Patcher/Layer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Patcher/Monkey.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Patcher/Pointcut.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Patcher/Quit.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/Patchers.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Jit/TokenStream.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Log.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/AnyException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBe.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeA.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeAnInstanceOf.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeCalled.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeCloseTo.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeFalsy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeGreaterThan.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeLessThan.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeNull.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToBeTruthy.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToContain.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToContainKey.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToEcho.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToEqual.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToHaveLength.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToMatch.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToMatchEcho.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToReceive.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Matcher/ToThrow.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/MissingImplementationException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/PhpErrorException.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Plugin/Call/Calls.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Plugin/Call/Message.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Plugin/Double.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Plugin/Monkey.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/Plugin/Pointcut.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vendor/kahlan/kahlan/src/functions.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint-state.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint-state.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/0/4/04ab0bd27dd39edf3ca734d94e8af87a0bdfec9d" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/0/4/04ab0bd27dd39edf3ca734d94e8af87a0bdfec9d" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/0/e/0e61f67641b441bb3ee38e903c594d99cafa14b4" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/0/e/0e61f67641b441bb3ee38e903c594d99cafa14b4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/1/219a69c6a4e8dda6d68159c4a0d05e25c82efe27" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/a/2a518ee5b8ccff499c46502927e28762600f7054" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/b/2b94d1427bac17a2e30e49f2e54b372230034b4f" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/3/5/3502c9a386a984f4c5c2a380ec8c1bc3caea3fcc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/3/9/3957b91a0d8450cea0115cfd5af69eac90d75897" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/4/6/46fd7b2d601db9dbc86f4467e630de3ab427bf6f" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/4/b/4bff78e63358abbcbc62e957e848bed2dbbc9246" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/9/2/9204b29823ec1df81e00f78763caf3d872210a9e" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/9/8/98cb9209faa5d8099b7dff62a6831d76ada34ade" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/b/8/b8b77f46658d4c8cccb25815f86c59b9a1f5c86c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/0/c00d1f64ba7f639be1a3ef2f8fd9ec411fb99836" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/0/c00d1f64ba7f639be1a3ef2f8fd9ec411fb99836" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/d/7/d703401c5d543fafba3ca3e45ded6a4658340cd7" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/d/e/de4d7c635365ba0419b2f71ca4adc8b75596d96a" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/e/7/e765fc7474fa03a5f401e3d08010abc48f4079e8" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/Auth.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Auth.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/Home/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Home/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/composer.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/Controller/RegisterController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/RegisterController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/Register/register.twig" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Register/register.twig" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -49,15 +844,12 @@
     <favorites_list name="mvc" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+    <leaf>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/public/index.php">
+        <entry file="file://$PROJECT_DIR$/App/View/template/Register/register.twig">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="1" selection-start-line="1" selection-end-line="1" />
-              <folding>
-                <element signature="e#209#253#0#PHP" expanded="true" />
-              </folding>
+            <state relative-caret-position="289">
+              <caret line="17" column="151" lean-forward="true" selection-start-line="17" selection-start-column="151" selection-end-line="17" selection-end-column="151" />
             </state>
           </provider>
         </entry>
@@ -65,22 +857,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/App/Controller/RegisterController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="322">
-              <caret line="52" column="9" lean-forward="true" selection-start-line="52" selection-start-column="9" selection-end-line="52" selection-end-column="9" />
+            <state relative-caret-position="342">
+              <caret line="74" column="8" selection-start-line="74" selection-start-column="8" selection-end-line="74" selection-end-column="8" />
               <folding>
                 <element signature="e#175#206#0#PHP" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/App/Controller/LoginController.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="526">
-              <caret line="56" selection-start-line="56" selection-end-line="56" />
-              <folding>
-                <element signature="e#7#142#0#PHP" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -141,9 +921,9 @@
         <option value="$PROJECT_DIR$/System/Library/Session.php" />
         <option value="$PROJECT_DIR$/App/Auth.php" />
         <option value="$PROJECT_DIR$/App/View/template/Home/index.html" />
-        <option value="$PROJECT_DIR$/App/View/template/Register/register.twig" />
         <option value="$PROJECT_DIR$/composer.json" />
         <option value="$PROJECT_DIR$/public/index.php" />
+        <option value="$PROJECT_DIR$/App/View/template/Register/register.twig" />
         <option value="$PROJECT_DIR$/App/Controller/RegisterController.php" />
       </list>
     </option>
@@ -202,6 +982,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -239,39 +1020,12 @@
               <item name="App" type="462c0819:PsiDirectoryNode" />
               <item name="View" type="462c0819:PsiDirectoryNode" />
               <item name="template" type="462c0819:PsiDirectoryNode" />
-              <item name="Home" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="App" type="462c0819:PsiDirectoryNode" />
-              <item name="View" type="462c0819:PsiDirectoryNode" />
-              <item name="template" type="462c0819:PsiDirectoryNode" />
-              <item name="Login" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="App" type="462c0819:PsiDirectoryNode" />
-              <item name="View" type="462c0819:PsiDirectoryNode" />
-              <item name="template" type="462c0819:PsiDirectoryNode" />
               <item name="Register" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="System" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -329,17 +1083,20 @@
       <workItem from="1585125275203" duration="2564000" />
       <workItem from="1585130072304" duration="661000" />
       <workItem from="1585133376047" duration="467000" />
+      <workItem from="1585482524883" duration="5357000" />
+      <workItem from="1585546391661" duration="2182000" />
+      <workItem from="1585659722962" duration="3635000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="60764000" />
+    <option name="totallyTimeSpent" value="71938000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49918166" visible="true" weight="0.27382752" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49918166" visible="true" weight="0.28744328" />
       <window_info id="Structure" order="1" sideWeight="0.5008183" side_tool="true" weight="0.26172465" />
       <window_info id="DB Browser" order="2" />
       <window_info id="Favorites" order="3" sideWeight="0.5011655" side_tool="true" weight="0.26172465" />
@@ -579,20 +1336,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/composer.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="298">
-          <caret line="26" column="4" selection-start-line="26" selection-start-column="4" selection-end-line="26" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Register/register.twig">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="29" column="14" selection-start-line="29" selection-start-column="14" selection-end-line="29" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/App/Controller/HomeController.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
@@ -600,6 +1343,23 @@
           <folding>
             <element signature="e#171#202#0#PHP" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/Controller/LoginController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="782">
+          <caret line="56" selection-start-line="56" selection-end-line="56" />
+          <folding>
+            <element signature="e#7#142#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/composer.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="26" column="4" selection-start-line="26" selection-start-column="4" selection-end-line="26" selection-end-column="4" />
         </state>
       </provider>
     </entry>
@@ -613,20 +1373,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/App/Controller/LoginController.php">
+    <entry file="file://$PROJECT_DIR$/App/View/template/Register/register.twig">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="526">
-          <caret line="56" selection-start-line="56" selection-end-line="56" />
-          <folding>
-            <element signature="e#7#142#0#PHP" expanded="true" />
-          </folding>
+        <state relative-caret-position="289">
+          <caret line="17" column="151" lean-forward="true" selection-start-line="17" selection-start-column="151" selection-end-line="17" selection-end-column="151" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/App/Controller/RegisterController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="52" column="9" lean-forward="true" selection-start-line="52" selection-start-column="9" selection-end-line="52" selection-end-column="9" />
+        <state relative-caret-position="342">
+          <caret line="74" column="8" selection-start-line="74" selection-start-column="8" selection-end-line="74" selection-end-column="8" />
           <folding>
             <element signature="e#175#206#0#PHP" expanded="true" />
           </folding>

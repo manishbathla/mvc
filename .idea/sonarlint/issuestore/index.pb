@@ -17,3 +17,7 @@ Q
 !App/Controller/HomeController.php,b\a\ba7cd5553569b6944ff597aa1ca25f311b1bed68
 U
 %App/Controller/RegisterController.php,0\4\04ab0bd27dd39edf3ca734d94e8af87a0bdfec9d
+R
+"App/Controller/LoginController.php,2\1\219a69c6a4e8dda6d68159c4a0d05e25c82efe27
+=
+composer.json,3\9\3957b91a0d8450cea0115cfd5af69eac90d75897

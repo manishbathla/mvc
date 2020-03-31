@@ -5,17 +5,17 @@
     <form action="register" method="post">
         <div>
             <label for="firstname">First name:</label>
-            <input type="text" id="firstname" name="first_name" placeholder="First name" autofocus />
+            <input type="text" id="firstname" name="first_name" placeholder="First name" autofocus value="{{ first_name }}" />
             {{ error_first_name }}
         </div>
         <div>
             <label for="lastname">Last name:</label>
-            <input type="text" id="lastname" name="last_name" placeholder="Last name" autofocus />
+            <input type="text" id="lastname" name="last_name" placeholder="Last name" autofocus value="{{ last_name }}" />
             {{ error_last_name }}
         </div>
         <div>
             <label for="mobilenumber">Mobile number</label>
-            <input type="text" id="mobilenumber" name="mobile_number" placeholder="Your 10 digit mobile number" autofocus/>
+            <input type="text" id="mobilenumber" name="mobile_number" placeholder="Your 10 digit mobile number" autofocus value="{{ mobile_number }}"/>
             {{ error_mobile_number }}
         </div>
         <div>

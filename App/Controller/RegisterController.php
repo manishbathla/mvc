@@ -17,6 +17,9 @@ class RegisterController extends BaseController
 {
     private $error = array();
 
+    /**
+     *
+     */
     public function indexAction()
     {
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
@@ -33,6 +36,11 @@ class RegisterController extends BaseController
         $data['error_email'] = $this->error['email'] ?? '';
         $data['error_password'] = $this->error['password'] ?? '';
 
+        $data['first_name'] = $this->request->post['first_name'] ?? '';
+        $data['last_name'] = $this->request->post['last_name'] ?? '';
+        $data['mobile_number'] = $this->request->post['mobile_number'] ?? '';
+        $data['email'] = $this->request->post['email'] ?? '';
+
         $data['base_url'] = BASE_URL;
 
         View::renderTemplate('register/register.twig', $data);
@@ -40,19 +48,23 @@ class RegisterController extends BaseController
 
     protected function validate()
     {
-        if ((strlen(trim($this->request->post['first_name'] < 1 ))) || (strlen(trim($this->request->post['first_name'] > 20)))) {
-            $this->error['first_name'] = 'Required!';
+        if (trim($this->request->post['first_name']) === '' || strlen(trim($this->request->post['first_name'])) > 32) {
+            $this->error['first_name'] = 'Required';
         }
 
-        if ((strlen(trim($this->request->post['last_name'] < 1 ))) || (strlen(trim($this->request->post['last_name'] > 20)))) {
+        if (trim($this->request->post['last_name']) === '' || strlen(trim($this->request->post['last_name'])) > 32) {
             $this->error['last_name'] = 'Required!';
         }
 
-        if (empty($this->request->post['mobile_number'])) {
+        if (trim($this->request->post['mobile_number']) === '') {
             $this->error['mobile_number'] = 'Required!';
         }
 
-        if (empty($this->request->post['email'])) {
+        if (preg_match('/^[0-9]$/', $this->request->post['mobile_number']) && mb_strlen($this->request->post['mobile_number']) !== (int)'10') {
+            $this->error['mobile_number'] = 'Your 10 digits mobile number!';
+        }
+
+        if (trim($this->request->post['email']) === '') {
             $this->error['email'] = 'Required!';
         }
 
@@ -60,8 +72,8 @@ class RegisterController extends BaseController
             $this->error['email'] = 'Invalid email!';
         }
 
-        if (empty($this->request->post['password'])) {
-            $this->error['password'] = 'Required!';
+        if (strlen(trim($this->request->post['password'])) < 8) {
+            $this->error['password'] = 'At least 8 character password';
         }
 
         return !$this->error;
