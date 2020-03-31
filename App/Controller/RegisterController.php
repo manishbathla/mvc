@@ -19,12 +19,13 @@ class RegisterController extends BaseController
 
     public function indexAction()
     {
+
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
-            echo $this->request->post['first_name'];
-            echo $this->request->post['last_name'];
-            echo $this->request->post['mobile_number'];
-            echo $this->request->post['email'];
-            echo $this->request->post['password'];
+            echo $this->purifier->purify($this->request->post['first_name']);
+            echo $this->purifier->purify($this->request->post['last_name']);
+            echo $this->purifier->purify($this->request->post['mobile_number']);
+            echo $this->purifier->purify($this->request->post['email']);
+            echo $this->purifier->purify($this->request->post['password']);
         }
 
         $data['error_first_name'] = $this->error['first_name'] ?? '';

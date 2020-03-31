@@ -43,12 +43,10 @@ $registry->set('request', new Request());
 $csrf = new AntiCSRF();
 $registry->set('AntiCSRF', new AntiCSRF());
 
-// GUMP
-$registry->set('validate', new GUMP());
-
 //HTML Purifier
 $config = HTMLPurifier_Config::createDefault();
 $registry->set('purifier', new HTMLPurifier($config));
+
 
 // Router AltoRouter (wwww.altorouter.com)
 $router = new Router();
