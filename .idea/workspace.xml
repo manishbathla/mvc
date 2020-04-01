@@ -2,18 +2,28 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9f565960-c1b5-428c-b055-043fd76eb32a" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/Controller/HomeController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/HomeController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/Controller/LoginController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/LoginController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/Controller/RegisterController.php" beforeDir="false" afterPath="$PROJECT_DIR$/App/Controller/RegisterController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/404.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/404.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/500.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/500.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/Home/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Home/index.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/In/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/In/index.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/Items/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Items/index.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/Login/new.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Login/new.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/Register/register.twig" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Register/register.twig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/View/template/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/base.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/0/4/04ab0bd27dd39edf3ca734d94e8af87a0bdfec9d" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/0/e/0e61f67641b441bb3ee38e903c594d99cafa14b4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/1/219a69c6a4e8dda6d68159c4a0d05e25c82efe27" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/1/21c712e4c0e27338ad4e441fff4a5d6bd809e514" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/2/22c4ca00fcd27fd23ec9a8a1e01dd9b19505cf7d" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/3/23780485366bd62743e3e29c56429e37abeb1b34" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/2/5/25480b2823302689e685dbdfaef5614fcae32260" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/3/9/3957b91a0d8450cea0115cfd5af69eac90d75897" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/4/1/41776492c1ecc0732c4e9fba438cc7ca101af92b" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/4/1/41a088f1fb30ec506cfc2ec0ea7d197ef337b446" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/4/6/46fd7b2d601db9dbc86f4467e630de3ab427bf6f" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/5/d/5dc94e2f3dd59a3940693125c6635fa9a145aa5c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/6/b/6baff02a191937eb76f43380fa84db163a765901" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/9/1/9126ddf2353a7dd42de97f735976ed40deb72bea" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/b/8/b8b77f46658d4c8cccb25815f86c59b9a1f5c86c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/b/a/ba7cd5553569b6944ff597aa1ca25f311b1bed68" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/0/c00d1f64ba7f639be1a3ef2f8fd9ec411fb99836" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/9/c982ef4abd367b9b8f99b7261bdf9b95319cce26" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/d/9/d9412cd1bee94f941a7b052421c09b1c75dc35c9" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/f/3/f38e9e7693f3b67c266077446f0a067f1c8e4e7b" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/View/template/Home/index.twig" beforeDir="false" afterPath="$PROJECT_DIR$/App/View/template/Home/index.twig" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -31,7 +41,42 @@
     <favorites_list name="mvc" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/App/Controller/HomeController.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="221">
+              <caret line="19" column="46" selection-start-line="19" selection-start-column="46" selection-end-line="19" selection-end-column="46" />
+              <folding>
+                <element signature="e#171#202#0#PHP" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.twig">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="136">
+              <caret line="8" column="11" selection-start-line="8" selection-start-column="11" selection-end-line="8" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/System/Core/View.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="305">
+              <caret line="25" column="57" selection-start-line="25" selection-start-column="57" selection-end-line="25" selection-end-column="57" />
+              <folding>
+                <element signature="e#7#131#0#PHP" expanded="true" />
+                <element signature="e#157#170#0#PHP" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -86,7 +131,6 @@
         <option value="$PROJECT_DIR$/composer.json" />
         <option value="$PROJECT_DIR$/System/Core/View.php" />
         <option value="$PROJECT_DIR$/App/View/template/base.html" />
-        <option value="$PROJECT_DIR$/App/View/template/Home/index.twig" />
         <option value="$PROJECT_DIR$/App/View/template/500.twig" />
         <option value="$PROJECT_DIR$/App/View/template/404.twig" />
         <option value="$PROJECT_DIR$/App/View/template/Login/new.twig" />
@@ -95,6 +139,7 @@
         <option value="$PROJECT_DIR$/App/Controller/LoginController.php" />
         <option value="$PROJECT_DIR$/App/Controller/RegisterController.php" />
         <option value="$PROJECT_DIR$/App/View/template/Register/register.twig" />
+        <option value="$PROJECT_DIR$/App/View/template/Home/index.twig" />
       </list>
     </option>
   </component>
@@ -152,7 +197,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -195,50 +239,24 @@
             <path>
               <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
               <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="App" type="462c0819:PsiDirectoryNode" />
-              <item name="View" type="462c0819:PsiDirectoryNode" />
-              <item name="template" type="462c0819:PsiDirectoryNode" />
-              <item name="In" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="App" type="462c0819:PsiDirectoryNode" />
-              <item name="View" type="462c0819:PsiDirectoryNode" />
-              <item name="template" type="462c0819:PsiDirectoryNode" />
-              <item name="Items" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="App" type="462c0819:PsiDirectoryNode" />
-              <item name="View" type="462c0819:PsiDirectoryNode" />
-              <item name="template" type="462c0819:PsiDirectoryNode" />
-              <item name="Login" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="App" type="462c0819:PsiDirectoryNode" />
-              <item name="View" type="462c0819:PsiDirectoryNode" />
-              <item name="template" type="462c0819:PsiDirectoryNode" />
-              <item name="Register" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mvc" type="462c0819:PsiDirectoryNode" />
               <item name="public" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
               <item name="mvc" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-              <item name="css" type="462c0819:PsiDirectoryNode" />
+              <item name="System" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mvc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mvc" type="462c0819:PsiDirectoryNode" />
+              <item name="System" type="462c0819:PsiDirectoryNode" />
+              <item name="Core" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -299,16 +317,18 @@
       <workItem from="1585482524883" duration="5357000" />
       <workItem from="1585546391661" duration="2182000" />
       <workItem from="1585659722962" duration="11472000" />
+      <workItem from="1585737217692" duration="2386000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="79775000" />
+    <option name="totallyTimeSpent" value="82161000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49918166" visible="true" weight="0.28744328" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49918166" visible="true" weight="0.29198185" />
       <window_info id="Structure" order="1" sideWeight="0.5008183" side_tool="true" weight="0.26172465" />
       <window_info id="DB Browser" order="2" />
       <window_info id="Favorites" order="3" sideWeight="0.5011655" side_tool="true" weight="0.26172465" />
@@ -480,17 +500,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/System/Core/View.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="441">
-          <caret line="33" column="9" lean-forward="true" selection-start-line="33" selection-start-column="9" selection-end-line="33" selection-end-column="9" />
-          <folding>
-            <element signature="e#7#131#0#PHP" expanded="true" />
-            <element signature="e#157#170#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/System/Core/BaseController.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="288">
@@ -518,52 +527,15 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/public/css/styles.css">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="16" lean-forward="true" selection-start-line="6" selection-start-column="16" selection-end-line="6" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/base.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="47" selection-start-line="47" selection-end-line="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/In/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" selection-start-line="10" selection-end-line="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Login/new.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="29" selection-end-line="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/404.html">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/500.html">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/public/css/styles.css" />
+    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.html" />
+    <entry file="file://$PROJECT_DIR$/App/View/template/base.html" />
+    <entry file="file://$PROJECT_DIR$/App/View/template/In/index.html" />
+    <entry file="file://$PROJECT_DIR$/App/View/template/Login/new.html" />
+    <entry file="file://$PROJECT_DIR$/App/View/template/404.html" />
+    <entry file="file://$PROJECT_DIR$/App/View/template/500.html" />
     <entry file="file://$PROJECT_DIR$/App/View/template/base.twig">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.twig">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="21" selection-start-column="21" selection-end-column="21" />
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/App/View/template/In/index.twig">
       <provider selected="true" editor-type-id="text-editor">
@@ -593,21 +565,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/App/View/template/Items/index.html">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Items/index.html" />
     <entry file="file://$PROJECT_DIR$/App/View/template/Items/index.twig">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/App/Controller/HomeController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="20" column="5" lean-forward="true" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="5" />
-          <folding>
-            <element signature="e#171#202#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/App/Controller/ItemController.php">
       <provider selected="true" editor-type-id="text-editor">
@@ -643,6 +603,34 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
           <caret line="12" column="52" lean-forward="true" selection-start-line="12" selection-start-column="52" selection-end-line="12" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/System/Core/View.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="305">
+          <caret line="25" column="57" selection-start-line="25" selection-start-column="57" selection-end-line="25" selection-end-column="57" />
+          <folding>
+            <element signature="e#7#131#0#PHP" expanded="true" />
+            <element signature="e#157#170#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/Controller/HomeController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="19" column="46" selection-start-line="19" selection-start-column="46" selection-end-line="19" selection-end-column="46" />
+          <folding>
+            <element signature="e#171#202#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/App/View/template/Home/index.twig">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="11" selection-start-line="8" selection-start-column="11" selection-end-line="8" selection-end-column="11" />
         </state>
       </provider>
     </entry>
