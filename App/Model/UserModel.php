@@ -48,9 +48,11 @@ class UserModel extends BaseModel
         $this->expiry_timestamp = time() + 60 * 60 * 24 * 30;
 
         $expires_on = date('Y-m-d H:i:s', $this->expiry_timestamp);
-
-        $data = MyPDO::run("INSERT INTO remember_login (token_hash, user_account_id, expires_at) VALUES (?, ?, ?)",
-            [$hashed_token, $this->id, $expires_on])->fetchObject();
-
+        $data = MyPDO::run(
+            "INSERT INTO remember_login (token_hash, user_account_id, expires_at) VALUES (?, ?, ?)",
+            [$hashed_token, $this->id, $expires_on]
+        )->fetchObject();
     }
+
+
 }
