@@ -1,36 +1,29 @@
 <?php
 
+/**
+ * File: PasswordController.php.
+ * Author: Self
+ * Standard: PSR-12.
+ * Do not change codes without permission.
+ * Date: 3/24/2020
+ */
+
 namespace App\Controller;
 
+use App\Model\UserModel;
 use System\Core\BaseController;
 use System\Core\View;
-use App\Model\UserModel;
-
-/**
- * Password controller
- *
- * PHP version 7.0
- */
 
 class PasswordController extends BaseController
 {
-    /**
-     * Show the forgotten password page
-     *
-     * @return void
-     */
     public function forgotAction()
     {
         View::renderTemplate('Password/forgot.twig');
     }
-    /**
-     * Send the password reset link to the supplied email
-     *
-     * @return void
-     */
+
     public function requestResetAction()
     {
-        User::sendPasswordReset($_POST['email']);
+        UserModel::sendPasswordReset($this->request->post['email']);
         View::renderTemplate('Password/reset_requested.twig');
     }
 }
