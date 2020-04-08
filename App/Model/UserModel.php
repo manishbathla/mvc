@@ -81,8 +81,8 @@ class UserModel extends BaseModel
     protected function sendPasswordResetEmail()
     {
         $url = 'http://' . $_SERVER['HTTP_HOST'] . '/password/reset/' . $this->password_reset_token;
-        $html = View::renderTemplate('Password/reset_email.html', ['url' => $url]);
-        $text = View::renderTemplate('Password/reset_email.txt', ['url' => $url]);
+        $html = 'Hi there, <a href="'.$url.'">Click here to reset password</a>.';
+        $text = 'Hi there, <a href="'.$url.'">Click here to reset password</a>.';
         Mail::send($this->email, 'Password reset', $text, $html);
     }
 }

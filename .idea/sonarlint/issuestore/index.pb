@@ -19,3 +19,5 @@ G
 App/Model/UserModel.php,f\0\f0fc96cd6f666f882a06caa11b614517d680d8d5
 <
 App/Mail.php,3\3\331d321e62d50d347fa8bcbe5c0e3bfe3d87495c
+@
+public/index.php,0\e\0e61f67641b441bb3ee38e903c594d99cafa14b4

@@ -26,4 +26,9 @@ class PasswordController extends BaseController
         UserModel::sendPasswordReset($this->request->post['email']);
         View::renderTemplate('Password/reset_requested.twig');
     }
+
+    public function reset($key)
+    {
+        echo $key;
+    }
 }

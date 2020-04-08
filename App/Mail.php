@@ -22,11 +22,12 @@ class Mail
         $mailer = new \Swift_Mailer($transport);
 
         $message = (new \Swift_Message('Wonderful Subject'))
-            ->setFrom(['john@doe.com' => 'John Doe'])
+            ->setFrom(['password-reset@doe.com' => 'no-reply'])
             ->setTo($to)
             ->setSubject($subject)
             ->setBody($html)
             ->addPart($text)
+            ->setContentType("text/html");
         ;
         $mailer->send($message);
     }

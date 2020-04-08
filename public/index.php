@@ -134,6 +134,32 @@ $router->map(
     }
 );
 
+$router->map(
+    'GET|POST',
+    '/[a:controller]/[a:action]/[a:key]',
+    function ($controller, $action, $params) use ($registry) {
+
+        $controller .= 'Controller';
+        $file = APP_DIR . 'Controller/' . $controller . '.php';
+
+        if (is_file($file)) {
+            include_once($file);
+
+            $namespace = 'App\Controller\\';
+            $relative_controller = $namespace . $controller;
+            $relative_controller = new $relative_controller($registry);
+
+            if (is_callable(array($relative_controller, $action))) {
+                return call_user_func(array($relative_controller->$action($params)));
+            }
+            echo 'Function not callable';
+
+        } else {
+            include 'error/404.php';
+        }
+    }
+);
+
 $match = $router->match();
 
 // call closure or throw error
