@@ -19,7 +19,6 @@ class ComposerStaticInit14e007126291881e62b05bfb1a850223
         'a1cce3d26cc15c00fcd0b3354bd72c88' => __DIR__ . '/..' . '/sabre/event/lib/Promise/functions.php',
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
         '337663d83d8353cc8c7847676b3b0937' => __DIR__ . '/..' . '/kahlan/kahlan/src/functions.php',
-        'da253f61703e9c22a5a34f228526f05a' => __DIR__ . '/..' . '/wixel/gump/gump.class.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -75,10 +74,6 @@ class ComposerStaticInit14e007126291881e62b05bfb1a850223
         'K' => 
         array (
             'Kahlan\\' => 7,
-        ),
-        'G' => 
-        array (
-            'GUMP\\' => 5,
         ),
         'E' => 
         array (
@@ -219,10 +214,6 @@ class ComposerStaticInit14e007126291881e62b05bfb1a850223
         'Kahlan\\' => 
         array (
             0 => __DIR__ . '/..' . '/kahlan/kahlan/src',
-        ),
-        'GUMP\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/wixel/gump/src',
         ),
         'Egulias\\EmailValidator\\' => 
         array (

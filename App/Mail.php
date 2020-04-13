@@ -15,7 +15,7 @@ class Mail
     public static function send($to, $subject, $text, $html)
     {
         $transport = (new \Swift_SmtpTransport('smtp.gmail.com', 587, 'tls'))
-            ->setUsername('manishdakshbathla@gmail.com')
+            ->setUsername('manishbathla05@gmail.com')
             ->setPassword('googletumc')
         ;
 
