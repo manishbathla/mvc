@@ -19,6 +19,7 @@ use Phan\Phan;
 use Phan\PluginV3;
 use Phan\PluginV3\SuppressionCapability;
 use Phan\Suggestion;
+use PhpToken;
 
 /**
  * Implements Phan's built in suppression kinds
@@ -101,6 +102,7 @@ final class BuiltinSuppressionPlugin extends PluginV3 implements
     }
 
     /**
+     * @unused-param $code_base
      * @return array<string,array<int, int>> Maps 0 or more issue types to a *list* of lines corresponding to issues that this plugin is going to suppress.
      *
      * An empty array can be returned if this is unknown.
@@ -130,7 +132,7 @@ final class BuiltinSuppressionPlugin extends PluginV3 implements
         if (($cached_suppressions['contents'] ?? null) === $file_contents) {
             return $cached_suppressions['suppressions'] ?? [];
         }
-        $suppress_issue_list = self::computeIssueSuppressionList($code_base, $file_contents);
+        $suppress_issue_list = self::computeIssueSuppressionList($file_contents);
         $this->current_line_suppressions[$absolute_file_path] = [
             'contents' => $file_contents,
             'suppressions' => $suppress_issue_list,
@@ -146,7 +148,6 @@ final class BuiltinSuppressionPlugin extends PluginV3 implements
      * The line number of 0 represents suppressing issues in the entire file.
      */
     private static function computeIssueSuppressionList(
-        CodeBase $unused_code_base,
         string $file_contents
     ): array {
         if (!\preg_match(self::SUPPRESS_ISSUE_REGEX, $file_contents)) {
@@ -208,6 +209,46 @@ final class BuiltinSuppressionPlugin extends PluginV3 implements
     private static function yieldSuppressionComments(
         string $file_contents
     ): Generator {
+        // @phan-suppress-next-line PhanUndeclaredClassReference
+        if (\PHP_VERSION_ID >= 80000 && \class_exists(PhpToken::class) && \method_exists(PhpToken::class, 'tokenize')) {
+            return self::yieldSuppressionCommentsPhpToken($file_contents);
+        }
+        return self::yieldSuppressionCommentsOld($file_contents);
+    }
+
+    /**
+     * @return Generator<array{0:string,1:int,2:int,3:string,4:string}>
+     * yields [$comment_text, $comment_start_line, $comment_start_offset, $comment_name, $kind_list_text];
+     * (using the faster PhpToken::tokenize())
+     */
+    private static function yieldSuppressionCommentsPhpToken(
+        string $file_contents
+    ): Generator {
+        // @phan-suppress-next-line PhanUndeclaredClassMethod missing in php 8 before 8.0.0RC4
+        foreach (PhpToken::tokenize($file_contents) as $token) {
+            $kind = $token->id;
+            if ($kind !== \T_COMMENT && $kind !== \T_DOC_COMMENT) {
+                continue;
+            }
+            $comment_text = $token->text;
+            if (\strpos($comment_text, '@phan-') === false) {
+                continue;
+            }
+            yield from self::yieldSuppressionCommentsFromTokenContents(
+                $comment_text,
+                $token->line
+            );
+        }
+    }
+
+    /**
+     * @return Generator<array{0:string,1:int,2:int,3:string,4:string}>
+     * yields [$comment_text, $comment_start_line, $comment_start_offset, $comment_name, $kind_list_text];
+     * (using the slower token_get_all())
+     */
+    private static function yieldSuppressionCommentsOld(
+        string $file_contents
+    ): Generator {
         foreach (\token_get_all($file_contents) as $token) {
             if (!\is_array($token)) {
                 continue;
@@ -220,27 +261,38 @@ final class BuiltinSuppressionPlugin extends PluginV3 implements
             if (\strpos($comment_text, '@phan-') === false) {
                 continue;
             }
-            $comment_start_line = $token[2];
-
-            // TODO: Emit UnextractableAnnotation if the string begins with phan-suppress or phan-file-suppress but nothing matched
-            $match_count = \preg_match_all(
-                self::SUPPRESS_ISSUE_REGEX,
+            yield from self::yieldSuppressionCommentsFromTokenContents(
                 $comment_text,
-                $matches,
-                \PREG_OFFSET_CAPTURE
+                $token[2]
             );
-            if (!$match_count) {
-                continue;
-            }
-
-            // Support multiple suppressions within a comment. (E.g. for suppressing multiple warnings about a doc comment)
-            for ($i = 0; $i < $match_count; $i++) {
-                $comment_start_offset = $matches[0][$i][1];  // byte offset
-                $comment_name = $matches[1][$i][0];
-                $kind_list_text = $matches[3][$i][0];  // byte offset
-
-                yield [$comment_text, $comment_start_line, $comment_start_offset, $comment_name, $kind_list_text];
-            }
         }
+    }
+
+    /**
+     * @return list<array{0:string,1:int,2:int,3:string,4:string}>
+     * returns list of [$comment_text, $comment_start_line, $comment_start_offset, $comment_name, $kind_list_text];
+     */
+    private static function yieldSuppressionCommentsFromTokenContents(
+        string $comment_text,
+        int $comment_start_line
+    ): array {
+        // TODO: Emit UnextractableAnnotation if the string begins with phan-suppress or phan-file-suppress but nothing matched
+        $match_count = \preg_match_all(
+            self::SUPPRESS_ISSUE_REGEX,
+            $comment_text,
+            $matches,
+            \PREG_OFFSET_CAPTURE
+        );
+        $result = [];
+
+        // Support multiple suppressions within a comment. (E.g. for suppressing multiple warnings about a doc comment)
+        for ($i = 0; $i < $match_count; $i++) {
+            $comment_start_offset = $matches[0][$i][1];  // byte offset
+            $comment_name = $matches[1][$i][0];
+            $kind_list_text = $matches[3][$i][0];  // byte offset
+
+            $result[] = [$comment_text, $comment_start_line, $comment_start_offset, $comment_name, $kind_list_text];
+        }
+        return $result;
     }
 }

@@ -7,6 +7,7 @@ use Phan\AST\Parser;
 use Phan\CLI;
 use Phan\CodeBase;
 use Phan\Config;
+use Phan\Issue;
 use Phan\Language\Context;
 use Phan\PluginV3;
 use Phan\PluginV3\AfterAnalyzeFileCapability;
@@ -36,7 +37,7 @@ class InvokePHPNativeSyntaxCheckPlugin extends PluginV3 implements
     BeforeAnalyzeFileCapability,
     FinalizeProcessCapability
 {
-    private const LINE_NUMBER_REGEX = "@ on line ([1-9][0-9]*)$@";
+    private const LINE_NUMBER_REGEX = "@ on line ([1-9][0-9]*)$@D";
     private const STDIN_FILENAME_REGEX = "@ in (Standard input code|-)@";
 
     /**
@@ -141,7 +142,6 @@ class InvokePHPNativeSyntaxCheckPlugin extends PluginV3 implements
         }
         $check_error_message = preg_replace(self::STDIN_FILENAME_REGEX, '', $check_error_message);
 
-
         self::emitIssue(
             $code_base,
             clone($context)->withLineNumberStart($lineno),
@@ -151,7 +151,8 @@ class InvokePHPNativeSyntaxCheckPlugin extends PluginV3 implements
                 $binary === PHP_BINARY ? 'php' : $binary,
                 json_encode($check_error_message),
 
-            ]
+            ],
+            Issue::SEVERITY_CRITICAL
         );
     }
 }
@@ -221,7 +222,11 @@ class InvokeExecutionPromise
             //
             // e.g. `""C:\php 7.4.3\php.exe" --syntax-check --no-php-ini < "C:\some project\test.php""`
             // gets unescaped as `"C:\php 7.4.3\php.exe" --syntax-check --no-php-ini < "C:\some project\test.php"`
-            $process = proc_open("\"$cmd\"", $descriptorspec, $pipes);
+            if (PHP_VERSION_ID < 80000) {
+                // In PHP 8.0.0, proc_open started always escaping arguments with additional quotes, so doing it twice would be a bug.
+                $cmd = "\"$cmd\"";
+            }
+            $process = proc_open("$cmd", $descriptorspec, $pipes);
             if (!is_resource($process)) {
                 $this->done = true;
                 $this->error = "Failed to run proc_open in " . __METHOD__;
@@ -229,12 +234,16 @@ class InvokeExecutionPromise
             }
             $this->process = $process;
         } else {
-            $cmd = escapeshellarg($binary) . ' --syntax-check --no-php-ini';
+            $cmd = [$binary, '--syntax-check', '--no-php-ini'];
+            if (PHP_VERSION_ID < 70400) {
+                $cmd = implode(' ', array_map('escapeshellarg', $cmd));
+            }
             $descriptorspec = [
                 ['pipe', 'rb'],
                 ['pipe', 'wb'],
             ];
             $this->binary = $binary;
+            // @phan-suppress-next-line PhanPartialTypeMismatchArgumentInternal
             $process = proc_open($cmd, $descriptorspec, $pipes);
             if (!is_resource($process)) {
                 $this->done = true;

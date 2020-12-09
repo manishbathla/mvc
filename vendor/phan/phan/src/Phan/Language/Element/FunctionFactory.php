@@ -197,6 +197,10 @@ class FunctionFactory
         );
 
         if (!$map_list) {
+            if (!$function->getParameterList()) {
+                $function->setParameterList($function->getRealParameterList());
+            }
+            $function->inheritRealParameterDefaults();
             return [$function];
         }
 
@@ -269,13 +273,11 @@ class FunctionFactory
                     $flags
                 );
                 $parameter->enablePhanFlagBits($phan_flags);
-
                 if ($is_optional) {
-                    // TODO: could check isDefaultValueAvailable and getDefaultValue, for a better idea.
-                    // I don't see any cases where this will be used for internal types, though.
-                    $parameter->setDefaultValueType(
-                        NullType::instance(false)->asPHPDocUnionType()
-                    );
+                    if (!$parameter->hasDefaultValue()) {
+                        // Placeholder value. PHP 8.0+ is better at actually providing real parameter defaults.
+                        $parameter->setDefaultValueType(NullType::instance(false)->asPHPDocUnionType());
+                    }
                 }
 
                 // Add the parameter
@@ -308,6 +310,7 @@ class FunctionFactory
                     $alternate_function->setNumberOfRequiredParameters(0);
                 }
             }
+            $alternate_function->inheritRealParameterDefaults();
 
             return $alternate_function;
         }, $map_list);

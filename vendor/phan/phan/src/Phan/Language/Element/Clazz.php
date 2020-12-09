@@ -9,6 +9,7 @@ use ast\Node;
 use Closure;
 use LogicException;
 use Phan\Analysis\AbstractMethodAnalyzer;
+use Phan\Analysis\ClassConstantTypesAnalyzer;
 use Phan\Analysis\ClassInheritanceAnalyzer;
 use Phan\Analysis\CompositionAnalyzer;
 use Phan\Analysis\DuplicateClassAnalyzer;
@@ -299,18 +300,22 @@ class Clazz extends AddressableElement
                 $property_name
             );
 
-            $flags = 0;
             if ($class->hasProperty($property_name)) {
-                $flags = self::getASTFlagsForReflectionProperty($class->getProperty($property_name));
+                $reflection_property = $class->getProperty($property_name);
+                $flags = self::getASTFlagsForReflectionProperty($reflection_property);
+                $real_type = self::getRealTypeForReflectionProperty($reflection_property);
+            } else {
+                $flags = 0;
+                $real_type = UnionType::empty();
             }
 
             $property = new Property(
                 $property_context,
                 $property_name,
-                $property_type,
+                $property_type->withRealTypeSet($real_type->getTypeSet()),
                 $flags,
                 $property_fqsen,
-                UnionType::empty()
+                $real_type
             );
             // Record that Phan has known union types for this internal property,
             // so that analysis of assignments to the property can account for it.
@@ -336,17 +341,46 @@ class Clazz extends AddressableElement
             if ($clazz->hasPropertyWithName($code_base, $name)) {
                 continue;
             }
-            $flags = 0;
             if ($class->hasProperty($name)) {
-                $flags = self::getASTFlagsForReflectionProperty($class->getProperty($name));
+                $reflection_property = $class->getProperty($name);
+                $flags = self::getASTFlagsForReflectionProperty($reflection_property);
+                $real_type = self::getRealTypeForReflectionProperty($reflection_property);
+            } else {
+                $flags = 0;
+                $real_type = UnionType::empty();
             }
             $property = new Property(
                 $property_context,
                 $name,
-                Type::fromObject($default_value)->asPHPDocUnionType(),
+                Type::fromObject($default_value)->asPHPDocUnionType()->withRealTypeSet($real_type->getTypeSet()),
                 $flags,
                 $property_fqsen,
-                UnionType::empty()
+                $real_type
+            );
+
+            $clazz->addProperty($code_base, $property, None::instance());
+        }
+        foreach ($class->getProperties() as $reflection_property) {
+            // In PHP 7.4, it's possible for internal classes to have properties without defaults if they're uninitialized.
+            $name = $reflection_property->name;
+            if ($clazz->hasPropertyWithName($code_base, $name)) {
+                continue;
+            }
+            $property_context = $context->withScope($class_scope);
+
+            $property_fqsen = FullyQualifiedPropertyName::make(
+                $clazz->getFQSEN(),
+                $name
+            );
+
+            $real_type = self::getRealTypeForReflectionProperty($reflection_property);
+            $property = new Property(
+                $property_context,
+                $name,
+                $real_type->asRealUnionType(),
+                self::getASTFlagsForReflectionProperty($reflection_property),
+                $property_fqsen,
+                $real_type
             );
 
             $clazz->addProperty($code_base, $property, None::instance());
@@ -391,6 +425,9 @@ class Clazz extends AddressableElement
         }
 
         foreach ($class->getMethods() as $reflection_method) {
+            if ($reflection_method->getDeclaringClass()->name !== $class_name) {
+                continue;
+            }
             $method_context = $context->withScope($class_scope);
 
             $method_list =
@@ -406,6 +443,19 @@ class Clazz extends AddressableElement
         }
 
         return $clazz;
+    }
+
+    /**
+     * @suppress PhanUndeclaredMethod
+     */
+    private static function getRealTypeForReflectionProperty(ReflectionProperty $property): UnionType
+    {
+        if (\PHP_VERSION_ID >= 70400) {
+            if ($property->hasType()) {
+                return UnionType::fromReflectionType($property->getType());
+            }
+        }
+        return UnionType::empty();
     }
 
     /**
@@ -560,6 +610,10 @@ class Clazz extends AddressableElement
      * It should not be used for traits or interfaces.
      *
      * This returns false if $this === $other
+     *
+     * @deprecated This may lead to infinite recursion when analyzing invalid code. asExpandedTypes should be used instead.
+     * @suppress PhanUnreferencedPublicMethod
+     * @suppress PhanDeprecatedFunction
      */
     public function isSubclassOf(CodeBase $code_base, Clazz $other): bool
     {
@@ -766,6 +820,7 @@ class Clazz extends AddressableElement
         Property $inherited_property,
         Property $overriding_property
     ): void {
+        $overriding_property->setIsOverride(true);
         if ($inherited_property->isFromPHPDoc() || $inherited_property->isDynamicProperty() ||
             $overriding_property->isFromPHPDoc() || $overriding_property->isDynamicProperty()) {
             return;
@@ -1384,6 +1439,21 @@ class Clazz extends AddressableElement
             );
             return;
         }
+        // Warn if inheriting a class constant declared as @abstract without overriding it.
+        // Optionally, could check if other interfaces declared class constants with the same value, but low priority.
+        if ($constant->isPHPDocAbstract() && !$constant->isPrivate() && !$this->isAbstract() && $this->isClass()) {
+            Issue::maybeEmit(
+                $code_base,
+                $this->getContext(),
+                Issue::CommentAbstractOnInheritedConstant,
+                $this->getContext()->getLineNumberStart(),
+                $this->getFQSEN(),
+                $constant->getRealDefiningFQSEN(),
+                $constant->getContext()->getFile(),
+                $constant->getContext()->getLineNumberStart(),
+                '@abstract'
+            );
+        }
 
         // Update the FQSEN if it's not associated with this
         // class yet (always true)
@@ -1517,8 +1587,7 @@ class Clazz extends AddressableElement
                     $context->getFile(),
                     $context->getLineNumberStart(),
                     [
-                        (string)$constant_fqsen,
-                        (string)$this->getFQSEN()
+                        $this->getFQSEN() . '::' . $constant_fqsen
                     ],
                     IssueFixSuggester::suggestSimilarClassConstant($code_base, $context, $constant_fqsen)
                 )
@@ -1648,6 +1717,9 @@ class Clazz extends AddressableElement
                 self::markMethodAsOverridden($code_base, $existing_method_defining_fqsen);
             }
 
+            if ($existing_method->getRealDefiningFQSEN() === $method->getRealDefiningFQSEN()) {
+                return;
+            }
             if ($existing_method->getRealDefiningFQSEN() === $method_fqsen || $method->isAbstract() || !$existing_method->isAbstract() || $existing_method->isNewConstructor()) {
                 // TODO: What if both of these are abstract, and those get combined into an abstract class?
                 //       Should phan check compatibility of the abstract methods it inherits?
@@ -2105,16 +2177,6 @@ class Clazz extends AddressableElement
         }
     }
 
-    /**
-     * True if this class has dynamic properties. (e.g. stdClass)
-     * @deprecated use hasDynamicProperties
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getHasDynamicProperties(CodeBase $code_base): bool
-    {
-        return $this->hasDynamicProperties($code_base);
-    }
-
     public function setHasDynamicProperties(
         bool $has_dynamic_properties
     ): void {
@@ -2124,7 +2186,6 @@ class Clazz extends AddressableElement
             $has_dynamic_properties
         ));
     }
-
 
     /**
      * @return bool
@@ -2416,15 +2477,12 @@ class Clazz extends AddressableElement
         }
     }
 
-    /*
-     * Add properties, constants and methods from the
-     * parent of this class
+    /**
+     * Add constants from the parent of this class
      *
      * @param CodeBase $code_base
      * The entire code base from which we'll find ancestor
      * details
-     *
-     * @return void
      */
     private function importConstantsFromParentClass(CodeBase $code_base): void
     {
@@ -2454,15 +2512,13 @@ class Clazz extends AddressableElement
         $this->importConstantsFromAncestorClass($code_base, $parent);
     }
 
-    /*
+    /**
      * Add properties, constants and methods from the
      * parent of this class
      *
      * @param CodeBase $code_base
      * The entire code base from which we'll find ancestor
      * details
-     *
-     * @return void
      */
     private function importParentClass(CodeBase $code_base): void
     {
@@ -2669,6 +2725,21 @@ class Clazz extends AddressableElement
 
         // Copy properties
         foreach ($class->getPropertyMap($code_base) as $property) {
+            if ($property->isPHPDocAbstract() && !$property->isPrivate() &&
+                $this->isClass() && !$this->isAbstract() && !$this->hasPropertyWithName($code_base, $property->getName())) {
+                Issue::maybeEmit(
+                    $code_base,
+                    $this->getContext(),
+                    Issue::CommentAbstractOnInheritedProperty,
+                    $this->getContext()->getLineNumberStart(),
+                    $this->getFQSEN(),
+                    $property->getRealDefiningFQSEN(),
+                    $property->getContext()->getFile(),
+                    $property->getContext()->getLineNumberStart(),
+                    '@abstract'
+                );
+            }
+
             // TODO: check for conflicts in visibility and default values for traits.
             // TODO: Check for ancestor classes with the same private property?
             $this->addProperty(
@@ -3136,7 +3207,12 @@ class Clazz extends AddressableElement
             }
         }
 
+        // Fetch the properties declared within the class, to check if they have override annotations later.
+        $original_declared_properties = $this->getPropertyMap($code_base);
+
         $this->importAncestorClasses($code_base);
+
+        self::analyzePropertyOverrides($code_base, $original_declared_properties);
 
         // Make sure there are no abstract methods on non-abstract classes
         AbstractMethodAnalyzer::analyzeAbstractMethodsAreImplemented(
@@ -3162,6 +3238,28 @@ class Clazz extends AddressableElement
                     Issue::CommentOverrideOnNonOverrideConstant,
                     $context->getLineNumberStart(),
                     (string)$constant->getFQSEN()
+                );
+            }
+        }
+    }
+
+    /**
+     * @param array<string, Property> $original_declared_properties
+     */
+    private static function analyzePropertyOverrides(CodeBase $code_base, array $original_declared_properties): void
+    {
+        foreach ($original_declared_properties as $property) {
+            if ($property->isOverrideIntended() && !$property->isOverride()) {
+                if ($property->checkHasSuppressIssueAndIncrementCount(Issue::CommentOverrideOnNonOverrideProperty)) {
+                    continue;
+                }
+                $context = $property->getContext();
+                Issue::maybeEmit(
+                    $code_base,
+                    $context,
+                    Issue::CommentOverrideOnNonOverrideProperty,
+                    $context->getLineNumberStart(),
+                    (string)$property->getFQSEN()
                 );
             }
         }
@@ -3198,6 +3296,11 @@ class Clazz extends AddressableElement
             $this
         );
 
+        ClassConstantTypesAnalyzer::analyzeClassConstantTypes(
+            $code_base,
+            $this
+        );
+
         // Analyze this class to make sure that we don't have conflicting
         // types between similar inherited methods.
         CompositionAnalyzer::analyzeComposition(
@@ -3205,11 +3308,37 @@ class Clazz extends AddressableElement
             $this
         );
 
+        $this->analyzeInheritedMethods($code_base);
+
         // Let any configured plugins analyze the class
         ConfigPluginSet::instance()->analyzeClass(
             $code_base,
             $this
         );
+    }
+
+    private function analyzeInheritedMethods(CodeBase $code_base): void
+    {
+        if ($this->isClass() && !$this->isAbstract()) {
+            foreach ($this->getMethodMap($code_base) as $method) {
+                if ($method->getRealDefiningFQSEN() === $method->getFQSEN()) {
+                    continue;
+                }
+                if ($method->isPHPDocAbstract() && !$method->isPrivate()) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $this->getContext(),
+                        Issue::CommentAbstractOnInheritedMethod,
+                        $this->getContext()->getLineNumberStart(),
+                        $this->getFQSEN(),
+                        $method->getRealDefiningFQSEN(),
+                        $method->getContext()->getFile(),
+                        $method->getContext()->getLineNumberStart(),
+                        '@abstract'
+                    );
+                }
+            }
+        }
     }
 
     public function setDidFinishParsing(bool $did_finish_parsing): void

@@ -10,6 +10,10 @@ use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Token;
 
 class Parameter extends Node {
+    /** @var AttributeGroup[]|null */
+    public $attributes;
+    /** @var Token|null */
+    public $visibilityToken;
     /** @var Token|null */
     public $questionToken;
     /** @var QualifiedName|Token|null */
@@ -31,6 +35,8 @@ class Parameter extends Node {
     public $default;
 
     const CHILD_NAMES = [
+        'attributes',
+        'visibilityToken',
         'questionToken',
         'typeDeclaration',
         'otherTypeDeclarations',

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * Set up error handlers, exception handlers, autoloaders, etc. Check that all dependencies are met for running Phan or its utilities.
+ *
+ * @phan-file-suppress PhanPluginRemoveDebugAny this has a lot of warnings to stderr
+ */
+
 use Phan\CLI;
 use Phan\CodeBase;
 use Phan\Config;
@@ -17,19 +23,28 @@ ini_set("memory_limit", '-1');
 define('CLASS_DIR', __DIR__ . '/../');
 set_include_path(get_include_path() . PATH_SEPARATOR . CLASS_DIR);
 
-if (PHP_VERSION_ID < 70100) {
+if (function_exists('uopz_allow_exit') && !ini_get('uopz.disable')) {
+    // This is safe to do in the uopz PECL module, it toggles a global variable.
+    try {
+        uopz_allow_exit(true); // @phan-suppress-current-line PhanUndeclaredFunction
+    } catch (Throwable $e) {
+        fprintf(STDERR, "uopz_allow_exit failed: %s" . PHP_EOL, $e->getMessage());
+    }
+}
+
+if (PHP_VERSION_ID < 70200) {
     fprintf(
         STDERR,
-        "ERROR: Phan 2.x requires PHP 7.1+ to run, but PHP %s is installed." . PHP_EOL,
+        "ERROR: Phan 3.x requires PHP 7.2+ to run, but PHP %s is installed." . PHP_EOL,
         PHP_VERSION
     );
-    fwrite(STDERR, "PHP 7.0 reached its end of life in December 2018." . PHP_EOL);
+    fwrite(STDERR, "PHP 7.1 reached its end of life in December 2019." . PHP_EOL);
     fwrite(STDERR, "Exiting without analyzing code." . PHP_EOL);
     // The version of vendor libraries this depends on will also require php 7.1
     exit(1);
 }
 
-const LATEST_KNOWN_PHP_AST_VERSION = '1.0.5';
+const LATEST_KNOWN_PHP_AST_VERSION = '1.0.10';
 
 /**
  * Dump instructions on how to install php-ast
@@ -54,7 +69,7 @@ function phan_output_ast_installation_instructions(): void
                 LATEST_KNOWN_PHP_AST_VERSION,
                 PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
                 PHP_ZTS ? 'ts' : 'nts',
-                PHP_VERSION_ID <= 70100 ? 'vc14' : 'vc15',
+                'vc15',
                 PHP_INT_SIZE == 4 ? 'x86' : 'x64'
             );
             fwrite(STDERR, "(if that link doesn't work, check https://windows.php.net/downloads/pecl/releases/ast/ )" . PHP_EOL);
@@ -90,7 +105,25 @@ EOT
 if (extension_loaded('ast')) {
     // Warn if the php-ast version is too low.
     $ast_version = (string)phpversion('ast');
-    if (version_compare($ast_version, '1.0.0') <= 0) {
+    if (PHP_VERSION_ID >= 80000 && version_compare($ast_version, '1.0.10') < 0) {
+        fprintf(
+            STDERR,
+            "ERROR: Phan 3.x requires php-ast 1.0.10+ to properly analyze ASTs for php 8.0+. php-ast %s and php %s is installed." . PHP_EOL,
+            $ast_version,
+            PHP_VERSION
+        );
+        phan_output_ast_installation_instructions();
+        fwrite(STDERR, "Exiting without analyzing files." . PHP_EOL);
+        exit(1);
+    } elseif (PHP_VERSION_ID >= 70400 && version_compare($ast_version, '1.0.2') < 0) {
+        fprintf(
+            STDERR,
+            "WARNING: Phan 3.x requires php-ast 1.0.2+ to properly analyze ASTs for php 7.4+ (1.0.6+ is recommended). php-ast %s and php %s is installed." . PHP_EOL,
+            $ast_version,
+            PHP_VERSION
+        );
+        phan_output_ast_installation_instructions();
+    } elseif (version_compare($ast_version, '1.0.0') <= 0) {
         if ($ast_version === '') {
             // Seen in php 7.3 with file_cache when ast is initially enabled but later disabled, due to the result of extension_loaded being assumed to be a constant by opcache.
             fwrite(STDERR, "ERROR: extension_loaded('ast') is true, but phpversion('ast') is the empty string. You probably need to clear opcache (opcache.file_cache='" . ini_get('opcache.file_cache') . "')" . PHP_EOL);
@@ -101,30 +134,22 @@ if (extension_loaded('ast')) {
         // NOTE: We haven't loaded the autoloader yet, so these issue messages can't be colorized.
         fprintf(
             STDERR,
-            "ERROR: Phan 2.x requires php-ast 1.0.1+ because it depends on AST version 70. php-ast '%s' is installed." . PHP_EOL,
+            "ERROR: Phan 3.x requires php-ast %s+ because it depends on AST version %d. php-ast '%s' is installed." . PHP_EOL,
+            Config::MINIMUM_AST_EXTENSION_VERSION,
+            Config::AST_VERSION,
             $ast_version
         );
         phan_output_ast_installation_instructions();
         fwrite(STDERR, "Exiting without analyzing files." . PHP_EOL);
         exit(1);
-    } elseif (PHP_VERSION_ID >= 80000 && version_compare($ast_version, '1.0.4') < 0) {
-        fprintf(
-            STDERR,
-            "WARNING: Phan 2.x requires php-ast 1.0.4+ to properly analyze ASTs for php 8.0+. php-ast %s and php %s is installed." . PHP_EOL,
-            $ast_version,
-            PHP_VERSION
-        );
-        phan_output_ast_installation_instructions();
-    } elseif (PHP_VERSION_ID >= 70400 && version_compare($ast_version, '1.0.2') < 0) {
-        fprintf(
-            STDERR,
-            "WARNING: Phan 2.x requires php-ast 1.0.2+ to properly analyze ASTs for php 7.4+. php-ast %s and php %s is installed." . PHP_EOL,
-            $ast_version,
-            PHP_VERSION
-        );
-        phan_output_ast_installation_instructions();
     }
+    // @phan-suppress-next-line PhanRedundantCondition, PhanImpossibleCondition, PhanSuspiciousValueComparison
+    if (PHP_VERSION_ID >= 80000 && strpos(PHP_VERSION, 'dev') === false && version_compare(PHP_VERSION, '8.0.0beta4') < 0) {
+        fwrite(STDERR, "WARNING: Phan may not work properly in PHP 8 versions before PHP 8.0.0beta4. The currently used PHP version is " . PHP_VERSION . PHP_EOL);
+    }
+    unset($ast_version);
 }
+
 // Use the composer autoloader
 $found_autoloader = false;
 foreach ([
@@ -138,9 +163,11 @@ foreach ([
         break;
     }
 }
+unset($file);
 if (!$found_autoloader) {
     fwrite(STDERR, "Could not locate the autoloader\n");
 }
+unset($found_autoloader);
 
 define('EXIT_SUCCESS', 0);
 define('EXIT_FAILURE', 1);
@@ -157,9 +184,17 @@ assert_options(ASSERT_WARNING, false);
 assert_options(ASSERT_BAIL, false);
 // ASSERT_QUIET_EVAL has been removed starting with PHP 8
 if (defined('ASSERT_QUIET_EVAL')) {
-    assert_options(ASSERT_QUIET_EVAL, false); // @phan-suppress-current-line PhanUndeclaredConstant, UnusedPluginSuppression
+    assert_options(ASSERT_QUIET_EVAL, false); // @phan-suppress-current-line UnusedPluginSuppression, PhanTypeMismatchArgumentNullableInternal
 }
 assert_options(ASSERT_CALLBACK, '');  // Can't explicitly set ASSERT_CALLBACK to null?
+
+// php 8 seems to have segfault issues with disable_function
+if (!extension_loaded('filter') && !function_exists('filter_var')) {
+    if (!($_ENV['PHAN_DISABLE_FILTER_VAR_POLYFILL'] ?? null)) {
+        fwrite(STDERR, "WARNING: Using a limited polyfill for filter_var() instead of the real filter_var(). **ANALYSIS RESULTS MAY DIFFER AND PLUGINS MAY HAVE ISSUES.** Install and/or enable https://www.php.net/filter to fix this. PHAN_DISABLE_FILTER_VAR_POLYFILL=1 can be used to disable this polyfill.\n");
+        require_once __DIR__ . '/filter_var.php_polyfill';
+    }
+}
 
 /**
  * Print more of the backtrace than is done by default
@@ -175,6 +210,34 @@ set_exception_handler(static function (Throwable $throwable): void {
             fprintf(STDERR, "(Phan %s crashed due to an uncaught Throwable)\n", CLI::PHAN_VERSION);
         }
     }
+    // Flush output in case this is related to a bug in a php or its engine that may crash when generating a frame
+    fflush(STDERR);
+    fwrite(STDERR, 'More details:' . PHP_EOL);
+    if (class_exists(Config::class, false)) {
+        $max_frame_length = max(100, Config::getValue('debug_max_frame_length'));
+    } else {
+        $max_frame_length = 1000;
+    }
+    $truncated = false;
+    foreach ($throwable->getTrace() as $i => $frame) {
+        $frame_details = \Phan\Debug\Frame::frameToString($frame);
+        if (strlen($frame_details) > $max_frame_length) {
+            $truncated = true;
+            if (function_exists('mb_substr')) {
+                $frame_details = mb_substr($frame_details, 0, $max_frame_length) . '...';
+            } else {
+                $frame_details = substr($frame_details, 0, $max_frame_length) . '...';
+            }
+        }
+        fprintf(STDERR, '#%d: %s' . PHP_EOL, $i, $frame_details);
+        fflush(STDERR);
+    }
+
+    if ($truncated) {
+        fwrite(STDERR, "(Some long strings (usually JSON of AST Nodes) were truncated. To print more details for some stack frames of this uncaught exception," .
+           "increase the Phan config setting debug_max_frame_length)" . PHP_EOL);
+    }
+
     exit(EXIT_FAILURE);
 });
 
@@ -266,14 +329,24 @@ function phan_error_handler(int $errno, string $errstr, string $errfile, int $er
             return false;
         }
     }
-    // php-src/ext/standard/streamsfuncs.c suggests that this is the only error caused by signal handlers and there are no translations
-    if ($errno === E_WARNING && preg_match('/^stream_select.*unable to select/', $errstr)) {
+    // php-src/ext/standard/streamsfuncs.c suggests that this is the only error caused by signal handlers and there are no translations.
+    // In PHP 8.0, "Unable" becomes uppercase.
+    if ($errno === E_WARNING && preg_match('/^stream_select.*unable to select/i', $errstr)) {
         // Don't execute the PHP internal error handler
         return true;
     }
     if ($errno === E_USER_DEPRECATED && preg_match('/(^Passing a command as string when creating a |method is deprecated since Symfony 4\.4)/', $errstr)) {
         // Suppress deprecation notices running `vendor/bin/paratest`.
         // Don't execute the PHP internal error handler.
+        return true;
+    }
+    if ($errno === E_DEPRECATED && preg_match('/^(Constant |Method ReflectionParameter::getClass)/', $errstr)) {
+        // Suppress deprecation notices running `vendor/bin/paratest` in php 8
+        // Constants such as ENCHANT can be deprecated when calling constant()
+        return true;
+    }
+    if ($errno === E_NOTICE && preg_match('/^(iconv_strlen)/', $errstr)) {
+        // Suppress deprecation notices in symfony/polyfill-mbstring
         return true;
     }
     if ($errno === E_DEPRECATED && preg_match('/ast\\\\parse_.*Version.*is deprecated/i', $errstr)) {
@@ -328,8 +401,4 @@ if (!class_exists(CompileError::class)) {
     class CompileError extends Error
     {
     }
-}
-
-if (!function_exists('spl_object_id')) {
-    require_once dirname(__DIR__) . '/spl_object_id.php';
 }

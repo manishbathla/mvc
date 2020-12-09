@@ -8,6 +8,7 @@ use AssertionError;
 use ast;
 use ast\Node;
 use Phan\AST\ArrowFunc;
+use Phan\AST\ASTReverter;
 use Phan\AST\ContextNode;
 use Phan\AST\UnionTypeVisitor;
 use Phan\BlockAnalysisVisitor;
@@ -58,8 +59,8 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
     }
      */
 
-    /** @param Node $unused_node implementation for unhandled nodes */
-    public function visit(Node $unused_node): Context
+    /** @param Node $node implementation for unhandled nodes @unused-param */
+    public function visit(Node $node): Context
     {
         return $this->context;
     }
@@ -243,9 +244,13 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
             if (!$default_type) {
                 continue;
             }
-            if ($property->getDefiningFQSEN() !== $property->getRealDefiningFQSEN()) {
+            if ($property->getFQSEN() !== $property->getRealDefiningFQSEN()) {
                 // Here, we don't analyze the properties of parent classes to avoid false positives.
                 // Phan doesn't infer that the scope is cleared by parent::__construct().
+                //
+                // TODO: It should be possible to inherit property types from parent::__construct() for simple constructors?
+                // TODO: Check if there's actually any calls to parent::__construct, infer types aggressively if there are no calls.
+                // TODO: Phan does not yet infer or apply implications of setPropName(), etc.
                 continue;
             }
             $property_types[$property->getName()] = $default_type;
@@ -460,7 +465,8 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
                 if (!($use instanceof Node) || $use->kind !== ast\AST_CLOSURE_VAR) {
                     $this->emitIssue(
                         Issue::VariableUseClause,
-                        $node->lineno
+                        $node->lineno,
+                        ASTReverter::toShortString($use)
                     );
                     continue;
                 }
@@ -482,7 +488,7 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
                 )) {
                     // If this is not pass-by-reference variable we
                     // have a problem
-                    if (!($use->flags & ast\flags\PARAM_REF)) {
+                    if (!($use->flags & ast\flags\CLOSURE_USE_REF)) {
                         Issue::maybeEmitWithParameters(
                             $this->code_base,
                             $context,
@@ -513,7 +519,7 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
                     // If this isn't a pass-by-reference variable, we
                     // clone the variable so state within this scope
                     // doesn't update the outer scope
-                    if (!($use->flags & ast\flags\PARAM_REF)) {
+                    if (!($use->flags & ast\flags\CLOSURE_USE_REF)) {
                         $variable = clone($variable);
                     } else {
                         $union_type = $variable->getUnionType();
@@ -607,7 +613,7 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
                 // If this isn't a pass-by-reference variable, we
                 // clone the variable so state within this scope
                 // doesn't update the outer scope
-                if (!($use->flags & ast\flags\PARAM_REF)) {
+                if (!($use->flags & ast\flags\CLOSURE_USE_REF)) {
                     $variable = clone($variable);
                 }
                 // Pass the variable into a new scope
@@ -684,6 +690,7 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
                 $this->emitIssue(
                     Issue::TypeMismatchReturn,
                     $node->lineno,
+                    '(a Generator due to existence of yield statements)',
                     '\\Generator',
                     $func->getNameForIssue(),
                     (string)$func_return_type
@@ -701,7 +708,7 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
      */
     public function visitAssign(Node $node): Context
     {
-        if (Config::get_closest_target_php_version_id() < 70100) {
+        if (Config::get_closest_minimum_target_php_version_id() < 70100) {
             $var_node = $node->children['var'];
             if ($var_node instanceof Node && $var_node->kind === ast\AST_ARRAY) {
                 BlockAnalysisVisitor::analyzeArrayAssignBackwardsCompatibility($this->code_base, $this->context, $var_node);
@@ -713,14 +720,14 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
     /**
      * No-op - all work is done in BlockAnalysisVisitor
      *
-     * @param Node $_
+     * @param Node $node @unused-param
      * A node to parse
      *
      * @return Context
      * A new or an unchanged context resulting from
      * parsing the node
      */
-    public function visitForeach(Node $_): Context
+    public function visitForeach(Node $node): Context
     {
         return $this->context;
     }
@@ -741,11 +748,18 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
             $this->context,
             $node->children['class']
         );
+        if (!isset($node->children['var'])) {
+            $this->emitIssue(
+                Issue::CompatibleNonCapturingCatch,
+                $node->lineno,
+                ASTReverter::toShortString($node->children['class'])
+            );
+        }
 
         try {
             $class_list = \iterator_to_array($union_type->asClassList($this->code_base, $this->context));
 
-            if (Config::get_closest_target_php_version_id() < 70100 && \count($class_list) > 1) {
+            if (Config::get_closest_minimum_target_php_version_id() < 70100 && \count($class_list) > 1) {
                 $this->emitIssue(
                     Issue::CompatibleMultiExceptionCatchPHP70,
                     $node->lineno
@@ -851,14 +865,14 @@ class PreOrderAnalysisVisitor extends ScopeVisitor
     }
 
     /**
-     * @param Node $_
+     * @param Node $node @unused-param
      * A node to parse
      *
      * @return Context
      * A new or an unchanged context resulting from
      * parsing the node
      */
-    public function visitCall(Node $_): Context
+    public function visitCall(Node $node): Context
     {
         return $this->context;
     }

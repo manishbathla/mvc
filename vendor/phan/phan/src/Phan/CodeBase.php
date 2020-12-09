@@ -39,6 +39,10 @@ use Phan\Plugin\ConfigPluginSet;
 use ReflectionClass;
 
 use function count;
+use function get_defined_constants;
+use function get_extension_funcs;
+use function get_loaded_extensions;
+use function is_array;
 use function strtolower;
 
 use const STDERR;
@@ -392,13 +396,48 @@ class CodeBase
      */
     private function addClassesByNames(array $class_name_list): void
     {
+        $included_extension_subset = self::getIncludedExtensionSubset();
         foreach ($class_name_list as $class_name) {
             $reflection_class = new \ReflectionClass($class_name);
-            if (!$reflection_class->isUserDefined()) {
-                // include internal classes, but not external classes such as composer
-                $this->addReflectionClass($reflection_class);
+            if ($reflection_class->isUserDefined()) {
+                continue;
             }
+            if (is_array($included_extension_subset) && !isset($included_extension_subset[strtolower($reflection_class->getExtensionName() ?: '')])) {
+                // Allow preventing Phan from loading type information for a subset of extensions.
+                // This is useful if you have an extension installed locally (e.g. FFI, ast) but it won't be available in the target environment/php version.
+                continue;
+            }
+            // include internal classes, but not external classes such as composer
+            $this->addReflectionClass($reflection_class);
         }
+    }
+
+    /**
+     * @return ?array<string,true> if non-null, the subset of extensions phan will limit the loading of reflection information to.
+     */
+    private static function getIncludedExtensionSubset(): ?array
+    {
+        $included_extension_subset = Config::getValue('included_extension_subset');
+        if (!is_array($included_extension_subset)) {
+            return null;
+        }
+        $map = [
+            'core' => true,
+            'date' => true,
+            // 'hash' => true,  // always enabled in 7.4.0, too new
+            // 'json' => true,  // always enabled in 8.0.0, too new
+            'pcre' => true,
+            'reflection' => true,
+            'spl' => true,
+            'standard' => true,
+        ];
+        foreach ($included_extension_subset as $name) {
+            if ($name === 'user') {
+                continue;
+            }
+            $map[strtolower($name)] = true;
+        }
+        return $map;
     }
 
     /**
@@ -407,9 +446,27 @@ class CodeBase
      */
     private function addGlobalConstantsByNames(array $const_name_list): void
     {
+        $included_extension_subset = self::getIncludedExtensionSubset();
+        if (is_array($included_extension_subset)) {
+            $excluded_constant_set = [];
+            foreach (get_defined_constants(true) as $ext_name => $constant_values) {
+                if (isset($included_extension_subset[strtolower($ext_name)])) {
+                    continue;
+                }
+                foreach ($constant_values as $constant_name => $_) {
+                    $excluded_constant_set[$constant_name] = true;
+                }
+            }
+            foreach ($const_name_list as $i => $const_name) {
+                if (isset($excluded_constant_set[$const_name])) {
+                    unset($const_name_list[$i]);
+                }
+            }
+        }
         foreach ($const_name_list as $const_name) {
             // #1015 workaround for empty constant names ('' and '0').
             if (!\is_string($const_name)) {
+                // @phan-suppress-next-line PhanPluginRemoveDebugCall
                 \fprintf(STDERR, "Saw constant with non-string name of %s. There may be a bug in a PECL extension you are using (php -m will list those)\n", \var_export($const_name, true));
                 continue;
             }
@@ -432,6 +489,7 @@ class CodeBase
         if (\strncmp($const_name, "\x00apc_", 5) === 0) {
             return;
         }
+        // @phan-suppress-next-line PhanPluginRemoveDebugCall
         \fprintf(STDERR, "Failed to load global constant value for %s, continuing: %s\n", \var_export($const_name, true), $e->getMessage());
     }
 
@@ -515,6 +573,25 @@ class CodeBase
      */
     private function addInternalFunctionsByNames(array $internal_function_name_list): void
     {
+        $included_extension_subset = self::getIncludedExtensionSubset();
+        if (is_array($included_extension_subset)) {
+            $forbidden_function_set = [];
+            // Forbid functions both from extensions and zend_extensions such as xdebug
+            foreach (get_loaded_extensions() as $ext_name) {
+                if (isset($included_extension_subset[strtolower($ext_name)])) {
+                    continue;
+                }
+                foreach (get_extension_funcs($ext_name) ?: [] as $function_name) {
+                    $forbidden_function_set[strtolower($function_name)] = true;
+                }
+            }
+            foreach ($internal_function_name_list as $i => $function_name) {
+                if (isset($forbidden_function_set[$function_name])) {
+                    unset($internal_function_name_list[$i]);
+                }
+            }
+        }
+
         foreach ($internal_function_name_list as $function_name) {
             $this->internal_function_fqsen_set->attach(FullyQualifiedFunctionName::fromFullyQualifiedString($function_name));
         }
@@ -1122,25 +1199,6 @@ class CodeBase
     }
 
     /**
-     * @return array<string,list<Method>>
-     * @deprecated
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    public function getMethodsGroupedByDefiningFQSEN(): array
-    {
-        $methods_by_defining_fqsen = [];
-        foreach ($this->method_set as $method) {
-            $defining_fqsen = $method->getDefiningFQSEN()->__toString();
-            $real_defining_fqsen = $method->getRealDefiningFQSEN()->__toString();
-            $methods_by_defining_fqsen[$defining_fqsen][] = $method;
-            if ($real_defining_fqsen !== $defining_fqsen) {
-                $methods_by_defining_fqsen[$real_defining_fqsen][] = $method;
-            }
-        }
-        return $methods_by_defining_fqsen;
-    }
-
-    /**
      * @return Map<FullyQualifiedMethodName,ArrayObject<Method>>
      */
     public function getMethodsMapGroupedByDefiningFQSEN(): Map
@@ -1504,9 +1562,14 @@ class CodeBase
                 $canonical_fqsen,
                 $signature
             ) as $function) {
+                if ($name === 'each' && Config::get_closest_target_php_version_id() >= 70200) {
+                    $function->setIsDeprecated(true);
+                }
                 if ($found) {
                     $reflection_function = new \ReflectionFunction($name);
-                    $function->setIsDeprecated($reflection_function->isDeprecated());
+                    if ($reflection_function->isDeprecated()) {
+                        $function->setIsDeprecated(true);
+                    }
                     $real_return_type = UnionType::fromReflectionType($reflection_function->getReturnType());
                     if (Config::getValue('assume_real_types_for_internal_functions')) {
                         // @phan-suppress-next-line PhanAccessMethodInternal
@@ -1521,7 +1584,10 @@ class CodeBase
                         $function->setUnionType(UnionType::of($function->getUnionType()->getTypeSet() ?: $real_type_set, $real_type_set));
                     }
 
-                    $function->setRealParameterList(Parameter::listFromReflectionParameterList($reflection_function->getParameters()));
+                    $real_parameter_list = Parameter::listFromReflectionParameterList($reflection_function->getParameters());
+                    $function->setRealParameterList($real_parameter_list);
+                    // @phan-suppress-next-line PhanAccessMethodInternal
+                    $function->inheritRealParameterDefaults();
                 }
                 $this->addFunction($function);
                 $this->updatePluginsOnLazyLoadInternalFunction($function);
@@ -1983,11 +2049,12 @@ class CodeBase
     }
 
     /**
+     * @unused-param $context
      * @return list<FullyQualifiedClassName> 0 or more namespaced class names found in this code base
      */
     public function suggestSimilarClassInOtherNamespace(
         FullyQualifiedClassName $missing_class,
-        Context $unused_context
+        Context $context
     ): array {
         $class_name = $missing_class->getName();
         $class_name_lower = strtolower($class_name);
@@ -2010,12 +2077,13 @@ class CodeBase
     }
 
     /**
+     * @unused-param $context
      * @return list<FullyQualifiedFunctionName> 0 or more namespaced function names found in this code base with the same name but different namespaces
      */
     public function suggestSimilarGlobalFunctionInOtherNamespace(
         string $namespace,
         string $function_name,
-        Context $unused_context,
+        Context $context,
         bool $include_same_namespace = false
     ): array {
         $function_name_lower = strtolower($function_name);
@@ -2163,12 +2231,13 @@ class CodeBase
     }
 
     /**
+     * @unused-param $context
      * @return list<FullyQualifiedFunctionName> 0 or more namespaced function names found in this code base, from various namespaces
      */
     public function suggestSimilarGlobalFunctionForNamespaceAndName(
         string $namespace,
         string $name,
-        Context $unused_context
+        Context $context
     ): array {
         $suggester = $this->getFunctionNameSuggesterForNamespace($namespace);
         $suggested_function_names = $suggester->getSuggestions($name);
@@ -2201,6 +2270,7 @@ class CodeBase
 
     /**
      * @param int $class_suggest_type value from IssueFixSuggester::CLASS_SUGGEST_*
+     * @unused-param $context
      *
      * @return list<FullyQualifiedClassName|string> 0 or more namespaced class names found in this code base
      *
@@ -2209,7 +2279,7 @@ class CodeBase
      */
     public function suggestSimilarClassInSameNamespace(
         FullyQualifiedClassName $missing_class,
-        Context $unused_context,
+        Context $context,
         int $class_suggest_type = IssueFixSuggester::CLASS_SUGGEST_ONLY_CLASSES
     ): array {
         $namespace = $missing_class->getNamespace();

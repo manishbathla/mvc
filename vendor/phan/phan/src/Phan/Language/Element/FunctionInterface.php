@@ -161,6 +161,20 @@ interface FunctionInterface extends AddressableElementInterface
     public function getParameterList();
 
     /**
+     * @param list<Parameter> $parameter_list
+     * A list of parameters to set on this method
+     * (When quick_mode is false, this is also called to temporarily
+     * override parameter types, etc.)
+     * @internal
+     */
+    public function setParameterList(array $parameter_list): void;
+
+    /**
+     * @internal - moves real parameter defaults to the inferred phpdoc parameters
+     */
+    public function inheritRealParameterDefaults(): void;
+
+    /**
      * Gets the $ith parameter for the **caller**.
      * In the case of variadic arguments, an infinite number of parameters exist.
      * (The callee would see variadic arguments(T ...$args) as a single variable of type T[],
@@ -439,7 +453,7 @@ interface FunctionInterface extends AddressableElementInterface
     /**
      * Create any plugins that exist due to doc comment annotations.
      * Must be called after adding this FunctionInterface to the $code_base, so that issues can be emitted if needed.
-     * @return ?Closure(CodeBase, Context, array):UnionType
+     * @return ?Closure(CodeBase, Context, FunctionInterface, list<Node|string|int|float>):UnionType
      * @internal
      */
     public function getCommentParamAssertionClosure(CodeBase $code_base): ?Closure;
@@ -460,4 +474,9 @@ interface FunctionInterface extends AddressableElementInterface
      * This is populated the first time it is called.
      */
     public function getOriginalReturnType(): UnionType;
+
+    /**
+     * Record the existence of a parameter with an `(at)phan-mandatory-param` comment at $offset
+     */
+    public function recordHasMandatoryPHPDocParamAtOffset(int $parameter_offset): void;
 }

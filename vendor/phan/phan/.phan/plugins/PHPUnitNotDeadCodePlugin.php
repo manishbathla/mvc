@@ -54,8 +54,9 @@ class PHPUnitNotDeadPluginVisitor extends PluginAwarePostAnalysisVisitor
     /**
      * This is called after the parse phase is completely finished, so $this->code_base contains all class definitions
      * @override
+     * @unused-param $node
      */
-    public function visitClass(Node $unused_node): void
+    public function visitClass(Node $node): void
     {
         if (!Config::get_track_references()) {
             return;
@@ -63,6 +64,7 @@ class PHPUnitNotDeadPluginVisitor extends PluginAwarePostAnalysisVisitor
         $code_base = $this->code_base;
         if (!$code_base->hasClassWithFQSEN(self::$phpunit_test_case_fqsen)) {
             if (!self::$did_warn_missing_class) {
+                // @phan-suppress-next-line PhanPluginRemoveDebugCall
                 fprintf(STDERR, "Using plugin %s but could not find PHPUnit\Framework\TestCase\n", self::class);
                 self::$did_warn_missing_class = true;
             }

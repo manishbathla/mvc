@@ -40,6 +40,7 @@ use Phan\Language\Type\ScalarType;
 use Phan\Language\Type\StringType;
 use Phan\Language\UnionType;
 use Phan\Parse\ParseVisitor;
+use Phan\Plugin\Internal\VariableTracker\VariableTrackerVisitor;
 use Phan\PluginV3;
 use Phan\PluginV3\AnalyzeFunctionCallCapability;
 use Phan\PluginV3\StopParamAnalysisException;
@@ -766,6 +767,7 @@ final class MiscParamPlugin extends PluginV3 implements
             if (!$variable) {
                 return;
             }
+            VariableTrackerVisitor::markVariableAsModifiedByReference($arg_node);
             $variable = clone($variable);
             $context->addScopeVariable($variable);
             $old_type = $variable->getUnionType();
@@ -974,7 +976,7 @@ final class MiscParamPlugin extends PluginV3 implements
                 // TODO: Ignore superglobals
 
                 // Some parts of this are probably wrong - EXTR_OVERWRITE and EXTR_SKIP are probably the most common?
-                switch ($flags & ~\EXTR_REFS) {
+                switch (($flags ?? 0) & ~\EXTR_REFS) {
                     default:
                     case \EXTR_OVERWRITE:
                         $add_variable($field_name);

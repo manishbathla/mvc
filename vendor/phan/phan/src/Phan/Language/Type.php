@@ -103,17 +103,17 @@ class Type
      * A legal type identifier (e.g. 'int' or 'DateTime')
      */
     public const simple_type_regex =
-        '(\??)(?:callable-(?:string|object|array)|associative-array|class-string|non-(?:zero-int|empty-(?:associative-array|array|list|string|mixed))|\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(?:\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*)';
+        '(\??)(?:callable-(?:string|object|array)|associative-array|class-string|lowercase-string|non-(?:zero-int|empty-(?:associative-array|array|list|string|lowercase-string|mixed))|\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(?:\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*)';
 
     public const simple_noncapturing_type_regex =
-        '\\\\?(?:callable-(?:string|object|array)|associative-array|class-string|non-(?:zero-int|empty-(?:associative-array|array|list|string|mixed))|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(?:\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*)';
+        '\\\\?(?:callable-(?:string|object|array)|associative-array|class-string|lowercase-string|non-(?:zero-int|empty-(?:associative-array|array|list|string|lowercase-string|mixed))|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(?:\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*)';
 
     /**
      * @var string
      * A legal type identifier (e.g. 'int' or 'DateTime')
      */
     public const simple_type_regex_or_this =
-        '(\??)(callable-(?:string|object|array)|associative-array|class-string|non-(?:zero-int|empty-(?:associative-array|array|list|string|mixed))|\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(?:\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*|\$this)';
+        '(\??)(callable-(?:string|object|array)|associative-array|class-string|lowercase-string|non-(?:zero-int|empty-(?:associative-array|array|list|string|lowercase-string|mixed))|\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(?:\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*|\$this)';
 
     public const shape_key_regex =
         '(?:[-.\/^;$%*+_a-zA-Z0-9\x7f-\xff]|\\\\(?:[nrt\\\\]|x[0-9a-fA-F]{2}))+\??';
@@ -236,12 +236,14 @@ class Type
         'int'             => true,
         'iterable'        => true,
         'list'            => true,
+        'lowercase-string' => true,
         'mixed'           => true,
         'non-empty-array' => true,
         'non-empty-associative-array' => true,
         'non-empty-mixed' => true,
         'non-empty-list'  => true,
         'non-empty-string' => true,
+        'non-empty-lowercase-string' => true,
         'non-zero-int'    => true,
         'null'            => true,
         'object'          => true,
@@ -265,9 +267,6 @@ class Type
      * (numeric not supported yet)
      */
     public const _soft_internal_type_set = [
-        'false'     => true,
-        'mixed'     => true,
-        'object'    => true,
         'resource'  => true,
         'scalar'    => true,
         'true'      => true,
@@ -285,7 +284,10 @@ class Type
     /** For types copied from phpdoc, e.g. `(at)param integer $x` */
     public const FROM_PHPDOC = 2;
 
-    /** To distinguish NativeType subclasses and classes with the same name. Overridden in subclasses */
+    /**
+     * To distinguish NativeType subclasses and classes with the same name.
+     * Overridden in some subclasses but not others.
+     */
     public const KEY_PREFIX = '';
 
     /** To normalize combinations of union types */
@@ -364,7 +366,10 @@ class Type
     // (It has previously been accidentally cloned in unit tests by phpunit (global_state helper),
     //  which saves and restores some static properties)
 
-    /** @throws Error this should not be called accidentally */
+    /**
+     * @throws Error this should not be called accidentally
+     * @suppress PhanPluginRemoveDebugCall deliberate output before uncatchable Error
+     */
     public function __wakeup()
     {
         \debug_print_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -399,7 +404,9 @@ class Type
      * @return Type
      * A single canonical instance of the given type.
      *
-     * @throws AssertionError if an unparsable string is passed in
+     * @suppress PhanThrowTypeAbsent
+     *
+     * Overridden in some subclasses but not others.
      */
     protected static function make(
         string $namespace,
@@ -429,19 +436,19 @@ class Type
         }
 
         if ($namespace === '') {
-            throw new AssertionError("Namespace cannot be empty");
+            throw new InvalidFQSENException("Namespace cannot be empty", $type_name);
         }
 
         if ('\\' !== $namespace[0]) {
-            throw new AssertionError("Namespace must be fully qualified");
+            throw new InvalidFQSENException("Namespace must be fully qualified", "$namespace\\$type_name");
         }
 
         if ($type_name === '') {
-            throw new AssertionError("Type name cannot be empty");
+            throw new EmptyFQSENException("Type name cannot be empty", \rtrim($namespace, "\\") . "\\");
         }
 
         if (\strpos($type_name, '|') !== false) {
-            throw new AssertionError("Type name '$type_name' may not contain a pipe");
+            throw new InvalidFQSENException("Type name '$type_name' may not contain a pipe", $type_name);
         }
 
         // Create a canonical representation of the
@@ -500,6 +507,9 @@ class Type
                             $is_nullable
                         );
                         break;
+                    case 'lowercase-string':
+                        $value = StringType::instance($is_nullable);
+                        break;
                     case 'class-string':
                         $value = new ClassStringType(
                             '\\',
@@ -524,6 +534,7 @@ class Type
                         $value = self::parseListTypeFromTemplateParameterList($template_parameter_type_list, $is_nullable, true);
                         break;
                     case 'non-empty-string':
+                    case 'non-empty-lowercase-string':
                         $value = new NonEmptyStringType($is_nullable);
                         break;
                     case 'non-zero-int':
@@ -616,6 +627,7 @@ class Type
      * A map from a template type identifier to a
      * concrete union type
      * @phan-side-effect-free
+     * @suppress PhanThrowTypeAbsentForCall
      */
     public static function fromType(
         Type $type,
@@ -734,6 +746,8 @@ class Type
      *
      * @param int $source Type::FROM_*
      *
+     * @param list<UnionType> $template_parameter_type_list used for static, etc. @phan-mandatory-param
+     *
      * @return Type
      * Get a type for the given type name
      *
@@ -743,7 +757,8 @@ class Type
     public static function fromInternalTypeName(
         string $type_name,
         bool $is_nullable,
-        int $source
+        int $source,
+        array $template_parameter_type_list = []
     ): Type {
 
         // If this is a generic type (like int[]), return
@@ -757,7 +772,8 @@ class Type
                 self::fromInternalTypeName(
                     \substr($type_name, 0, $pos),
                     false,
-                    $source
+                    $source,
+                    $template_parameter_type_list
                 ),
                 $is_nullable,
                 GenericArrayType::KEY_MIXED
@@ -805,6 +821,7 @@ class Type
                 return NonEmptyAssociativeArrayType::fromElementType(MixedType::instance(false), $is_nullable, GenericArrayType::KEY_MIXED);
             case 'non-empty-list':
                 return NonEmptyListType::fromElementType(MixedType::instance(false), $is_nullable);
+            case 'non-empty-lowercase-string':
             case 'non-empty-string':
                 return NonEmptyStringType::instance($is_nullable);
             case 'non-zero-int':
@@ -818,6 +835,7 @@ class Type
             case 'scalar':
                 return ScalarRawType::instance($is_nullable);
             case 'string':
+            case 'lowercase-string':
                 return StringType::instance($is_nullable);
             case 'true':
                 return TrueType::instance($is_nullable);
@@ -826,14 +844,13 @@ class Type
             case 'iterable':
                 return IterableType::instance($is_nullable);
             case 'static':
-                return StaticType::instance($is_nullable);
             case '$this':
-                return StaticType::instance($is_nullable);
+                return StaticType::instanceWithTemplateTypeList($is_nullable, $template_parameter_type_list);
         }
 
         if (\substr($type_name, 0, 1) === '?') {
             // @phan-suppress-next-line PhanPossiblyFalseTypeArgument
-            return self::fromInternalTypeName(\substr($type_name, 1), true, $source);
+            return self::fromInternalTypeName(\substr($type_name, 1), true, $source, $template_parameter_type_list);
         }
         throw new AssertionError("No internal type with name $type_name");
     }
@@ -853,6 +870,8 @@ class Type
      * True if this type can be null, false if it cannot
      * be null.
      * @phan-side-effect-free
+     *
+     * @suppress PhanThrowTypeAbsentForCall
      */
     public static function fromNamespaceAndName(
         string $namespace,
@@ -875,29 +894,15 @@ class Type
         if ($reflection_type instanceof \ReflectionNamedType) {
             $reflection_type_string = $reflection_type->getName();
             if ($reflection_type->allowsNull()) {
+                if (\PHP_VERSION_ID >= 80000 && $reflection_type_string === 'mixed') {
+                    return 'mixed';
+                }
                 return "?" . $reflection_type_string;
             }
             return $reflection_type_string;
         }
         // Unreachable in php 7.1-7.4, but reachable and revertsed deprecation in php 8.0+?
         return (string)$reflection_type;
-    }
-
-    /**
-     * Creates a type for the ReflectionType of a parameter, return value, etc.
-     * @phan-side-effect-free
-     * @deprecated - use UnionType::fromReflectionType to prepare for php 8
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    public static function fromReflectionType(
-        \ReflectionType $reflection_type
-    ): Type {
-
-        return self::fromStringInContext(
-            self::stringFromReflectionType($reflection_type),
-            new Context(),
-            Type::FROM_TYPE
-        );
     }
 
     /**
@@ -964,7 +969,7 @@ class Type
         $template_parameter_type_name_list = $tuple->_2;
         $is_nullable = $tuple->_3;
         $shape_components = $tuple->_4;
-        if (\preg_match('/^(' . self::noncapturing_literal_regex . ')$/', $type_name)) {
+        if (\preg_match('/^(' . self::noncapturing_literal_regex . ')$/D', $type_name)) {
             return self::fromEscapedLiteralScalar($type_name);
         }
         if (\is_array($shape_components)) {
@@ -979,40 +984,34 @@ class Type
             }
         }
 
+        // Map the names of the types to actual types in the
+        // template parameter type list
+        $template_parameter_type_list = self::createTemplateParameterTypeList($template_parameter_type_name_list);
+
         if (!$namespace) {
             if (count($template_parameter_type_name_list) > 0) {
                 $type_name = \strtolower($type_name);
                 switch ($type_name) {
                     case 'array':
                     case 'non-empty-array':
-                        // template parameter type list
-                        $template_parameter_type_list = self::createTemplateParameterTypeList($template_parameter_type_name_list);
                         return self::parseGenericArrayTypeFromTemplateParameterList($template_parameter_type_list, $is_nullable, $type_name === 'non-empty-array', false);
                     case 'associative-array':
                     case 'non-empty-associative-array':
-                        // template parameter type list
-                        $template_parameter_type_list = self::createTemplateParameterTypeList($template_parameter_type_name_list);
                         return self::parseGenericArrayTypeFromTemplateParameterList($template_parameter_type_list, $is_nullable, $type_name === 'non-empty-array', true);
                     case 'list':
                     case 'non-empty-list':
-                        $template_parameter_type_list = self::createTemplateParameterTypeList($template_parameter_type_name_list);
                         return self::parseListTypeFromTemplateParameterList($template_parameter_type_list, $is_nullable, $type_name === 'non-empty-list');
                     case 'iterable':
-                        // template parameter type list
-                        $template_parameter_type_list = self::createTemplateParameterTypeList($template_parameter_type_name_list);
                         return self::parseGenericIterableTypeFromTemplateParameterList($template_parameter_type_list, $is_nullable);
                 }
             }
             return self::fromInternalTypeName(
                 $fully_qualified_string,
                 $is_nullable,
-                Type::FROM_NODE
+                Type::FROM_NODE,
+                $template_parameter_type_list
             );
         }
-
-        // Map the names of the types to actual types in the
-        // template parameter type list
-        $template_parameter_type_list = self::createTemplateParameterTypeList($template_parameter_type_name_list);
 
         if (0 !== \strpos($namespace, '\\')) {
             $namespace = '\\' . $namespace;
@@ -1078,7 +1077,7 @@ class Type
         array $shape_components,
         bool $is_nullable
     ): FunctionLikeDeclarationType {
-        if (count($shape_components) === 0) {
+        if (!$shape_components) {
             // The literal int '0' is a valid union type, but it's falsey, so check the count instead.
             // shouldn't happen
             throw new AssertionError("Expected at least one component of a closure phpdoc type");
@@ -1280,7 +1279,7 @@ class Type
      * @return Type
      * Parse a type from the given string
      *
-     * @suppress PhanPossiblyFalseTypeArgument, PhanPossiblyFalseTypeArgumentInternal
+     * @suppress PhanPossiblyFalseTypeArgument, PhanPossiblyFalseTypeArgumentInternal, PhanThrowTypeAbsent, PhanThrowTypeAbsentForCall
      * @phan-side-effect-free
      */
     public static function fromStringInContext(
@@ -1290,7 +1289,7 @@ class Type
         CodeBase $code_base = null
     ): Type {
         if ($string === '') {
-            throw new AssertionError("Type cannot be empty");
+            throw new EmptyFQSENException("Type cannot be empty", '');
         }
         while (\substr($string, -1) === ')') {
             if ($string[0] === '?') {
@@ -1357,7 +1356,7 @@ class Type
         $shape_components = $tuple->_4;
 
 
-        if (\preg_match('/^(' . self::noncapturing_literal_regex . ')$/', $type_name)) {
+        if (\preg_match('/^(' . self::noncapturing_literal_regex . ')$/D', $type_name)) {
             return self::fromEscapedLiteralScalar($type_name);
         }
 
@@ -1485,7 +1484,7 @@ class Type
                 }
                 // TODO: Warn about unrecognized types.
             }
-            return self::fromInternalTypeName($type_name, $is_nullable, $source);
+            return self::fromInternalTypeName($type_name, $is_nullable, $source, $template_parameter_type_list);
         }
 
         // Things like `self[]` or `$this[]`
@@ -1523,13 +1522,18 @@ class Type
                 return self::maybeFindParentType($is_nullable, $context, $code_base);
             }
             if ($source === self::FROM_PHPDOC && $context->getScope()->isInTraitScope()) {
-                return SelfType::instance($is_nullable);
+                return SelfType::instanceWithTemplateTypeList($is_nullable, $template_parameter_type_list);
             }
             // Equivalent to getClassFQSEN()->asType()->withIsNullable but slightly faster (this is frequently used)
             // @phan-suppress-next-line PhanThrowTypeAbsentForCall
-            return self::fromFullyQualifiedString(
-                $context->getClassFQSEN()->__toString()
-            )->withIsNullable($is_nullable);
+            $fqsen = $context->getClassFQSEN();
+            return self::make(
+                $fqsen->getNamespace(),
+                $fqsen->getName(),
+                $template_parameter_type_list,
+                $is_nullable,
+                $source
+            );
         }
 
         // Merge the current namespace with the given relative
@@ -1703,8 +1707,8 @@ class Type
                         $union_type = $union_type->nullableClone();
                     }
                 }
-                // $var_name = $param_match[19]; // would be unused
-                $result[] = new ClosureDeclarationParameter($union_type, $is_variadic, $is_reference, $has_default_value);
+                $var_name = $param_match[17];
+                $result[] = new ClosureDeclarationParameter($union_type, $is_variadic, $is_reference, $has_default_value, $var_name);
             }  // TODO: Otherwise, warn
         }
         return $result;
@@ -1719,17 +1723,6 @@ class Type
      * @var ?UnionType of [$this] with an identical real type set
      */
     protected $singleton_real_union_type;
-
-    /**
-     * A UnionType representing this and only this type (from phpdoc or real types)
-     *
-     * @deprecated use self::asPHPDocUnionType()
-     * @suppress PhanUnreferencedPublicMethod, PhanAccessReadOnlyProperty
-     */
-    public function asUnionType(): UnionType
-    {
-        return $this->singleton_union_type ?? ($this->singleton_union_type = new UnionType([$this], true, []));
-    }
 
     /**
      * @return UnionType
@@ -1804,29 +1797,9 @@ class Type
     }
 
     /**
-     * Is this nullable?
-     * @deprecated use isNullable
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsNullable(): bool
-    {
-        return $this->isNullable();
-    }
-
-    /**
      * Returns true if this has some possibly falsey values
      */
     public function isPossiblyFalsey(): bool
-    {
-        return $this->is_nullable;
-    }
-
-    /**
-     * Returns true if this has some possibly falsey values
-     * @deprecated
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsPossiblyFalsey(): bool
     {
         return $this->is_nullable;
     }
@@ -1840,31 +1813,11 @@ class Type
     }
 
     /**
-     * Returns true if this is guaranteed to be falsey
-     * @deprecated use isAlwaysFalsey
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsAlwaysFalsey(): bool
-    {
-        return $this->isAlwaysFalsey();
-    }
-
-    /**
      * Returns true if this is possibly truthy.
      */
     public function isPossiblyTruthy(): bool
     {
         return true;  // overridden in various types. This base class (Type) is implicitly the type of an object, which is always truthy.
-    }
-
-    /**
-     * Returns true if this is possibly truthy.
-     * @deprecated use isPossiblyTruthy
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsPossiblyTruthy(): bool
-    {
-        return $this->isPossiblyTruthy();
     }
 
     /**
@@ -1881,31 +1834,11 @@ class Type
     }
 
     /**
-     * Returns true if this is guaranteed to be truthy.
-     * @deprecated use isAlwaysTruthy
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsAlwaysTruthy(): bool
-    {
-        return $this->isAlwaysTruthy();
-    }
-
-    /**
      * Returns true for types such as `mixed`, `bool`, `false`
      */
     public function isPossiblyFalse(): bool
     {
-        return $this->is_nullable;
-    }
-
-    /**
-     * Returns true for types such as `mixed`, `bool`, `false`
-     * @deprecated use isPossiblyFalse
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsPossiblyFalse(): bool
-    {
-        return $this->isPossiblyFalse();
+        return false;
     }
 
     /**
@@ -1914,16 +1847,6 @@ class Type
     public function isAlwaysFalse(): bool
     {
         return false;  // overridden in FalseType
-    }
-
-    /**
-     * Returns true for non-nullable `FalseType`
-     * @deprecated
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsAlwaysFalse(): bool
-    {
-        return $this->isAlwaysFalse();
     }
 
     /**
@@ -1936,31 +1859,11 @@ class Type
     }
 
     /**
-     * Returns true if this could include the type `true`
-     * @deprecated use isPossiblyTrue
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsPossiblyTrue(): bool
-    {
-        return $this->isPossiblyTrue();
-    }
-
-    /**
      * Returns true for non-nullable `TrueType`
      */
     public function isAlwaysTrue(): bool
     {
         return false;
-    }
-
-    /**
-     * Returns true for non-nullable `TrueType`
-     * @deprecated
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsAlwaysTrue(): bool
-    {
-        return $this->isAlwaysTrue();
     }
 
     /**
@@ -1972,31 +1875,11 @@ class Type
     }
 
     /**
-     * Returns true for FalseType, TrueType, and BoolType
-     * @deprecated use isInBoolFamily
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsInBoolFamily(): bool
-    {
-        return $this->isInBoolFamily();
-    }
-
-    /**
      * Returns true if this type may satisfy `is_numeric()`
      */
     public function isPossiblyNumeric(): bool
     {
         return false;
-    }
-
-    /**
-     * Returns true if this type may satisfy `is_numeric()`
-     * @deprecated use isPossiblyNumeric
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsPossiblyNumeric(): bool
-    {
-        return $this->isPossiblyNumeric();
     }
 
     /**
@@ -2007,6 +1890,8 @@ class Type
      * @return Type
      * A new type that is a copy of this type but with the
      * given nullability value.
+     *
+     * @suppress PhanThrowTypeAbsentForCall should not happen provided a valid type
      */
     public function withIsNullable(bool $is_nullable): Type
     {
@@ -2124,8 +2009,9 @@ class Type
     /**
      * Returns true if this has any instance of `static` or `self`.
      * This is overridden in subclasses such as `SelfType` and `IterableType`
+     * @unused-param $code_base
      */
-    public function hasStaticOrSelfTypesRecursive(CodeBase $_): bool
+    public function hasStaticOrSelfTypesRecursive(CodeBase $code_base): bool
     {
         // TODO: Check template types?
         return false;
@@ -2146,7 +2032,7 @@ class Type
     ): bool {
         // Note: While 'self' and 'parent' are case-insensitive, '$this' is case-sensitive
         // Not sure if that should extend to phpdoc.
-        return \preg_match('/^\\\\?([sS][eE][lL][fF]|[pP][aA][rR][eE][nN][tT]|\$this)$/', $type_string) > 0;
+        return \preg_match('/^\\\\?([sS][eE][lL][fF]|[pP][aA][rR][eE][nN][tT]|\$this)$/D', $type_string) > 0;
     }
 
     /**
@@ -2164,7 +2050,7 @@ class Type
     ): bool {
         // Note: While 'self' and 'parent' are case-insensitive, '$this' is case-sensitive
         // Not sure if that should extend to phpdoc.
-        return \preg_match('/^\\\\?([sS][tT][aA][tT][iI][cC]|\\$this)$/', $type_string) > 0;
+        return \preg_match('/^\\\\?([sS][tT][aA][tT][iI][cC]|\\$this)$/D', $type_string) > 0;
     }
 
     /**
@@ -2247,8 +2133,9 @@ class Type
      * Check if this type can possibly cast to the declared type, ignoring nullability of this type
      *
      * Precondition: This is either non-nullable or the type NullType/VoidType
+     * @unused-param $context
      */
-    public function canCastToDeclaredType(CodeBase $code_base, Context $unused_context, Type $other): bool
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         if ($other->isPossiblyObject() && $this->canPossiblyCastToClass($code_base, $other->withIsNullable(false))) {
             return true;
@@ -2292,8 +2179,9 @@ class Type
             // If at least one class is final (and the other is a trait/interface), we already confirmed there's nothing in common.
             return false;
         }
-        if ($this_class->isClass() && $other_class->isClass()) {
-            // So now we have two classes.
+        if (($this_class->isClass() || $this->isThrowableInterface()) &&
+            ($other_class->isClass() || $other->isThrowableInterface())) {
+            // So now we have two classes or interfaces that are only implemented by a sealed set of classes.
             // We already know that their expanded types don't overlap from checking asExpandedTypes, so there's no possible common subtype.
             return false;
         }
@@ -2971,18 +2859,22 @@ class Type
             return \get_class($type) === MixedType::class || $this->isPossiblyTruthy();
         }
 
-        // A nullable type cannot cast to a non-nullable type
-        if ($this->is_nullable && !$type->is_nullable) {
-            // If this is nullable, but that isn't, and we've
-            // configured nulls to cast as anything (or as arrays), ignore
-            // the nullable part.
+        if ($this->is_nullable) {
+            // A nullable type cannot cast to a non-nullable type (Except when null_casts_as_any_type is true)
             if (Config::get_null_casts_as_any_type()) {
-                return $this->withIsNullable(false)->canCastToType($type);
+                return true;
             } elseif (Config::get_null_casts_as_array() && $type->isArrayLike()) {
-                return $this->withIsNullable(false)->canCastToType($type);
+                return true;
+            } elseif ($type->isScalar() && (
+                    Config::getValue('scalar_implicit_cast') ||
+                    in_array($type->getName(), Config::getValue('scalar_implicit_partial')['null'] ?? [], true))) {
+                // e.g. allow casting ?string to string if scalar_implicit_cast or 'null' => ['string'] is in scalar_implicit_partial.
+                return true;
             }
 
-            return false;
+            if (!$type->isNullable()) {
+                return false;
+            }
         }
 
         // Get a non-null version of the type we're comparing
@@ -3626,7 +3518,7 @@ class Type
         $result = [];
         foreach (self::extractNameList($shape_component_string) as $shape_component) {
             // Because these can be nested, there may be more than one ':'. Only consider the first.
-            if (preg_match('/^(' . self::shape_key_regex . ')\s*:\s*(.*)$/', $shape_component, $parts)) {
+            if (preg_match('/^(' . self::shape_key_regex . ')\s*:\s*(.*)$/D', $shape_component, $parts)) {
                 $field_name = $parts[1];
                 $field_value = \trim($parts[2]);
                 if ($field_value === '') {
@@ -4154,5 +4046,13 @@ class Type
         foreach ($this->template_parameter_type_list as $template_union_type) {
             yield from $template_union_type->getTypesRecursively();
         }
+    }
+
+    /**
+     * Returns true if this is referring to the throwable interface exactly
+     */
+    public function isThrowableInterface(): bool
+    {
+        return $this->name === 'Throwable' && $this->namespace === '\\';
     }
 }

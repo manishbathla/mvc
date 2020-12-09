@@ -13,6 +13,7 @@ use Phan\CodeBase;
 use Phan\Config;
 use Phan\Language\Context;
 use Phan\Language\ElementContext;
+use Phan\Language\FileRef;
 use Phan\Language\FQSEN\FullyQualifiedMethodName;
 use Phan\Language\Scope\FunctionLikeScope;
 use Phan\Language\Type\GenericArrayType;
@@ -157,46 +158,11 @@ class Method extends ClassElement implements FunctionInterface
     }
 
     /**
-     * @return bool
-     * True if this method is intended to be an override of another method (contains (at)override)
-     */
-    public function isOverrideIntended(): bool
-    {
-        return $this->getPhanFlagsHasState(Flags::IS_OVERRIDE_INTENDED);
-    }
-
-    /**
-     * Sets whether this method is intended to be an override of another method (contains (at)override)
-     * @param bool $is_override_intended
-
-     */
-    public function setIsOverrideIntended(bool $is_override_intended): void
-    {
-        $this->setPhanFlags(
-            Flags::bitVectorWithState(
-                $this->getPhanFlags(),
-                Flags::IS_OVERRIDE_INTENDED,
-                $is_override_intended
-            )
-        );
-    }
-
-    /**
      * Returns true if this element is overridden by at least one other element
      */
     public function isOverriddenByAnother(): bool
     {
         return $this->getPhanFlagsHasState(Flags::IS_OVERRIDDEN_BY_ANOTHER);
-    }
-
-    /**
-     * Returns true if this element is overridden by at least one other element
-     * @deprecated use isOverriddenByAnother
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsOverriddenByAnother(): bool
-    {
-        return $this->isOverriddenByAnother();
     }
 
     /**
@@ -274,32 +240,12 @@ class Method extends ClassElement implements FunctionInterface
     }
 
     /**
-     * Returns true if this is a magic method
-     * @deprecated use isMagic
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsMagic(): bool
-    {
-        return $this->isMagic();
-    }
-
-    /**
      * Returns true if this is a magic method which should have return type of void
      * (Names are all normalized in FullyQualifiedMethodName::make())
      */
     public function isMagicAndVoid(): bool
     {
         return \array_key_exists($this->name, FullyQualifiedMethodName::MAGIC_VOID_METHOD_NAME_SET);
-    }
-
-    /**
-     * Returns true if this is a magic method which should have return type of void
-     * @deprecated use isMagicAndVoid
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getIsMagicAndVoid(): bool
-    {
-        return $this->isMagicAndVoid();
     }
 
     /**
@@ -842,7 +788,9 @@ class Method extends ClassElement implements FunctionInterface
         }
         $string .= $this->name;
 
-        $string .= '(' . \implode(', ', $this->getParameterList()) . ')';
+        $string .= '(' . \implode(', ', \array_map(function (Parameter $param): string {
+            return $param->toStubString($this->isPHPInternal());
+        }, $this->getParameterList())) . ')';
 
         $union_type = $this->getUnionTypeWithUnmodifiedStatic();
         if (!$union_type->isEmpty()) {
@@ -867,7 +815,9 @@ class Method extends ClassElement implements FunctionInterface
         }
         $string .= $this->name;
 
-        $string .= '(' . \implode(', ', $this->getRealParameterList()) . ')';
+        $string .= '(' . \implode(', ', \array_map(function (Parameter $param): string {
+            return $param->toStubString($this->isPHPInternal());
+        }, $this->getRealParameterList())) . ')';
 
         if (!$this->getRealReturnType()->isEmpty()) {
             $string .= ' : ' . (string)$this->getRealReturnType();
@@ -910,7 +860,8 @@ class Method extends ClassElement implements FunctionInterface
             $return_type = $this->real_return_type;
         }
         if ($return_type && !$return_type->isEmpty()) {
-            $string .= ' : ' . (string)$return_type;
+            // Use PSR-12 style with no space before `:`
+            $string .= ': ' . (string)$return_type;
         }
 
         return $string;
@@ -1060,5 +1011,25 @@ class Method extends ClassElement implements FunctionInterface
             $result->reference_list = &$this->reference_list;
         }
         return $result;
+    }
+
+    /**
+     * @override
+     */
+    public function addReference(FileRef $file_ref): void
+    {
+        if (Config::get_track_references()) {
+            // Currently, we don't need to track references to PHP-internal methods/functions/constants
+            // such as PHP_VERSION, strlen(), Closure::bind(), etc.
+            // This may change in the future.
+            if ($this->isPHPInternal()) {
+                return;
+            }
+            if ($file_ref instanceof Context && $file_ref->isInFunctionLikeScope() && $file_ref->getFunctionLikeFQSEN() === $this->fqsen) {
+                // Don't track methods calling themselves
+                return;
+            }
+            $this->reference_list[$file_ref->__toString()] = $file_ref;
+        }
     }
 }

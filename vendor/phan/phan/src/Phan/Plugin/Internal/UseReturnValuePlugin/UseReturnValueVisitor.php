@@ -103,6 +103,7 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
             ))->getFunctionFromNode();
 
             foreach ($function_list_generator as $function) {
+                $this->checkUseReturnValueGenerator($function, $node);
                 if ($function instanceof Method) {
                     $fqsen = $function->getDefiningFQSEN()->__toString();
                 } else {
@@ -191,6 +192,15 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
     }
 
     /**
+     * @param Node $node a node of type AST_NULLSAFE_METHOD_CALL
+     * @override
+     */
+    public function visitNullsafeMethodCall(Node $node): void
+    {
+        $this->visitMethodCall($node);
+    }
+
+    /**
      * @param Node $node a node of type AST_METHOD_CALL
      * @override
      */
@@ -221,6 +231,7 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
         } catch (Exception $_) {
             return;
         }
+        $this->checkUseReturnValueGenerator($method, $node);
         $fqsen = $method->getDefiningFQSEN()->__toString();
         if (!UseReturnValuePlugin::$use_dynamic) {
             $this->quickWarn($method, $fqsen, $node);
@@ -238,7 +249,7 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
     }
 
     /**
-     * @param Node $node a node of type AST_METHOD_CALL
+     * @param Node $node a node of type AST_STATIC_CALL
      * @override
      */
     public function visitStaticCall(Node $node): void
@@ -268,9 +279,12 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
         } catch (Exception $_) {
             return;
         }
+        $this->checkUseReturnValueGenerator($method, $node);
         $fqsen = $method->getDefiningFQSEN()->__toString();
+        if ($this->quickWarn($method, $fqsen, $node)) {
+            return;
+        }
         if (!UseReturnValuePlugin::$use_dynamic) {
-            $this->quickWarn($method, $fqsen, $node);
             return;
         }
         $counter = UseReturnValuePlugin::$stats[$fqsen] ?? null;
@@ -281,6 +295,19 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
             $counter->used_locations[$key] = $this->context;
         } else {
             $counter->unused_locations[$key] = $this->context;
+        }
+    }
+
+    private function checkUseReturnValueGenerator(FunctionInterface $function, Node $node): void
+    {
+        if ($function->hasYield() || $function->getUnionType()->isExclusivelyGenerators()) {
+            $this->emitPluginIssue(
+                $this->code_base,
+                (clone($this->context))->withLineNumberStart($node->lineno),
+                UseReturnValuePlugin::UseReturnValueGenerator,
+                'Expected to use the return value of the function/method {FUNCTION} returning a generator of type {TYPE}',
+                [$function->getRepresentationForIssue(true), $function->getUnionType()]
+            );
         }
     }
 
@@ -360,17 +387,20 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
         return (UseReturnValuePlugin::HARDCODED_FQSENS[$fqsen_key] ?? null) !== true;
     }
 
-    private function quickWarn(FunctionInterface $method, string $fqsen, Node $node): void
+    /**
+     * @return bool true if there is no need to perform dynamic checks later
+     */
+    private function quickWarn(FunctionInterface $method, string $fqsen, Node $node): bool
     {
         if (!$method->isPure()) {
             $fqsen_key = \strtolower(\ltrim($fqsen, "\\"));
-            $result = UseReturnValuePlugin::HARDCODED_FQSENS[$fqsen_key] ?? false;
+            $result = UseReturnValuePlugin::HARDCODED_FQSENS[$fqsen_key] ?? null;
             if (!$result) {
-                return;
+                return $result ?? true;
             }
             if ($result === UseReturnValuePlugin::SPECIAL_CASE) {
                 if ($this->shouldNotWarnForSpecialCase($fqsen_key, $node)) {
-                    return;
+                    return false;
                 }
             }
         }
@@ -382,10 +412,11 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
                 'Expected to use the return value of the internal function/method {FUNCTION}',
                 [$fqsen]
             );
-            return;
+            return true;
         }
-        if ($method->getUnionType()->isNull() || !($method->hasReturn() || $method->isFromPHPDoc())) {
-            return;
+        $phpdoc_return_type = $method->getPHPDocReturnType();
+        if (($phpdoc_return_type && $phpdoc_return_type->isNull()) || $method->getRealReturnType()->isNull() || !($method->hasReturn() || $method->isFromPHPDoc())) {
+            return false;
         }
         $this->emitPluginIssue(
             $this->code_base,
@@ -394,6 +425,7 @@ class UseReturnValueVisitor extends PluginAwarePostAnalysisVisitor
             'Expected to use the return value of the user-defined function/method {FUNCTION} defined at {FILE}:{LINE}',
             [$method->getRepresentationForIssue(), $method->getContext()->getFile(), $method->getContext()->getLineNumberStart()]
         );
+        return true;
     }
 }
 

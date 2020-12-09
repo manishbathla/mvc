@@ -193,16 +193,26 @@ final class ClosureType extends Type
      * Gets the function-like this type was created from.
      *
      * TODO: Uses of this may keep outdated data in language server mode.
-     * @deprecated use asFunctionInterfaceOrNull
-     * @suppress PhanUnreferencedPublicMethod
+     * @param CodeBase $code_base @unused-param
+     * @param Context $context @unused-param
      */
-    public function getFunctionLikeOrNull(): ?FunctionInterface
+    public function asFunctionInterfaceOrNull(CodeBase $code_base, Context $context): ?FunctionInterface
     {
         return $this->func;
     }
 
-    public function asFunctionInterfaceOrNull(CodeBase $unused_codebase, Context $unused_context): ?FunctionInterface
+    /**
+     * @param CodeBase $code_base @unused-param
+     * @param Context $context @unused-param
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        return $this->func;
+        if (!$other->isPossiblyObject()) {
+            return false;
+        }
+        if ($other->isObjectWithKnownFQSEN()) {
+            return $other instanceof FunctionLikeDeclarationType || $other instanceof ClosureType || $other->asFQSEN()->__toString() === '\Closure';
+        }
+        return true;
     }
 }

@@ -4,7 +4,7 @@ Phan looks for common issues and will verify type compatibility on various opera
 information is available or can be deduced. Phan has a good (but not comprehensive) understanding of flow control
 and can track values in a few use cases (e.g. arrays, integers, and strings).
 
-[![Build Status](https://travis-ci.org/phan/phan.svg?branch=master)](https://travis-ci.org/phan/phan)
+[![Build Status](https://dev.azure.com/tysonandre775/phan/_apis/build/status/phan.phan?branchName=master)](https://dev.azure.com/tysonandre775/phan/_build/latest?definitionId=3&branchName=master)
 [![Build Status (Windows)](https://ci.appveyor.com/api/projects/status/github/phan/phan?branch=master&svg=true)](https://ci.appveyor.com/project/TysonAndre/phan/branch/master)
 [![Gitter](https://badges.gitter.im/phan/phan.svg)](https://gitter.im/phan/phan?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Latest Stable Version](https://img.shields.io/packagist/v/phan/phan.svg)](https://packagist.org/packages/phan/phan)
@@ -21,7 +21,7 @@ composer require phan/phan
 With Phan installed, you'll want to [create a `.phan/config.php` file](https://github.com/phan/phan/wiki/Getting-Started#creating-a-config-file) in
 your project to tell Phan how to analyze your source code. Once configured, you can run it via `./vendor/bin/phan`.
 
-Phan depends on PHP 7.1+ with the [php-ast](https://github.com/nikic/php-ast) extension (1.0.1+) and supports analyzing PHP version 7.0-7.4 syntax.
+Phan depends on PHP 7.2+ with the [php-ast](https://github.com/nikic/php-ast) extension (1.0.1+) and supports analyzing PHP version 7.0-7.4 syntax.
 Installation instructions for php-ast can be found [here](https://github.com/nikic/php-ast#installation).
 (Phan can be used without php-ast by using the CLI option `--allow-polyfill-parser`, but there are slight differences in the parsing of doc comments)
 
@@ -110,7 +110,7 @@ Example: [Phan's plugins for self-analysis.](https://github.com/phan/phan/blob/2
 
 # Usage
 
-Phan needs to be configured with details on where to find code to analyze and how to analyze it. The
+After [installing Phan](#getting-started), Phan needs to be configured with details on where to find code to analyze and how to analyze it. The
 easiest way to tell Phan where to find source code is to [create a `.phan/config.php` file](https://github.com/phan/phan/wiki/Getting-Started#creating-a-config-file).
 A simple `.phan/config.php` file might look something like the following.
 
@@ -287,7 +287,7 @@ contributor is required to adhere to our [Code of Conduct](./CODE_OF_CONDUCT.md)
 
 # Online Demo
 
-**This is experimental, and requires an up to date version of Firefox/Chrome and at least 4GB of free RAM.** (this is a 10MB download)
+**This requires an up to date version of Firefox/Chrome and at least 4 GB of free RAM.** (this is a 10 MB download)
 
 [Run Phan entirely in your browser](https://phan.github.io/demo/).
 

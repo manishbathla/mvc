@@ -217,16 +217,6 @@ final class EmptyUnionType extends UnionType
     }
 
     /**
-     * @return bool
-     * True if this type has a type referencing the
-     * class context 'static' or 'self'.
-     */
-    public function hasStaticOrSelfType(): bool
-    {
-        return false;
-    }
-
-    /**
      * @return UnionType
      * A new UnionType with any references to 'static' resolved
      * in the given context.
@@ -325,6 +315,14 @@ final class EmptyUnionType extends UnionType
      * @return bool - True if not empty and at least one type is NullType or nullable.
      */
     public function containsNullable(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @return bool - True if not empty and at least one type is NullType or mixed.
+     */
+    public function containsNullableOrMixed(): bool
     {
         return false;
     }
@@ -497,6 +495,15 @@ final class EmptyUnionType extends UnionType
     }
 
     /**
+     * @return bool
+     * True if this Union has no types or is the mixed type
+     */
+    public function isEmptyOrMixed(): bool
+    {
+        return true;
+    }
+
+    /**
      * @param UnionType $target
      * The type we'd like to see if this type can cast
      * to
@@ -595,7 +602,11 @@ final class EmptyUnionType extends UnionType
         return false;
     }
 
-    public function asArrayOrArrayAccessSubTypes(CodeBase $unused_code_base): UnionType
+    /**
+     * @unused-param $code_base
+     * @override
+     */
+    public function asArrayOrArrayAccessSubTypes(CodeBase $code_base): UnionType
     {
         return $this;
     }
@@ -1074,7 +1085,10 @@ final class EmptyUnionType extends UnionType
         return ($cache[$key_type] ?? ($cache[$key_type] = AssociativeArrayType::fromElementType(MixedType::instance(false), false, $key_type)->asRealUnionType()));
     }
 
-    public function withAssociativeArrays(bool $_): UnionType
+    /**
+     * @unused-param $can_reduce_size
+     */
+    public function withAssociativeArrays(bool $can_reduce_size): UnionType
     {
         return $this;
     }
@@ -1287,18 +1301,31 @@ final class EmptyUnionType extends UnionType
         return false;
     }
 
+    public function isExclusivelyGenerators(): bool
+    {
+        return false;
+    }
+
     /** @suppress PhanThrowTypeAbsentForCall */
     public function asGeneratorTemplateType(): Type
     {
         return Type::fromFullyQualifiedString('\Generator');
     }
 
-    public function iterableKeyUnionType(CodeBase $unused_code_base): UnionType
+    /**
+     * @unused-param $code_base
+     * @override
+     */
+    public function iterableKeyUnionType(CodeBase $code_base): UnionType
     {
         return $this;
     }
 
-    public function iterableValueUnionType(CodeBase $unused_code_base): UnionType
+    /**
+     * @unused-param $code_base
+     * @override
+     */
+    public function iterableValueUnionType(CodeBase $code_base): UnionType
     {
         return $this;
     }
@@ -1332,6 +1359,11 @@ final class EmptyUnionType extends UnionType
     }
 
     public function isNonNullIntType(): bool
+    {
+        return false;
+    }
+
+    public function isIntTypeOrNull(): bool
     {
         return false;
     }
@@ -1384,6 +1416,16 @@ final class EmptyUnionType extends UnionType
     public function applyUnaryPlusOperator(): UnionType
     {
         return UnionType::fromFullyQualifiedRealString('int|float');
+    }
+
+    public function applyUnaryNotOperator(): UnionType
+    {
+        return UnionType::fromFullyQualifiedRealString('bool');
+    }
+
+    public function applyBoolCast(): UnionType
+    {
+        return UnionType::fromFullyQualifiedRealString('bool');
     }
 
     /** @return null */

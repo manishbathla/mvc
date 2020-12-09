@@ -22,6 +22,8 @@ use Throwable;
 /**
  * This plugin only works correctly with Phan -j1
  * see tool/pdep for an intelligent wrapper for it
+ *
+ * @phan-file-suppress PhanPluginRemoveDebugAny outputting is deliberate
  */
 class DependencyGraphPlugin extends PluginV3 implements
     AnalyzeClassCapability,
@@ -74,8 +76,12 @@ class DependencyGraphPlugin extends PluginV3 implements
         return [\substr($file_string, 0, $idx), (int)\substr($file_string, $idx + 1)];
     }
 
-    /** Build file<->class mappings */
-    public function analyzeClass(CodeBase $unused_code_base, Clazz $class): void
+    /**
+     * Build file<->class mappings
+     *
+     * @unused-param $code_base
+     */
+    public function analyzeClass(CodeBase $code_base, Clazz $class): void
     {
         $this->elements[] = $class;
         $cnode = (string)$class->getFQSEN()->getCanonicalFQSEN();
@@ -202,8 +208,10 @@ class DependencyGraphPlugin extends PluginV3 implements
 
     /**
      * Build the actual class and file graphs
+     *
+     * @unused-param $code_base
      */
-    public function finalizeProcess(CodeBase $unused_code_base): void
+    public function finalizeProcess(CodeBase $code_base): void
     {
         if (empty($this->elements)) {
             \fwrite(\STDERR, "Nothing to analyze - please run pdep from your top-level project directory" . \PHP_EOL);
@@ -230,13 +238,13 @@ class DependencyGraphPlugin extends PluginV3 implements
             }
             $refs = $element->getReferenceList();
             foreach ($refs as $ref) {
-                $depNode = $ref->getFile();
+                $dep_node = $ref->getFile();
                 if (empty($this->file_to_class[self::getFileString($ref)])) {
                     continue;
                 }
-                $cdepNode = $this->file_to_class[self::getFileString($ref)];
-                $this->fgraph[$fnode][$depNode] = $ctype . ':' . $ref->getLineNumberStart();
-                $this->cgraph[$cnode][$cdepNode] = $ctype . ':' . $ref->getLineNumberStart();
+                $cdep_node = $this->file_to_class[self::getFileString($ref)];
+                $this->fgraph[$fnode][$dep_node] = $ctype . ':' . $ref->getLineNumberStart();
+                $this->cgraph[$cnode][$cdep_node] = $ctype . ':' . $ref->getLineNumberStart();
             }
         }
 
@@ -411,12 +419,12 @@ class DependencyGraphPlugin extends PluginV3 implements
         $shapes = '';
         $shape_defined = [];
         echo "strict digraph $title {\nrankdir=RL\nsplines=ortho\n";
-        foreach ($graph as $node => $depNode) {
+        foreach ($graph as $node => $dep_node) {
             if (empty($shape_defined[$node])) {
                 $shapes .= "\"$node\" [shape=box]\n";
                 $shape_defined[$node] = true;
             }
-            foreach ($depNode as $dnode => $val) {
+            foreach ($dep_node as $dnode => $val) {
                 [$type,$lineno] = self::getFileLineno((string)$val);
                 $style = '';
                 if ($type === 's') {
@@ -449,7 +457,7 @@ class DependencyGraphPlugin extends PluginV3 implements
         echo "strict digraph $title {\nrankdir=RL\nsplines=ortho\n";
         $shapes = '';
         $shape_defined = [];
-        foreach ($graph as $node => $depNode) {
+        foreach ($graph as $node => $dep_node) {
             if (empty($shape_defined[$node])) {
                 $shape = "";
                 switch ($this->ctype[$node]) {
@@ -470,7 +478,7 @@ class DependencyGraphPlugin extends PluginV3 implements
                     $shape_defined[$node] = true;
                 }
             }
-            foreach ($depNode as $dnode => $val) {
+            foreach ($dep_node as $dnode => $val) {
                 [$dnode] = \explode(',', $dnode);
                 $type = self::getFileLineno((string)$val)[0];
                 $style = '';
@@ -559,7 +567,7 @@ class DependencyGraphPlugin extends PluginV3 implements
         $node_id = 0;
 
         // Nodes
-        foreach ($graph as $node => $depNode) {
+        foreach ($graph as $node => $dep_node) {
             $node_name = \trim($node, "\\");
             $col = '#FFFFFF';
             $ntype = 'class';
@@ -592,7 +600,7 @@ class DependencyGraphPlugin extends PluginV3 implements
             echo '    </node>' . \PHP_EOL;
 
             // Edges
-            foreach ($depNode as $dnode => $val) {
+            foreach ($dep_node as $dnode => $val) {
                 $ecol = '#000000';
                 [$type,$lineno] = self::getFileLineno((string)$val);
                 [$dnode] = \explode(',', $dnode);

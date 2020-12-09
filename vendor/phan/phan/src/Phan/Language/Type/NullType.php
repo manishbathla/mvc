@@ -56,9 +56,14 @@ final class NullType extends ScalarType
             || parent::canCastToNonNullableType($type);
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     * @override
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        return $other->isNullable();
+        return $other->isNullable() || $other instanceof MixedType || $other instanceof TemplateType;
     }
 
     public function isSubtypeOf(Type $type): bool
@@ -66,7 +71,11 @@ final class NullType extends ScalarType
         return $type->isNullable();
     }
 
-    public function isSubtypeOfNonNullableType(Type $unused_type): bool
+    /**
+     * @unused-param $type
+     * @override
+     */
+    public function isSubtypeOfNonNullableType(Type $type): bool
     {
         return false;
     }

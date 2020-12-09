@@ -189,7 +189,9 @@ class ReferenceCountsAnalyzer
         foreach ($element_list as $element) {
             CLI::progress('dead code', (++$i) / $total_count, $element);
             // Don't worry about internal elements
-            if ($element->isPHPInternal()) {
+            if ($element->isPHPInternal() || $element->getContext()->isPHPInternal()) {
+                // The extra check of the context is necessary for code in internal_stubs
+                // which aren't exactly internal to PHP.
                 continue;
             }
             // Currently, deferred analysis is only needed for class elements, which can be inherited
@@ -211,7 +213,7 @@ class ReferenceCountsAnalyzer
             // copy references to methods, properties, and constants into the defining trait or class.
             if ($fqsen !== $defining_fqsen) {
                 $has_references = $element->getReferenceCount($code_base) > 0;
-                if ($has_references || ($element instanceof Method && $element->isOverride())) {
+                if ($has_references || ($element instanceof Method && ($element->isOverride() && !$element->isPrivate()))) {
                     $defining_element = null;
                     if ($defining_fqsen instanceof FullyQualifiedMethodName) {
                         if ($code_base->hasMethodWithFQSEN($defining_fqsen)) {
@@ -241,7 +243,7 @@ class ReferenceCountsAnalyzer
 
             // Don't analyze elements defined in a parent class.
             // We copy references to methods, properties, and constants into the defining trait or class before this.
-            if ($element->isOverride()) {
+            if ($element->isOverride() && !$element->isPrivate()) {
                 continue;
             }
 

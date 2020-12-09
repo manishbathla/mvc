@@ -73,15 +73,36 @@ class ParameterTypesAnalyzer
         }
 
         self::checkCommentParametersAreInOrder($code_base, $method);
-        $target_php_version = Config::get_closest_target_php_version_id();
-        if ($target_php_version < 70200 && !$method->isFromPHPDoc()) {
-            self::analyzeRealSignatureCompatibility($code_base, $method, $target_php_version);
+        $minimum_target_php_version = Config::get_closest_minimum_target_php_version_id();
+        if ($minimum_target_php_version < 70200 && !$method->isFromPHPDoc()) {
+            self::analyzeRealSignatureCompatibility($code_base, $method, $minimum_target_php_version);
         }
 
         // Look at each parameter to make sure their types
         // are valid
         $is_optional_seen = false;
-        foreach ($method->getParameterList() as $parameter) {
+        foreach ($method->getParameterList() as $i => $parameter) {
+            if ($parameter->getFlags() & Parameter::PARAM_MODIFIER_VISIBILITY_FLAGS) {
+                if ($method instanceof Method && strcasecmp($method->getName(), '__construct') === 0) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $parameter->createContext($method),
+                        Issue::CompatibleConstructorPropertyPromotion,
+                        $parameter->getFileRef()->getLineNumberStart(),
+                        $parameter,
+                        $method->getRepresentationForIssue(true)
+                    );
+                } else {
+                    // emit an InvalidNode warning for non-constructors (closures, global functions, other methods)
+                    Issue::maybeEmit(
+                        $code_base,
+                        $parameter->createContext($method),
+                        Issue::InvalidNode,
+                        $parameter->getFileRef()->getLineNumberStart(),
+                        "Cannot use visibility modifier on parameter $parameter of non-constructor " . $method->getRepresentationForIssue(true)
+                    );
+                }
+            }
             $union_type = $parameter->getUnionType();
 
             if ($parameter->isOptional()) {
@@ -92,7 +113,9 @@ class ParameterTypesAnalyzer
                         $code_base,
                         $method->getContext(),
                         Issue::ParamReqAfterOpt,
-                        $parameter->getFileRef()->getLineNumberStart()
+                        $parameter->getFileRef()->getLineNumberStart(),
+                        '(' . $parameter->toStubString() . ')',
+                        '(' . $method->getParameterList()[$i - 1]->toStubString() . ')'
                     );
                 }
             }
@@ -205,11 +228,11 @@ class ParameterTypesAnalyzer
     }
 
     /**
-     * Precondition: $target_php_version < 70200
+     * Precondition: $minimum_target_php_version < 70200
      */
-    private static function analyzeRealSignatureCompatibility(CodeBase $code_base, FunctionInterface $method, int $target_php_version): void
+    private static function analyzeRealSignatureCompatibility(CodeBase $code_base, FunctionInterface $method, int $minimum_target_php_version): void
     {
-        $php70_checks = $target_php_version < 70100;
+        $php70_checks = $minimum_target_php_version < 70100;
 
         foreach ($method->getRealParameterList() as $real_parameter) {
             foreach ($real_parameter->getUnionType()->getTypeSet() as $type) {
@@ -236,7 +259,7 @@ class ParameterTypesAnalyzer
                         );
                         continue;
                     }
-                    if ($target_php_version < 70000 && $type instanceof ScalarType) {
+                    if ($minimum_target_php_version < 70000 && $type instanceof ScalarType) {
                         Issue::maybeEmit(
                             $code_base,
                             $method->getContext(),
@@ -247,77 +270,103 @@ class ParameterTypesAnalyzer
                     }
                 }
                 if ($type_class === ObjectType::class) {
-                    Issue::maybeEmit(
-                        $code_base,
-                        $method->getContext(),
-                        Issue::CompatibleObjectTypePHP71,
-                        $real_parameter->getFileRef()->getLineNumberStart(),
-                        (string)$type
-                    );
-                }
-            }
-        }
-        foreach ($method->getRealReturnType()->getTypeSet() as $type) {
-            $type_class = \get_class($type);
-            if ($php70_checks) {
-                if ($target_php_version < 70000) {
-                    Issue::maybeEmit(
-                        $code_base,
-                        $method->getContext(),
-                        Issue::CompatibleAnyReturnTypePHP56,
-                        $real_parameter->getFileRef()->getLineNumberStart(),
-                        (string)$method->getRealReturnType()
-                    );
-                }
-                // Could check for use statements, but `php7.1 -l path/to/file.php` would do that already.
-                if ($type_class === VoidType::class) {
-                    Issue::maybeEmit(
-                        $code_base,
-                        $method->getContext(),
-                        Issue::CompatibleVoidTypePHP70,
-                        $method->getFileRef()->getLineNumberStart(),
-                        (string)$type
-                    );
-                } else {
-                    if ($type->isNullable()) {
-                        // Don't emit CompatibleNullableTypePHP70 for `void`.
+                    if ($minimum_target_php_version < 70200) {
                         Issue::maybeEmit(
                             $code_base,
                             $method->getContext(),
-                            Issue::CompatibleNullableTypePHP70,
-                            $method->getFileRef()->getLineNumberStart(),
+                            Issue::CompatibleObjectTypePHP71,
+                            $real_parameter->getFileRef()->getLineNumberStart(),
                             (string)$type
                         );
                     }
-                    if ($type_class === IterableType::class) {
+                } elseif ($type_class === MixedType::class) {
+                    if ($minimum_target_php_version < 80000) {
                         Issue::maybeEmit(
                             $code_base,
                             $method->getContext(),
-                            Issue::CompatibleIterableTypePHP70,
-                            $method->getFileRef()->getLineNumberStart(),
-                            (string)$type
-                        );
-                        continue;
-                    }
-                    if ($target_php_version < 70000 && $type instanceof ScalarType) {
-                        Issue::maybeEmit(
-                            $code_base,
-                            $method->getContext(),
-                            Issue::CompatibleScalarTypePHP56,
+                            Issue::CompatibleMixedType,
                             $real_parameter->getFileRef()->getLineNumberStart(),
                             (string)$type
                         );
                     }
                 }
             }
+        }
+        foreach ($method->getRealReturnType()->getTypeSet() as $type) {
+            $type_class = \get_class($type);
+            if ($php70_checks) {
+                if ($minimum_target_php_version < 70000) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $method->getContext(),
+                        Issue::CompatibleAnyReturnTypePHP56,
+                        $method->getFileRef()->getLineNumberStart(),
+                        (string)$method->getRealReturnType()
+                    );
+                }
+                // Could check for use statements, but `php7.1 -l path/to/file.php` would do that already.
+                if ($minimum_target_php_version < 70100) {
+                    if ($type_class === VoidType::class) {
+                        Issue::maybeEmit(
+                            $code_base,
+                            $method->getContext(),
+                            Issue::CompatibleVoidTypePHP70,
+                            $method->getFileRef()->getLineNumberStart(),
+                            (string)$type
+                        );
+                    } else {
+                        if ($type->isNullable()) {
+                            // Don't emit CompatibleNullableTypePHP70 for `void`.
+                                Issue::maybeEmit(
+                                    $code_base,
+                                    $method->getContext(),
+                                    Issue::CompatibleNullableTypePHP70,
+                                    $method->getFileRef()->getLineNumberStart(),
+                                    (string)$type
+                                );
+                        }
+                        if ($type_class === IterableType::class) {
+                            Issue::maybeEmit(
+                                $code_base,
+                                $method->getContext(),
+                                Issue::CompatibleIterableTypePHP70,
+                                $method->getFileRef()->getLineNumberStart(),
+                                (string)$type
+                            );
+                            continue;
+                        }
+                        if ($minimum_target_php_version < 70000 && $type instanceof ScalarType) {
+                            Issue::maybeEmit(
+                                $code_base,
+                                $method->getContext(),
+                                Issue::CompatibleScalarTypePHP56,
+                                $method->getFileRef()->getLineNumberStart(),
+                                (string)$type
+                            );
+                        }
+                    }
+                }
+            }
             if ($type_class === ObjectType::class) {
-                Issue::maybeEmit(
-                    $code_base,
-                    $method->getContext(),
-                    Issue::CompatibleObjectTypePHP71,
-                    $method->getFileRef()->getLineNumberStart(),
-                    (string)$type
-                );
+                if ($minimum_target_php_version < 70200) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $method->getContext(),
+                        Issue::CompatibleObjectTypePHP71,
+                        $method->getFileRef()->getLineNumberStart(),
+                        (string)$type
+                    );
+                }
+            } elseif ($type_class === MixedType::class) {
+                if ($minimum_target_php_version < 80000) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $method->getContext(),
+                        Issue::CompatibleMixedType,
+                        $method->getFileRef()->getLineNumberStart(),
+                        (string)$type
+                    );
+                }
             }
         }
     }
@@ -463,7 +512,7 @@ class ParameterTypesAnalyzer
         $construct_access_signature_mismatch_thrown = false;
         if ($method->getName() === '__construct') {
             // flip the switch on so we don't throw both ConstructAccessSignatureMismatch now and AccessSignatureMismatch later
-            $construct_access_signature_mismatch_thrown = Config::get_closest_target_php_version_id() < 70200 && !$o_method->getPhanFlagsHasState(Flags::IS_FAKE_CONSTRUCTOR) && $o_method->isStrictlyMoreVisibleThan($method);
+            $construct_access_signature_mismatch_thrown = Config::get_closest_minimum_target_php_version_id() < 70200 && !$o_method->getPhanFlagsHasState(Flags::IS_FAKE_CONSTRUCTOR) && $o_method->isStrictlyMoreVisibleThan($method);
 
             if ($construct_access_signature_mismatch_thrown) {
                 Issue::maybeEmit(
@@ -507,6 +556,7 @@ class ParameterTypesAnalyzer
             // TODO: Fix edge cases caused by hack changing FQSEN of private methods
             return;
         }
+        $mismatch_details = '';
 
         // Get the parameters for that method
         $o_parameter_list = $o_method->getParameterList();
@@ -561,10 +611,12 @@ class ParameterTypesAnalyzer
             > $o_method->getNumberOfRequiredParameters()
         ) {
             $signatures_match = false;
+            $mismatch_details = 'Saw more required parameters in the override';
         } elseif ($method->getNumberOfParameters()
             < $o_method->getNumberOfParameters()
         ) {
             $signatures_match = false;
+            $mismatch_details = 'Saw fewer optional parameters in the override';
 
         // If parameter counts match, check their types
         } else {
@@ -582,20 +634,24 @@ class ParameterTypesAnalyzer
                 // @see https://3v4l.org/Utuo8
                 if ($parameter->isPassByReference() != $o_parameter->isPassByReference()) {
                     $signatures_match = false;
+                    $mismatch_details = "Difference in passing by reference in override $parameter of parameter $o_parameter";
                     break;
                 }
 
                 // Variadic parameters must match up.
                 if ($o_parameter->isVariadic() !== $parameter->isVariadic()) {
                     $signatures_match = false;
+                    $mismatch_details = "Difference in being variadic in override $parameter of parameter $o_parameter";
                     break;
                 }
 
                 // Check for the presence of real types first, warn if the override has a type but the original doesn't.
                 $o_real_parameter = $o_real_parameter_list[$i] ?? null;
                 $real_parameter = $real_parameter_list[$i] ?? null;
-                if ($o_real_parameter !== null && $real_parameter !== null && !$real_parameter->getUnionType()->isEmpty() && $o_real_parameter->getUnionType()->isEmpty()) {
+                if ($o_real_parameter !== null && $real_parameter !== null && !$real_parameter->getUnionType()->isEmptyOrMixed() && $o_real_parameter->getUnionType()->isEmptyOrMixed()
+                    && (!$method->isFromPHPDoc() || $parameter->getUnionType()->isEmptyOrMixed())) {
                     $signatures_match = false;
+                    $mismatch_details = "Cannot use $parameter with a real type to override parameter $o_parameter without a real type";
                     break;
                 }
 
@@ -622,10 +678,9 @@ class ParameterTypesAnalyzer
                 //       via ->asExpandedTypes($code_base)?
                 //
                 //       @see https://3v4l.org/ke3kp
-                if (!$o_parameter->getUnionType()->canCastToUnionType(
-                    $parameter->getUnionType()
-                )) {
+                if (!self::canWeakCast($code_base, $o_parameter->getUnionType(), $parameter->getUnionType())) {
                     $signatures_match = false;
+                    $mismatch_details = "Expected $parameter to have the same type as $o_parameter or a supertype";
                     break;
                 }
             }
@@ -636,7 +691,7 @@ class ParameterTypesAnalyzer
         // The return type should be stricter than or identical to the overridden union type.
         // E.g. there is no issue if the overridden return type is empty.
         // See https://github.com/phan/phan/issues/1397
-        if (!$o_return_union_type->isEmpty()) {
+        if (!$o_return_union_type->isEmptyOrMixed()) {
             if (!$method->getUnionType()->asExpandedTypes($code_base)->canCastToUnionType(
                 $o_return_union_type
             )) {
@@ -678,7 +733,8 @@ class ParameterTypesAnalyzer
                     Issue::ParamSignatureMismatchInternal,
                     $method->getFileRef()->getLineNumberStart(),
                     $method,
-                    $o_method
+                    $o_method,
+                    $mismatch_details !== '' ? " ($mismatch_details)" : ''
                 );
             } else {
                 Issue::maybeEmit(
@@ -689,7 +745,8 @@ class ParameterTypesAnalyzer
                     $method,
                     $o_method,
                     $o_method->getFileRef()->getFile(),
-                    $o_method->getFileRef()->getLineNumberStart()
+                    $o_method->getFileRef()->getLineNumberStart(),
+                    $mismatch_details !== '' ? " ($mismatch_details)" : ''
                 );
             }
         }
@@ -720,6 +777,12 @@ class ParameterTypesAnalyzer
         }
     }
 
+    private static function canWeakCast(CodeBase $code_base, UnionType $overridden_type, UnionType $type): bool
+    {
+        $expanded_overridden_type = $overridden_type->asExpandedTypes($code_base);
+        return $expanded_overridden_type->canCastToUnionType($type) &&
+                    $expanded_overridden_type->hasAnyTypeOverlap($code_base, $type);
+    }
     /**
      * Previously, Phan bases the analysis off of phpdoc.
      * Keeping that around(e.g. to check that string[] is compatible with string[])
@@ -744,7 +807,9 @@ class ParameterTypesAnalyzer
         }
 
         // Get the parameters for that method
-        $o_parameter_list = $o_method->getRealParameterList();
+        // NOTE: If the overriding method is from an (at)method tag, then compare the phpdoc types instead here to emit FromPHPDoc issue equivalents.
+        // TODO: Track magic and real methods separately so that subclasses of subclasses get properly analyzed
+        $o_parameter_list = $method->isFromPHPDoc() ? $o_method->getParameterList() : $o_method->getRealParameterList();
 
         // Make sure the count of parameters matches
         if ($method->getNumberOfRequiredRealParameters()
@@ -783,7 +848,7 @@ class ParameterTypesAnalyzer
 
         // TODO: Stricter checks for parameter types when this is a magic method?
         // - If the overriding method is magic, then compare the magic method phpdoc types against the phpdoc+real types  of the parent
-        foreach ($method->getRealParameterList() as $i => $parameter) {
+        foreach ($method->isFromPHPDoc() ? $method->getParameterList() : $method->getRealParameterList() as $i => $parameter) {
             $offset = $i + 1;
             // TODO: check if variadic
             if (!isset($o_parameter_list[$i])) {
@@ -830,8 +895,10 @@ class ParameterTypesAnalyzer
             // Either 0 or both of the params must have types for the signatures to be compatible.
             $o_parameter_union_type = $o_parameter->getUnionType();
             $parameter_union_type = $parameter->getUnionType();
-            if ($parameter_union_type->isEmpty() != $o_parameter_union_type->isEmpty()) {
-                if ($parameter_union_type->isEmpty()) {
+            // Mixed and empty parameter types are interchangeable in php 8
+            if ($parameter_union_type->isEmptyOrMixed() != $o_parameter_union_type->isEmptyOrMixed()) {
+                if ($parameter_union_type->isEmptyOrMixed()) {
+                    // Don't warn about mixed
                     if (Config::getValue('allow_method_param_type_widening') === false) {
                         $is_possibly_compatible = false;
                         self::emitSignatureRealMismatchIssue(
@@ -867,7 +934,7 @@ class ParameterTypesAnalyzer
             // If both have types, make sure they are identical.
             // Non-nullable param types can be substituted with the nullable equivalents.
             // E.g. A::foo(?int $x) can override BaseClass::foo(int $x)
-            if (!$parameter_union_type->isEmpty()) {
+            if (!$parameter_union_type->isEmptyOrMixed()) {
                 if (!$o_parameter_union_type->isEqualTo($parameter_union_type) &&
                     !($parameter_union_type->containsNullable() && $o_parameter_union_type->isEqualTo($parameter_union_type->nonNullableClone()))
                 ) {

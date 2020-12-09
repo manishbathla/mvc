@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phan\Language\Type;
 
+use Phan\CodeBase;
+use Phan\Language\Context;
 use Phan\Language\Type;
 
 /**
@@ -52,5 +54,21 @@ final class ClosureDeclarationType extends FunctionLikeDeclarationType
     public function asSignatureType(): Type
     {
         return ClosureType::instance($this->is_nullable);
+    }
+
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
+    {
+        // TODO: Apply the inverse to objects with known fqsens - stdClass is not a closure
+        if (!$other->isPossiblyObject()) {
+            return false;
+        }
+        if ($other->isObjectWithKnownFQSEN()) {
+            return $other instanceof FunctionLikeDeclarationType || $other instanceof ClosureType || $other->asFQSEN()->__toString() === '\Closure';
+        }
+        return true;
     }
 }

@@ -6,12 +6,15 @@ namespace Phan\Plugin\Internal;
 
 use Phan\CLI;
 use Phan\CodeBase;
+use Phan\Config;
 use Phan\IssueInstance;
 use Phan\Language\FileRef;
 use Phan\Phan;
 use Phan\PluginV3;
 use Phan\PluginV3\FinalizeProcessCapability;
 use Phan\PluginV3\SubscribeEmitIssueCapability;
+
+use function in_array;
 
 /**
  * This plugin generates a baseline from the issues that weren't suppressed by other plugins or config settings.
@@ -62,6 +65,8 @@ final class BaselineSavingPlugin extends PluginV3 implements
         if (Phan::isExcludedAnalysisFile($file_path)) {
             return false;
         }
+        // Generate compatible baselines on Windows
+        $file_path = \str_replace(\DIRECTORY_SEPARATOR, '/', $file_path);
 
         // Would prefer to use formatSortableKey, but this doesn't provide the IssueInstance, and plugins have issues that can't be fetched with Issue::fromType.
         $hash = \sha1($issue_instance->__toString());
@@ -71,9 +76,13 @@ final class BaselineSavingPlugin extends PluginV3 implements
         return false;
     }
 
-    public function finalizeProcess(CodeBase $unused_code_base): void
+    /**
+     * @unused-param $code_base
+     */
+    public function finalizeProcess(CodeBase $code_base): void
     {
-        CLI::printToStderr("Saving a new issue baseline to '$this->baseline_path'\nSubsequent Phan runs can read from this file with --load-baseline='$this->baseline_path' to ignore pre-existing issues.\n");
+        CLI::printToStderr("Saving a new issue baseline to '$this->baseline_path'\n" .
+            "Subsequent Phan runs can read from this file with --load-baseline='$this->baseline_path' to ignore pre-existing issues.\n");
         $contents = $this->generateAllBaselineContents();
         \file_put_contents($this->baseline_path, $contents);
     }
@@ -93,7 +102,8 @@ final class BaselineSavingPlugin extends PluginV3 implements
 return [
 
 EOT;
-        $contents .= $this->generateSuppressIssueSummary();
+        $summary_type = Config::getValue('baseline_summary_type');
+        $contents .= $this->generateSuppressIssueSummary($summary_type);
         $contents .= $this->generateSuppressFileEntries();
         $contents .= "];\n";
         return $contents;
@@ -112,7 +122,7 @@ EOT;
 
     private static function getSuppressCountLabel(int $count): string
     {
-        if ($count <= 10) {
+        if ($count < 10) {
             return (string)$count;
         }
         // Round counts over 100 down to a multiple of 10, etc.
@@ -125,16 +135,27 @@ EOT;
      * This is useful for checking if issues that you don't want in your project
      * have been added into a large baseline.
      */
-    private function generateSuppressIssueSummary(): string
+    private function generateSuppressIssueSummary(string $baseline_summary_type): string
     {
+        if ($baseline_summary_type === 'none') {
+            return '';
+        }
+        if (!in_array($baseline_summary_type, ['ordered_by_type', 'ordered_by_count'], true)) {
+            CLI::printWarningToStderr("Unknown baseline_summary_type '$baseline_summary_type'. Supported values: 'ordered_by_type', 'ordered_by_count', 'none'");
+        }
         $entries = [];
-        foreach ($this->suppressions_by_type as $issueType => $hashes) {
+        foreach ($this->suppressions_by_type as $issue_type => $hashes) {
             $count = \count($hashes);
+            if ($baseline_summary_type === 'ordered_by_type') {
+                $key = $issue_type;
+            } else {
+                $key = -self::roundSuppressCount($count);
+            }
             $count_name = self::getSuppressCountLabel($count);
             $entries[] = [
-                -self::roundSuppressCount($count),
-                $issueType,
-                \sprintf("    // %s : %s %s\n", $issueType, $count_name, $count !== 1 ? "occurrences" : "occurrence"),
+                $key,
+                $issue_type,
+                \sprintf("    // %s : %s %s\n", $issue_type, $count_name, $count !== 1 ? "occurrences" : "occurrence"),
             ];
         }
         if (!$entries) {
@@ -162,10 +183,10 @@ EOT;
         $result .= "    // Currently, file_suppressions and directory_suppressions are the only supported suppressions\n";
         $result .= "    'file_suppressions' => [\n";
         \uksort($this->suppressions_by_file, 'strcmp');
-        foreach ($this->suppressions_by_file as $fileName => $type_set) {
+        foreach ($this->suppressions_by_file as $file_name => $type_set) {
             $types = \array_map('strval', \array_keys($type_set));
             \usort($types, 'strcmp');
-            $result .= "        '$fileName' => [" . \implode(', ', \array_map(static function (string $type): string {
+            $result .= "        '$file_name' => [" . \implode(', ', \array_map(static function (string $type): string {
                     return "'" . $type . "'";
             }, $types)) . "],\n";
         }

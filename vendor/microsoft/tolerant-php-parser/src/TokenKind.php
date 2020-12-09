@@ -86,6 +86,7 @@ class TokenKind {
     const YieldKeyword = 166;
     const YieldFromKeyword = 167;
     const FnKeyword = 168;
+    const MatchKeyword = 169;
 
     const OpenBracketToken = 201;
     const CloseBracketToken = 202;
@@ -148,6 +149,8 @@ class TokenKind {
     const BacktickToken = 260;
     const QuestionToken = 261;
     const QuestionQuestionEqualsToken = 262;
+    const QuestionArrowToken = 263;
+    const AttributeToken = 264;
 
     const DecimalLiteralToken = 301;
     const OctalLiteralToken = 302;

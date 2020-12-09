@@ -9,6 +9,7 @@ use ast;
 use ast\Node;
 use InvalidArgumentException;
 use Phan\Analysis\ScopeVisitor;
+use Phan\AST\ASTReverter;
 use Phan\AST\ContextNode;
 use Phan\AST\UnionTypeVisitor;
 use Phan\CodeBase;
@@ -27,6 +28,7 @@ use Phan\Language\Element\FunctionFactory;
 use Phan\Language\Element\FunctionInterface;
 use Phan\Language\Element\GlobalConstant;
 use Phan\Language\Element\Method;
+use Phan\Language\Element\Parameter;
 use Phan\Language\Element\Property;
 use Phan\Language\ElementContext;
 use Phan\Language\FQSEN\FullyQualifiedClassConstantName;
@@ -331,12 +333,21 @@ class ParseVisitor extends ScopeVisitor
             $class->addMethod($code_base, $method, None::instance());
         }
 
-        if ('__construct' === $method_name) {
+        $method_name_lower = \strtolower($method_name);
+        if ('__construct' === $method_name_lower) {
             $class->setIsParentConstructorCalled(false);
-        } elseif ('__invoke' === $method_name) {
+
+            // Handle constructor property promotion of __construct parameters
+            foreach ($method->getParameterList() as $i => $parameter) {
+                if ($parameter->getFlags() & Parameter::PARAM_MODIFIER_VISIBILITY_FLAGS) {
+                    // @phan-suppress-next-line PhanTypeMismatchArgumentNullable kind is AST_PARAM
+                    $this->addPromotedConstructorPropertyFromParam($class, $parameter, $node->children['params']->children[$i]);
+                }
+            }
+        } elseif ('__invoke' === $method_name_lower) {
             // TODO: More precise callable shape
             $class->addAdditionalType(CallableType::instance(false));
-        } elseif ('__toString' === $method_name
+        } elseif ('__tostring' === $method_name_lower
             && !$this->context->isStrictTypes()
         ) {
             $class->addAdditionalType(StringType::instance(false));
@@ -344,9 +355,81 @@ class ParseVisitor extends ScopeVisitor
 
 
         // Create a new context with a new scope
-        return $this->context->withScope(
-            $method->getInternalScope()
+        return $this->context->withScope($method->getInternalScope());
+    }
+
+    /**
+     * Add an instance property from php 8.0 constructor property promotion
+     * (`__construct(public int $param)`)
+     *
+     * This heavily duplicates parts of visitPropGroup
+     */
+    private function addPromotedConstructorPropertyFromParam(
+        Clazz $class,
+        Parameter $parameter,
+        Node $parameter_node
+    ): void  {
+        $code_base = $this->code_base;
+        $lineno = $parameter_node->lineno;
+        $context = (clone($this->context))->withLineNumberStart($lineno);
+        if ($parameter_node->flags & ast\flags\PARAM_VARIADIC) {
+            $this->emitIssue(
+                Issue::InvalidNode,
+                $lineno,
+                "Cannot declare variadic promoted property"
+            );
+            return;
+        }
+        $property_fqsen = FullyQualifiedPropertyName::make($class->getFQSEN(), $parameter->getName());
+
+        if ($code_base->hasPropertyWithFQSEN($property_fqsen)) {
+            $old_property = $code_base->getPropertyByFQSEN($property_fqsen);
+            if ($old_property->getDefiningFQSEN() === $property_fqsen) {
+                // Note: PHPDoc properties are parsed by Phan before real properties, so they take precedence (e.g. they are more visible)
+                // PhanRedefineMagicProperty is a separate check.
+                if ($old_property->isFromPHPDoc()) {
+                    return;
+                }
+                $this->emitIssue(
+                    Issue::RedefineProperty,
+                    $lineno,
+                    $property_fqsen->getName(),
+                    $context->getFile(),
+                    $lineno,
+                    $context->getFile(),
+                    $old_property->getContext()->getLineNumberStart()
+                );
+                return;
+            }
+        }
+        // TODO support attributes in Phan 4
+        // TODO: this should probably use FutureUnionType instead.
+        $property = new Property(
+            $context,
+            $parameter->getName(),
+            $parameter->getUnionType(),
+            $parameter_node->flags & Parameter::PARAM_MODIFIER_VISIBILITY_FLAGS,
+            $property_fqsen,
+            $parameter->getUnionType()->getRealUnionType()
         );
+        $doc_comment = $parameter_node->children['docComment'] ?? '';
+        // Get a comment on the property declaration
+        $comment = Comment::fromStringInContext(
+            $doc_comment,
+            $code_base,
+            $context,
+            $lineno,
+            Comment::ON_PROPERTY  // TODO: Could optionally add a new ON_PARAM kind?
+        );
+        $property->setDocComment($doc_comment);
+        $property->setPhanFlags($comment->getPhanFlagsForProperty());
+        $property->setSuppressIssueSet($comment->getSuppressIssueSet());
+        $class->addProperty($code_base, $property, None::instance());
+        if ($class->isImmutable()) {
+            if (!$property->isStatic() && !$property->isWriteOnly()) {
+                $property->setIsReadOnly(true);
+            }
+        }
     }
 
     /**
@@ -374,7 +457,7 @@ class ParseVisitor extends ScopeVisitor
                 Issue::maybeEmitInstance($this->code_base, $this->context, $e->getIssueInstance());
                 $real_union_type = UnionType::empty();
             }
-            if (Config::get_closest_target_php_version_id() < 70400) {
+            if (Config::get_closest_minimum_target_php_version_id() < 70400) {
                 $this->emitIssue(
                     Issue::CompatibleTypedProperty,
                     $type_node->lineno,
@@ -450,15 +533,12 @@ class ParseVisitor extends ScopeVisitor
                     }
                 } else {
                     // Get the type of the default (not a literal)
-                    if ($variable_has_literals) {
-                        $union_type = Type::fromObject($default_node)->asPHPDocUnionType();
-                    } else {
-                        $union_type = Type::nonLiteralFromObject($default_node)->asPHPDocUnionType();
-                    }
+                    // The literal value needs to be known to warn about incompatible composition of traits
+                    $union_type = Type::fromObject($default_node)->asPHPDocUnionType();
                 }
                 $default_type = $union_type;
                 // Erase the corresponding real type set to avoid false positives such as `$x->prop['field'] === null` is redundant/impossible.
-                $union_type = $union_type->eraseRealTypeSetRecursively();
+                $union_type = $union_type->asNonLiteralType()->eraseRealTypeSetRecursively();
                 if ($real_union_type->isEmpty()) {
                     if ($union_type->isType(NullType::instance(false))) {
                         $union_type = UnionType::empty();
@@ -466,10 +546,11 @@ class ParseVisitor extends ScopeVisitor
                 } else {
                     if (!$union_type->isStrictSubtypeOf($this->code_base, $real_union_type)) {
                         $this->emitIssue(
-                            Issue::TypeInvalidPropertyDefaultReal,
+                            Issue::TypeMismatchPropertyDefaultReal,
                             $context_for_property->getLineNumberStart(),
                             $real_union_type,
                             $property_name,
+                            ASTReverter::toShortString($default_node),
                             $union_type
                         );
                         $union_type = $real_union_type;
@@ -531,9 +612,7 @@ class ParseVisitor extends ScopeVisitor
             // Add the property to the class
             $class->addProperty($this->code_base, $property, None::instance());
 
-            $property->setSuppressIssueSet(
-                $comment->getSuppressIssueSet()
-            );
+            $property->setSuppressIssueSet($comment->getSuppressIssueSet());
 
             if ($future_union_type_node instanceof Node) {
                 $future_union_type = new FutureUnionType(
@@ -574,16 +653,19 @@ class ParseVisitor extends ScopeVisitor
                     }
                 }
 
-                if (!$original_union_type->isType(NullType::instance(false))
-                    && !$original_union_type->canCastToUnionType($variable->getUnionType())
-                    && !$property->checkHasSuppressIssueAndIncrementCount(Issue::TypeMismatchProperty)
+                if ($default_node !== null &&
+                    !$original_union_type->isType(NullType::instance(false)) &&
+                    !$variable->getUnionType()->asExpandedTypes($this->code_base)->canCastToUnionType($original_union_type) &&
+                    !$original_union_type->asExpandedTypes($this->code_base)->canCastToUnionType($variable->getUnionType()) &&
+                    !$property->checkHasSuppressIssueAndIncrementCount(Issue::TypeMismatchPropertyDefault)
                 ) {
                     $this->emitIssue(
-                        Issue::TypeMismatchProperty,
-                        $child_node->lineno ?? 0,
-                        (string)$original_union_type,
-                        $property->asPropertyFQSENString(),
-                        (string)$variable->getUnionType()
+                        Issue::TypeMismatchPropertyDefault,
+                        $child_node->lineno,
+                        (string)$variable->getUnionType(),
+                        $property->getName(),
+                        ASTReverter::toShortString($default_node),
+                        (string)$original_union_type
                     );
                 }
 
@@ -731,6 +813,7 @@ class ParseVisitor extends ScopeVisitor
             $constant->setIsDeprecated($comment->isDeprecated());
             $constant->setIsNSInternal($comment->isNSInternal());
             $constant->setIsOverrideIntended($comment->isOverrideIntended());
+            $constant->setIsPHPDocAbstract($comment->isPHPDocAbstract());
             $constant->setSuppressIssueSet($comment->getSuppressIssueSet());
             $value_node = $child_node->children['value'];
             if ($value_node instanceof Node) {
@@ -760,6 +843,7 @@ class ParseVisitor extends ScopeVisitor
                 $constant->setUnionType(Type::fromObject($value_node)->asRealUnionType());
             }
             $constant->setNodeForValue($value_node);
+            $constant->setComment($comment);
 
             $class->addConstant(
                 $this->code_base,
@@ -772,6 +856,7 @@ class ParseVisitor extends ScopeVisitor
                         $constant->getFileRef()->getLineNumberStart(),
                         (string)$constant->getFQSEN()
                     );
+                    break;
                 }
             }
         }
@@ -952,6 +1037,7 @@ class ParseVisitor extends ScopeVisitor
     {
         if (!isset($node->children['params'])) {
             $msg = "php-ast 1.0.2 or newer is required to correctly parse short arrow functions, but an older version is installed. A short arrow function was seen at $this->context";
+            // @phan-suppress-next-line PhanPluginRemoveDebugCall
             \fwrite(\STDERR, $msg . \PHP_EOL);
             throw new AssertionError($msg);
         }
@@ -1384,16 +1470,7 @@ class ParseVisitor extends ScopeVisitor
                     $context
                 );
             }
-        } catch (InvalidArgumentException $_) {
-            Issue::maybeEmit(
-                $code_base,
-                $context,
-                Issue::InvalidConstantFQSEN,
-                $lineno,
-                $name
-            );
-            return;
-        } catch (FQSENException $_) {
+        } catch (InvalidArgumentException | FQSENException $_) {
             Issue::maybeEmit(
                 $code_base,
                 $context,
@@ -1552,6 +1629,10 @@ class ParseVisitor extends ScopeVisitor
         return $this->context;
     }
     public function visitStmtList(Node $node): Context
+    {
+        return $this->context;
+    }
+    public function visitNullsafeProp(Node $node): Context
     {
         return $this->context;
     }

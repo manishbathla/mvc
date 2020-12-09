@@ -91,7 +91,10 @@ final class TrueType extends ScalarType
 
     public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        return $other->isInBoolFamily() || (!$context->isStrictTypes() && parent::canCastToDeclaredType($code_base, $context, $other));
+        return $other->isInBoolFamily() ||
+            $other instanceof MixedType ||
+            $other instanceof TemplateType ||
+            (!$context->isStrictTypes() && parent::canCastToDeclaredType($code_base, $context, $other));
     }
 
     // public function getTypeAfterIncOrDec() : UnionType - doesn't need to be changed

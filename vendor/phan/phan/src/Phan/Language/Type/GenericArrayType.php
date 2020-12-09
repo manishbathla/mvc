@@ -8,11 +8,13 @@ use ast\Node;
 use Closure;
 use Generator;
 use InvalidArgumentException;
+use Phan\AST\ASTReverter;
 use Phan\AST\UnionTypeVisitor;
 use Phan\CodeBase;
 use Phan\Config;
 use Phan\Debug\Frame;
 use Phan\Exception\RecursionDepthException;
+use Phan\Issue;
 use Phan\Language\Context;
 use Phan\Language\FQSEN\FullyQualifiedClassName;
 use Phan\Language\Type;
@@ -280,19 +282,21 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
     }
 
     /**
+     * @unused-param $code_base
      * @return UnionType returns the array value's union type
      * @phan-override
      */
-    public function iterableValueUnionType(CodeBase $unused_codebase): UnionType
+    public function iterableValueUnionType(CodeBase $code_base): UnionType
     {
         return $this->element_type->asPHPDocUnionType();
     }
 
     /**
+     * @unused-param $code_base
      * @return UnionType the array key's union type
      * @phan-override
      */
-    public function iterableKeyUnionType(CodeBase $unused_codebase): UnionType
+    public function iterableKeyUnionType(CodeBase $code_base): UnionType
     {
         return self::unionTypeForKeyType($this->key_type);
     }
@@ -386,16 +390,16 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
             $recursive_union_type_builder = new UnionTypeBuilder();
             $representation = $this->__toString();
             try {
-                foreach ($union_type->getTypeSet() as $clazz_type) {
-                    if ($clazz_type->__toString() !== $representation) {
+                foreach ($union_type->getTypeSet() as $generic_array_type) {
+                    if ($generic_array_type->__toString() !== $representation) {
                         $recursive_union_type_builder->addUnionType(
-                            $clazz_type->asExpandedTypes(
+                            $generic_array_type->asExpandedTypes(
                                 $code_base,
                                 $recursion_depth + 1
                             )
                         );
                     } else {
-                        $recursive_union_type_builder->addType($clazz_type);
+                        $recursive_union_type_builder->addType($generic_array_type);
                     }
                 }
             } catch (RecursionDepthException $_) {
@@ -405,7 +409,7 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
             // Add in aliases
             // (If enable_class_alias_support is false, this will do nothing)
             if (Config::getValue('enable_class_alias_support')) {
-                self::addClassAliases($code_base, $recursive_union_type_builder, $class_fqsen);
+                $this->addClassAliases($code_base, $recursive_union_type_builder, $class_fqsen);
             }
             return $recursive_union_type_builder->getPHPDocUnionType();
         });
@@ -481,7 +485,7 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
             // Add in aliases
             // (If enable_class_alias_support is false, this will do nothing)
             if (Config::getValue('enable_class_alias_support')) {
-                self::addClassAliases($code_base, $recursive_union_type_builder, $class_fqsen);
+                $this->addClassAliases($code_base, $recursive_union_type_builder, $class_fqsen);
             }
             return $recursive_union_type_builder->getPHPDocUnionType();
         });
@@ -639,12 +643,22 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
             // Don't bother recursing more than one level to iterate over possible types.
             $key_node = $child->children['key'];
             if ($key_node instanceof Node) {
-                $key_type_enum |= self::keyTypeFromUnionTypeValues(UnionTypeVisitor::unionTypeFromNode(
+                $key_type = UnionTypeVisitor::unionTypeFromNode(
                     $code_base,
                     $context,
                     $key_node,
                     $should_catch_issue_exception
-                ));
+                );
+                if ($key_type->isVoidType()) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $context,
+                        Issue::TypeVoidExpression,
+                        $node->lineno,
+                        ASTReverter::toShortString($key_node)
+                    );
+                }
+                $key_type_enum |= self::keyTypeFromUnionTypeValues($key_type);
             } elseif ($key_node !== null) {
                 if (\is_string($key_node)) {
                     $key_type_enum |= GenericArrayType::KEY_STRING;
@@ -739,9 +753,10 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
     }
 
     /**
+     * @unused-param $type
      * Precondition: Callers should check isObjectWithKnownFQSEN
      */
-    public function hasSameNamespaceAndName(Type $_): bool
+    public function hasSameNamespaceAndName(Type $type): bool
     {
         return false;
     }
@@ -836,10 +851,11 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
 
     /**
      * Do not use this. Use ArrayType::instance or static::fromElementType
+     * @unused-param $is_nullable
      * @internal
      * @deprecated
      */
-    public static function instance(bool $unused_is_nullable)
+    public static function instance(bool $is_nullable)
     {
         throw new \AssertionError(static::class . '::' . __FUNCTION__ . ' should not be used');
     }
@@ -853,9 +869,10 @@ class GenericArrayType extends ArrayType implements GenericArrayInterface
     }
 
     /**
+     * @unused-param $can_reduce_size
      * Returns the equivalent (possibly nullable) associative array type for this type.
      */
-    public function asAssociativeArrayType(bool $unused_can_reduce_size): ArrayType
+    public function asAssociativeArrayType(bool $can_reduce_size): ArrayType
     {
         return AssociativeArrayType::fromElementType(
             $this->element_type,

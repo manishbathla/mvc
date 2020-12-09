@@ -334,6 +334,12 @@ return [
     'pdoexception' => ['code' => 'string', 'errorInfo' => 'array'],
     'pdostatement' => ['queryString' => 'string'],
     'php_user_filter' => ['filtername' => 'string', 'params' => 'mixed'],
+    'phptoken' => [
+        'id' => 'int',
+        'line' => 'int',
+        'pos' => 'int',
+        'text' => 'string',
+    ],
     'recursivearrayiterator' => ['name' => 'string'],
     'recursivecachingiterator' => ['name' => 'string'],
     'recursivedirectoryiterator' => ['name' => 'string'],
@@ -395,8 +401,8 @@ return [
     'streamwrapper' => ['context' => 'resource'],
     'tidy' => ['errorBuffer' => 'string'],
     'tidynode' => [
-        'attribute' => 'array',
-        'child' => 'array',
+        'attribute' => '?array<string,string>',
+        'child' => '?non-empty-list<tidyNode>',
         'column' => 'int',
         'id' => 'int',
         'line' => 'int',
