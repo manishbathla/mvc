@@ -63,7 +63,7 @@ describe("Parser", function () {
 
         it("parses arrow functions", function () {
 
-            skipIf(defined('HHVM_VERSION') || PHP_VERSION_ID < 70400);
+            skipIf(PHP_VERSION_ID < 70400);
 
             $sample = file_get_contents('spec/Fixture/Jit/Parser/ArrowFunction.php');
             $root = Parser::parse($sample);
@@ -89,7 +89,7 @@ describe("Parser", function () {
 
         it("parses arrow functions", function () {
 
-            skipIf(defined('HHVM_VERSION') || PHP_VERSION_ID < 70400);
+            skipIf(PHP_VERSION_ID < 70400);
 
             $filename = 'spec/Fixture/Jit/Parser/ArrowFunction';
             $content = file_get_contents($filename . '.php');
@@ -151,24 +151,6 @@ describe("Parser", function () {
                 "?>\n",
                 "<?php\n"
             ]);
-        });
-
-        it("correctly populates the `->isGenerator` attribute", function () {
-
-            skipIf(version_compare(phpversion(), '5.5', '<'));
-
-            $sample = file_get_contents('spec/Fixture/Jit/Parser/Generator.php');
-            $root = Parser::parse($sample);
-            foreach ($root->tree as $node) {
-                if ($node->type === 'function') {
-                    expect($node->name)->toBe('myGenerator');
-                    expect($node->isClosure)->toBeFalsy();
-                    expect($node->isMethod)->toBeFalsy();
-                    expect($node->isGenerator)->toBeTruthy();
-                    expect($node->parent)->toBe($root);
-                }
-            }
-
         });
 
         it("rebases __DIR__ and __FILE__ magic constants", function () {
@@ -349,7 +331,6 @@ describe("Parser", function () {
             $root = Parser::parse($sample);
 
             $check = 0;
-            ;
 
             foreach ($root->tree as $node) {
                 if ($node->type !== 'namespace') {
@@ -473,6 +454,41 @@ describe("Parser", function () {
             $parsed = Parser::debug($content);
             expect($parsed)->toBe(file_get_contents($filename . '.txt'));
 
+            $parsed = Parser::parse($content);
+            expect(Parser::unparse($parsed))->toBe($content);
+        });
+
+        it("parses named arguments", function () {
+
+            $filename = 'spec/Fixture/Jit/Parser/NamedArguments';
+            $content = file_get_contents($filename . '.php');
+
+            $parsed = Parser::debug($content);
+            expect($parsed)->toBe(file_get_contents($filename . '.txt'));
+
+            $parsed = Parser::parse($content);
+            expect(Parser::unparse($parsed))->toBe($content);
+        });
+
+        it("parses constructor promotion", function () {
+
+            $filename = 'spec/Fixture/Jit/Parser/ConstructorPromotion';
+            $content = file_get_contents($filename . '.php');
+
+            $parsed = Parser::debug($content);
+            expect($parsed)->toBe(file_get_contents($filename . '.txt'));
+
+            $parsed = Parser::parse($content);
+            expect(Parser::unparse($parsed))->toBe($content);
+        });
+
+        it("parses annotation attributes", function () {
+
+            $filename = 'spec/Fixture/Jit/Parser/AnnotationAttributes';
+            $content = file_get_contents($filename . '.php');
+
+            $parsed = Parser::debug($content);
+            expect($parsed)->toBe(file_get_contents($filename . '.txt'));
             $parsed = Parser::parse($content);
             expect(Parser::unparse($parsed))->toBe($content);
         });

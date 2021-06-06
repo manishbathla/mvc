@@ -2,6 +2,80 @@
 
 ## Last changes
 
+## 5.1.2 (2021-05-30)
+
+  * **Bugfix:** Respect the error_reporting() level.
+
+## 5.1.1 (2021-05-30)
+
+  * **Add:** Change the string representation of Error in the Terminal report.
+
+## 5.1.0 (2021-04-22)
+
+  * **Bugfix:** Do not show coverage report when the option is set to 0.
+  * **Break BC:** Change exit code on errors to 1 instead of -1.
+
+## 5.0.9 (2021-04-15)
+
+  * **Bugfix:** Doesn't attempt to rebind a callable no declared in a kahlan scope.
+
+## 5.0.8 (2021-02-22)
+
+  * **Bugfix:** Fix monkey patching for PHP 8.0 comments.
+
+## 5.0.7 (2021-02-08)
+
+  * **Bugfix:** Fix static & self return type hint in doubles.
+
+## 5.0.6 (2021-01-24)
+
+  * **Bugfix:** Disable instance substitution feature for assignments by reference.
+
+## 5.0.5 (2020-12-30)
+
+  * **BC Break:** Declared functions in a scope is attached to current context when executed.
+
+## 5.0.4 (2020-12-30)
+
+  * **Add:** Display relative path of current projet files in error reporting.
+
+## 5.0.3 (2020-12-30)
+
+  * **Bugfix:** Fix a CodeClimate exporter issue.
+
+## 5.0.2 (2020-12-28)
+
+  * **Bugfix:** Fix some PHP 8.0 parsing issues.
+
+## 5.0.1 (2020-12-27)
+
+  * **Bugfix:** Fix Xdebug >= 3.0.0 detection.
+
+## 5.0.0 (2020-12-26)
+
+  * **Add:** Support PHP 8.0.
+  * **Remove:** Drop PHP <= 7.0 & HHVM version.
+
+## 4.7.7 (2020-10-17)
+
+  * **Bugfix:** Show fatal errors on file requirements.
+
+## 4.7.6 (2020-09-25)
+
+  * **Bugfix:** Ignore spaces after class names.
+
+## 4.7.5 (2020-04-25)
+
+  * **Bugfix:** Support isset() for scopes.
+
+## 4.7.4 (2020-04-11)
+
+  * **Bugfix:** Tweak autoload files that conflict when define constant.
+
+## 4.7.3 (2020-04-10)
+
+  * **Bugfix:** Fix autoloader to not load autoload files.
+
 ## 4.7.2 (2020-01-25)
 
   * **Bugfix:** Fix autoloader conficts when code coverage is enabled.

@@ -1,7 +1,7 @@
 ![Kahlan](docs/assets/logo.png "Kahlan")
 <hr/>
 
-![Build Status](https://img.shields.io/badge/branch-master-blue.svg) [![Build Status](https://travis-ci.org/kahlan/kahlan.svg?branch=master)](https://travis-ci.org/kahlan/kahlan) [![License](https://poser.pugx.org/kahlan/kahlan/license.svg)](https://packagist.org/packages/kahlan/kahlan)
+![Build Status](https://img.shields.io/badge/branch-master-blue.svg) [![Build Status](https://travis-ci.com/kahlan/kahlan.svg?branch=master)](https://travis-ci.com/kahlan/kahlan) [![License](https://poser.pugx.org/kahlan/kahlan/license.svg)](https://packagist.org/packages/kahlan/kahlan)
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/kahlan/kahlan.svg)](https://packagist.org/packages/kahlan/kahlan)
 [![Total Downloads](https://img.shields.io/packagist/dt/kahlan/kahlan.svg)](https://packagist.org/packages/kahlan/kahlan)
@@ -29,7 +29,7 @@ See the [full documentation here](https://kahlan.github.io/docs)
 
 ## Requirements
 
- * PHP 5.5+
+ * PHP 7.1+
  * Composer
  * [phpdbg](http://php.net/manual/en/debugger-about.php) or [Xdebug](http://xdebug.org/) (only required for code coverage analysis)
 

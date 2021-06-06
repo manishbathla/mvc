@@ -385,26 +385,26 @@
     },
     {
         "name": "kahlan/kahlan",
-        "version": "4.7.2",
-        "version_normalized": "4.7.2.0",
+        "version": "5.1.2",
+        "version_normalized": "5.1.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/kahlan/kahlan.git",
-            "reference": "025114b7f13985abceff3ba0e28cca71cb0d40e8"
+            "reference": "565190eea371c39c298f6baeb7ad92db90ca6544"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/kahlan/kahlan/zipball/025114b7f13985abceff3ba0e28cca71cb0d40e8",
-            "reference": "025114b7f13985abceff3ba0e28cca71cb0d40e8",
+            "url": "https://api.github.com/repos/kahlan/kahlan/zipball/565190eea371c39c298f6baeb7ad92db90ca6544",
+            "reference": "565190eea371c39c298f6baeb7ad92db90ca6544",
             "shasum": ""
         },
         "require": {
-            "php": ">=5.5"
+            "php": ">=7.1"
         },
         "require-dev": {
             "squizlabs/php_codesniffer": "^3.4"
         },
-        "time": "2020-01-25T16:39:06+00:00",
+        "time": "2021-05-30T20:59:19+00:00",
         "bin": [
             "bin/kahlan"
         ],
@@ -2494,12 +2494,12 @@
         "version_normalized": "1.7.0.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/webmozart/assert.git",
+            "url": "https://github.com/webmozarts/assert.git",
             "reference": "aed98a490f9a8f78468232db345ab9cf606cf598"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/webmozart/assert/zipball/aed98a490f9a8f78468232db345ab9cf606cf598",
+            "url": "https://api.github.com/repos/webmozarts/assert/zipball/aed98a490f9a8f78468232db345ab9cf606cf598",
             "reference": "aed98a490f9a8f78468232db345ab9cf606cf598",
             "shasum": ""
         },
