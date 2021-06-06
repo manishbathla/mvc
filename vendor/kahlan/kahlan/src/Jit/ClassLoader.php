@@ -243,8 +243,8 @@ class ClassLoader
             $code = file_get_contents($file);
             $timestamp = filemtime($file);
 
-            $rewrited = $this->_patchers->process($code, $file);
-            $cached = $this->cache($file, $rewrited, max($timestamp, $this->_watchedTimestamp) + 1);
+            $rewritten = $this->_patchers->process($code, $file);
+            $cached = $this->cache($file, $rewritten, max($timestamp, $this->_watchedTimestamp) + 1);
         }
         $includePath = get_include_path();
         set_include_path($includePath ? $includePath . ':' . dirname($file) : dirname($file));
@@ -490,7 +490,7 @@ class ClassLoader
     public function getPrefixes()
     {
         if (!empty($this->_prefixesPsr0)) {
-            return call_user_func_array('array_merge', $this->_prefixesPsr0);
+            return call_user_func_array('array_merge', array_values($this->_prefixesPsr0));
         }
 
         return [];
@@ -783,11 +783,6 @@ class ClassLoader
 
         $file = $this->_findFileWithExtension($class, '.php');
 
-        // Search for Hack files if we are running on HHVM
-        if (!$file && defined('HHVM_VERSION')) {
-            $file = $this->_findFileWithExtension($class, '.hh');
-        }
-
         if ($this->_apcuPrefix !== null) {
             apcu_add($this->_apcuPrefix . $class, $file);
         }
@@ -799,6 +794,26 @@ class ClassLoader
             $this->_missingClasses[$class] = true;
         }
         return $this->_patchers ? $this->_patchers->findFile($this, $class, $file) : $file;
+    }
+
+    /**
+     * Return the relative path of a file.
+     *
+     * @param  string $filePath  The file path
+     * @return string        The relative file path
+     */
+    public function relativePath($filePath)
+    {
+        $cachePath = rtrim($this->cachePath(), DIRECTORY_SEPARATOR);
+        $prefix = rtrim(defined('KAHLAN_CWD') ? KAHLAN_CWD : '' ?? '', DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+        if ($cachePath && strpos($filePath, $cachePath) === 0) {
+            $filePath = substr($filePath, strlen($cachePath));
+        }
+        if (strpos($filePath, $prefix) === 0) {
+            $filePath = substr($filePath, strlen($prefix));
+        }
+        return $filePath;
     }
 
     protected function _findFileWithExtension($class, $ext)

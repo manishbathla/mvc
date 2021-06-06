@@ -101,6 +101,26 @@ describe("Double", function () {
 
         });
 
+        it("stubs an instance with a parent class and stub a method", function () {
+
+            $double = Double::instance(['extends' => 'Kahlan\Spec\Fixture\Plugin\Double\Doz']);
+            expect($double->foo2())->toBe(null);
+
+            allow($double)->toReceive('foo2')->andReturn('Hello World');
+            expect($double->foo2())->toBe('Hello World');
+
+        });
+
+        it("stubs an instance with a parent class and stub a method with a return type int defined", function () {
+
+            $double = Double::instance(['extends' => 'Kahlan\Spec\Fixture\Plugin\Double\Doz']);
+            expect($double->foo9())->toBe([]);
+
+            allow($double)->toReceive('foo9')->andReturn(['Hello World']);
+            expect($double->foo9())->toBe(['Hello World']);
+
+        });
+
         it("stubs an instance using a trait", function () {
 
             $double = Double::instance(['uses' => 'Kahlan\Spec\Mock\Plugin\Double\HelloTrait']);
@@ -524,8 +544,6 @@ EOD;
 
         it("generates interface methods with return type", function () {
 
-            skipIf(PHP_MAJOR_VERSION < 7);
-
             $result = Double::generate([
                 'class'        => 'Kahlan\Spec\Plugin\Double\Double',
                 'implements'   => ['Kahlan\Spec\Fixture\Plugin\Double\ReturnTypesInterface'],
@@ -550,9 +568,6 @@ EOD;
 
         it("generates interface methods with nullable return type", function () {
 
-            skipIf(PHP_MAJOR_VERSION < 7);
-            skipIf(PHP_MINOR_VERSION < 1);
-
             $result = Double::generate([
                 'class'        => 'Kahlan\Spec\Plugin\Double\Double',
                 'implements'   => ['Kahlan\Spec\Fixture\Plugin\Double\NullableInterface'],
@@ -575,9 +590,32 @@ EOD;
 
         });
 
-        it("generates interface methods with variadic variable", function () {
+        it("generates interface methods with union types", function () {
 
-            skipIf(defined('HHVM_VERSION') || PHP_MAJOR_VERSION < 7);
+            skipIf(PHP_MAJOR_VERSION < 8);
+
+            $result = Double::generate([
+                'class'        => 'Kahlan\Spec\Plugin\Double\Double',
+                'implements'   => ['Kahlan\Spec\Fixture\Plugin\Double\UnionTypesInterface'],
+                'magicMethods' => false
+            ]);
+
+            $expected = <<<EOD
+<?php
+namespace Kahlan\\Spec\\Plugin\\Double;
+
+class Double implements \\Kahlan\\Spec\\Fixture\\Plugin\\Double\\UnionTypesInterface {
+
+    public function foo(\\DateTime|string|int|null \$integer = NULL) : \\DateTime|string|int {}
+
+}
+?>
+EOD;
+            expect($result)->toBe($expected);
+
+        });
+
+        it("generates interface methods with variadic variable", function () {
 
             $result = Double::generate([
                 'class'        => 'Kahlan\Spec\Plugin\Double\Double',
@@ -685,6 +723,7 @@ class Double extends \\Kahlan\\Spec\\Fixture\\Plugin\\Double\\Doz {
     public function foo5(\\Closure \$fct) {return parent::foo5(\$fct);}
     public function foo6(\\Exception \$e) {return parent::foo6(\$e);}
     public function foo7(\\Kahlan\\Spec\\Fixture\\Plugin\\Double\\DozInterface \$instance) {return parent::foo7(\$instance);}
+    public function foo9() : array {return parent::foo9();}
 
 }
 ?>
@@ -705,8 +744,6 @@ EOD;
 
         it("adds ` = NULL` to optional parameter in PHP core method", function () {
 
-            skipIf(defined('HHVM_VERSION'));
-
             $result = Double::generate([
                 'class'   => 'Kahlan\Spec\Plugin\Double\Double',
                 'extends' => 'LogicException',
@@ -719,7 +756,7 @@ namespace Kahlan\\\\Spec\\\\Plugin\\\\Double;
 
 class Double extends \\\\LogicException {
 
-    public function __construct\\(\\\$message = NULL, \\\$code = NULL, \\\$previous = NULL\\)
+    public function __construct\\((.*)?\\\$message(.*)?,(.*)?\\\$code(.*)?,(.*)?\\\$previous = NULL\\)
 EOD;
             expect($result)->toMatch('~' . $expected . '~i');
 
@@ -740,6 +777,34 @@ namespace Kahlan\\Spec\\Plugin\\Double;
 class Double {
 
 
+
+}
+
+EOD;
+            expect($result)->toBe($expected);
+
+        });
+
+        it("stubs an interface with `self` return type hints", function () {
+
+            skipIf(PHP_MAJOR_VERSION < 8);
+
+            $result = Double::generate([
+                'class' => 'Kahlan\Spec\Plugin\Double\Double',
+                'implements' => 'Kahlan\Spec\Mock\Plugin\Double\HelloInterface',
+                'magicMethods' => false,
+                'openTag' => false,
+                'closeTag' => false,
+            ]);
+
+            $expected = <<<EOD
+namespace Kahlan\\Spec\\Plugin\\Double;
+
+class Double implements \Kahlan\Spec\Mock\Plugin\Double\HelloInterface {
+
+    public function returnSelf() : self {}
+    public function returnStatic() : static {}
+    public function aloha() : \Kahlan\Spec\Mock\Plugin\Double\HelloInterface {}
 
 }
 

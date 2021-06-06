@@ -85,6 +85,33 @@ describe("Monkey", function () {
 
         });
 
+        it("patches named arguments", function () {
+
+            $nodes = Parser::parse(file_get_contents($this->path . '/NamedArguments.php'));
+            $expected = file_get_contents($this->path . '/NamedArgumentsProcessed.php');
+            $actual = Parser::unparse($this->patcher->process($nodes));
+            expect($actual)->toBe($expected);
+
+        });
+
+        it("patches return by reference", function () {
+
+            $nodes = Parser::parse(file_get_contents($this->path . '/ReturnByReference.php'));
+            $expected = file_get_contents($this->path . '/ReturnByReferenceProcessed.php');
+            $actual = Parser::unparse($this->patcher->process($nodes));
+            expect($actual)->toBe($expected);
+
+        });
+
+        it("patches comments", function () {
+
+            $nodes = Parser::parse(file_get_contents($this->path . '/Comment.php'));
+            $expected = file_get_contents($this->path . '/CommentProcessed.php');
+            $actual = Parser::unparse($this->patcher->process($nodes));
+            expect($actual)->toBe($expected);
+
+        });
+
     });
 
     describe("->patchable()", function () {
