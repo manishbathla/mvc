@@ -16,6 +16,8 @@ use Phan\Language\UnionType;
  */
 class IntType extends ScalarType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'int';
 
@@ -36,7 +38,7 @@ class IntType extends ScalarType
     public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         // always allow int -> float or int -> int
-        if ($other instanceof IntType || $other instanceof FloatType) {
+        if ($other instanceof IntType || $other instanceof FloatType || $other instanceof MixedType || $other instanceof TemplateType) {
             return true;
         }
         if ($context->isStrictTypes()) {

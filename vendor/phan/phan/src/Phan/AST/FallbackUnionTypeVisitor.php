@@ -128,7 +128,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
     /**
      * Visit a node with kind `\ast\AST_CLONE`
      *
-     * @param Node $_
+     * @param Node $node @unused-param
      * A node of the type indicated by the method name that we'd
      * like to figure out the type that it produces.
      *
@@ -136,7 +136,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
      * The set of types that are possibly produced by the
      * given node
      */
-    public function visitClone(Node $_): UnionType
+    public function visitClone(Node $node): UnionType
     {
         return ObjectType::instance(false)->asRealUnionType();
     }
@@ -229,7 +229,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
         // Rarely, a conditional will always be true or always be false.
         if ($cond_truthiness !== null) {
             // TODO: Add no-op checks in another PR, if they don't already exist for conditional.
-            if ($cond_truthiness === true) {
+            if ($cond_truthiness) {
                 // The condition is unconditionally true
                 return self::unionTypeFromNode(
                     $this->code_base,
@@ -283,7 +283,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
     /**
      * Visit a node with kind `\ast\AST_ARRAY`
      *
-     * @param Node $_
+     * @param Node $node @unused-param
      * A node of the type indicated by the method name that we'd
      * like to figure out the type that it produces.
      *
@@ -291,7 +291,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
      * The set of types that are possibly produced by the
      * given node
      */
-    public function visitArray(Node $_): UnionType
+    public function visitArray(Node $node): UnionType
     {
         // TODO: More precise
         return ArrayType::instance(false)->asRealUnionType();
@@ -437,6 +437,8 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
      * @return UnionType
      * The set of types that are possibly produced by the
      * given node
+     *
+     * @suppress PhanStaticClassAccessWithStaticVariable static variables are safely initialized
      */
     public function visitNew(Node $node): UnionType
     {
@@ -454,7 +456,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
     /**
      * Visit a node with kind `\ast\AST_INSTANCEOF`
      *
-     * @param Node $_
+     * @param Node $node @unused-param
      * A node of the type indicated by the method name that we'd
      * like to figure out the type that it produces.
      *
@@ -462,7 +464,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
      * The set of types that are possibly produced by the
      * given node
      */
-    public function visitInstanceOf(Node $_): UnionType
+    public function visitInstanceOf(Node $node): UnionType
     {
         return BoolType::instance(false)->asRealUnionType();
     }
@@ -676,7 +678,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
         try {
             $possible_types = null;
             foreach (UnionTypeVisitor::classListFromNodeAndContext($this->code_base, $this->context, $class_node) as $class) {
-                if (!$class->hasMethodWithName($this->code_base, $method_name)) {
+                if (!$class->hasMethodWithName($this->code_base, $method_name, true)) {
                     return UnionType::empty();
                 }
                 $method = $class->getMethodByName($this->code_base, $method_name);
@@ -724,7 +726,7 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
         }
         try {
             $class = $this->context->getClassInScope($this->code_base);
-            if (!$class->hasMethodWithName($this->code_base, $method_name)) {
+            if (!$class->hasMethodWithName($this->code_base, $method_name, true)) {
                 return UnionType::empty();
             }
             $method = $class->getMethodByName($this->code_base, $method_name);
@@ -732,6 +734,25 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
         } catch (Exception $_) {
             return UnionType::empty();
         }
+    }
+
+    /**
+     * Visit a node with kind `\ast\AST_NULLSAFE_METHOD_CALL`.
+     *
+     * Conservatively try to infer the returned union type of calls such
+     * as $this?->someMethod(...)
+     *
+     * @param Node $node
+     * A node of the type indicated by the method name that we'd
+     * like to figure out the type that it produces.
+     *
+     * @return UnionType
+     * The set of types that are possibly produced by the
+     * given node
+     */
+    public function visitNullsafeMethodCall(Node $node): UnionType
+    {
+        return $this->visitMethodCall($node)->nullableClone();
     }
 
     /**
@@ -793,11 +814,11 @@ class FallbackUnionTypeVisitor extends KindVisitorImplementation
         return LiteralIntType::instanceForValue(1, false)->asRealUnionType();
     }
 
-    /*
+    /**
      * @param Node $node
      * A node holding a class name
      *
-     * @return UnionType
+     * @return ?UnionType
      * The set of types that are possibly produced by the
      * given node
      */

@@ -437,37 +437,39 @@ final class BinaryOperatorFlagVisitor extends FlagVisitorImplementation
     }
 
     /**
-     * @param Node $unused_node
+     * @param Node $node @unused-param
      * A node to check types on
      *
      * @return UnionType
      * The resulting type(s) of the binary operation
      */
-    public function visitBinaryBoolAnd(Node $unused_node): UnionType
+    public function visitBinaryBoolAnd(Node $node): UnionType
+    {
+        // TODO: This might be useful when at least one side is a constant expression or at least one side is `never`
+        // e.g. `const X = Y || Z;`
+        return BoolType::instance(false)->asRealUnionType();
+    }
+
+    /**
+     * @param Node $node @unused-param
+     * A node to check types on
+     *
+     * @return UnionType
+     * The resulting type(s) of the binary operation
+     */
+    public function visitBinaryBoolXor(Node $node): UnionType
     {
         return BoolType::instance(false)->asRealUnionType();
     }
 
     /**
-     * @param Node $unused_node
+     * @param Node $node @unused-param
      * A node to check types on
      *
      * @return UnionType
      * The resulting type(s) of the binary operation
      */
-    public function visitBinaryBoolXor(Node $unused_node): UnionType
-    {
-        return BoolType::instance(false)->asRealUnionType();
-    }
-
-    /**
-     * @param Node $unused_node
-     * A node to check types on
-     *
-     * @return UnionType
-     * The resulting type(s) of the binary operation
-     */
-    public function visitBinaryBoolOr(Node $unused_node): UnionType
+    public function visitBinaryBoolOr(Node $node): UnionType
     {
         return BoolType::instance(false)->asRealUnionType();
     }
@@ -838,8 +840,6 @@ final class BinaryOperatorFlagVisitor extends FlagVisitorImplementation
         }
         $common_left_fields = null;
         foreach ($left->getRealTypeSet() as $type) {
-            // if ($type->isNullable()) { return; }
-
             if (!$type instanceof ArrayShapeType) {
                 if ($type instanceof ListType) {
                     continue;
@@ -999,10 +999,11 @@ final class BinaryOperatorFlagVisitor extends FlagVisitorImplementation
     }
 
     /**
+     * @unused-param $node
      * @return UnionType
      * The resulting type(s) of the binary operation
      */
-    public function visitBinaryMod(Node $unused_node): UnionType
+    public function visitBinaryMod(Node $node): UnionType
     {
         // TODO: Warn about invalid left or right side
         return IntType::instance(false)->asRealUnionType();
@@ -1037,6 +1038,9 @@ final class BinaryOperatorFlagVisitor extends FlagVisitorImplementation
             $node->children['right'],
             $this->should_catch_issue_exception
         );
+        if ($right_type->isNeverType()) {
+            return $left_type->nonNullableClone();
+        }
         if ($left_type->isEmpty()) {
             if ($right_type->isEmpty()) {
                 return MixedType::instance(false)->asPHPDocUnionType();
@@ -1053,6 +1057,9 @@ final class BinaryOperatorFlagVisitor extends FlagVisitorImplementation
         // On the left side, remove null and replace '?T' with 'T'
         // Don't bother if the right side contains null.
         if (!$right_type->isEmpty() && $left_type->containsNullable() && !$right_type->containsNullable()) {
+            if ($left_type->getRealUnionType()->isRealTypeNullOrUndefined()) {
+                return $right_type;
+            }
             $left_type = $left_type->nonNullableClone();
         }
 

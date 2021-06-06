@@ -17,6 +17,8 @@ use Phan\Language\UnionType;
  */
 class ArrayType extends IterableType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'array';
 
@@ -46,12 +48,20 @@ class ArrayType extends IterableType
         return true;  // Overrides Type
     }
 
-    public function isArrayOrArrayAccessSubType(CodeBase $unused_code_base): bool
+    /**
+     * @unused-param $code_base
+     * @override
+     */
+    public function isArrayOrArrayAccessSubType(CodeBase $code_base): bool
     {
         return true;  // Overrides Type
     }
 
-    public function isCountable(CodeBase $unused_code_base): bool
+    /**
+     * @unused-param $code_base
+     * @override
+     */
+    public function isCountable(CodeBase $code_base): bool
     {
         return true;  // Overrides Type
     }
@@ -204,7 +214,7 @@ class ArrayType extends IterableType
                 $result[] = $type_part;
             }
         }
-        // @phan-suppress-next-line PhanPartialTypeMismatchArgument
+        // (at)phan-suppress-next-line PhanPartialTypeMismatchArgument
         return UnionType::getUniqueTypes($result);
              */
     }
@@ -212,6 +222,7 @@ class ArrayType extends IterableType
     /**
      * @param non-empty-list<Type> $right_types the original types being added to
      * @return list<ArrayType>
+     * @suppress PhanPartialTypeMismatchArgument UnionType::typeSetFromString is list<Type>
      */
     private static function computeRealTypeSetFromArrayTypeLists(array $right_types, bool $is_assignment): array
     {
@@ -222,6 +233,7 @@ class ArrayType extends IterableType
             }
         }
         static $array_type_set;
+        // @phan-suppress-next-line PhanPartialTypeMismatchReturn Type cannot cast to ArrayType
         return $array_type_set ?? ($array_type_set = UnionType::typeSetFromString('array'));
     }
 
@@ -298,9 +310,14 @@ class ArrayType extends IterableType
         return parent::canCastToNonNullableTypeWithoutConfig($type) || $type instanceof ArrayType || $type instanceof CallableDeclarationType;
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @override
+     * @unused-param $code_base
+     * @unused-param $context
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        if ($other instanceof IterableType) {
+        if ($other instanceof IterableType || $other instanceof MixedType || $other instanceof TemplateType) {
             return true;
         }
         if ($this->isDefiniteNonCallableType()) {
@@ -310,9 +327,11 @@ class ArrayType extends IterableType
     }
 
     /**
+     * @override
+     * @unused-param $code_base
      * @return UnionType int|string for arrays
      */
-    public function iterableKeyUnionType(CodeBase $unused_code_base): UnionType
+    public function iterableKeyUnionType(CodeBase $code_base): UnionType
     {
         // Reduce false positive partial type mismatch errors
         return UnionType::empty();
@@ -363,7 +382,12 @@ class ArrayType extends IterableType
         return null;
     }
 
-    public function canPossiblyCastToClass(CodeBase $unused_code_base, Type $unused_other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $other
+     * @override
+     */
+    public function canPossiblyCastToClass(CodeBase $code_base, Type $other): bool
     {
         // arrays can't cast to object.
         return false;
@@ -373,8 +397,9 @@ class ArrayType extends IterableType
      * Returns the equivalent (possibly nullable) associative array type (or array shape type) for this type.
      *
      * TODO: Implement for ArrayShapeType (not currently calling it) with $can_reduce_size
+     * @unused-param $can_reduce_size
      */
-    public function asAssociativeArrayType(bool $unused_can_reduce_size): ArrayType
+    public function asAssociativeArrayType(bool $can_reduce_size): ArrayType
     {
         return AssociativeArrayType::fromElementType(
             MixedType::instance(false),
@@ -384,8 +409,18 @@ class ArrayType extends IterableType
     }
 
     /**
+     * Returns the equivalent (possibly nullable) list type (or array shape type) for this type.
+     * Note that this returns the empty union type if it is known to be impossible for this to be a list.
+     */
+    public function castToListTypes(): UnionType
+    {
+        return ListType::fromElementType(MixedType::instance(false), $this->is_nullable)->asPHPDocUnionType();
+    }
+
+    /**
      * Convert ArrayTypes with integer-only keys to ListType.
      * Calling withFlattenedArrayShapeTypeInstances first is recommended.
+     * @see asListType
      */
     public function convertIntegerKeyArrayToList(): ArrayType
     {

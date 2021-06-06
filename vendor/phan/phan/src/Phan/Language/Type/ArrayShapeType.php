@@ -206,9 +206,10 @@ final class ArrayShapeType extends ArrayType implements GenericArrayInterface
     }
 
     /**
+     * @unused-param $code_base
      * @phan-override
      */
-    public function iterableKeyUnionType(CodeBase $unused_code_base): UnionType
+    public function iterableKeyUnionType(CodeBase $code_base): UnionType
     {
         return $this->getKeyUnionType();
     }
@@ -228,9 +229,10 @@ final class ArrayShapeType extends ArrayType implements GenericArrayInterface
     }
 
     /**
+     * @unused-param $code_base
      * @override
      */
-    public function iterableValueUnionType(CodeBase $unused_code_base): UnionType
+    public function iterableValueUnionType(CodeBase $code_base): UnionType
     {
         return $this->genericArrayElementUnionType();
     }
@@ -996,7 +998,7 @@ final class ArrayShapeType extends ArrayType implements GenericArrayInterface
             }
             if ($code_base->hasClassWithFQSEN($fqsen)) {
                 $class = $code_base->getClassByFQSEN($fqsen);
-                if ($class->hasMethodWithName($code_base, $method_name)) {
+                if ($class->hasMethodWithName($code_base, $method_name, true)) {
                     return $class->getMethodByName($code_base, $method_name);
                 }
             }
@@ -1116,9 +1118,31 @@ final class ArrayShapeType extends ArrayType implements GenericArrayInterface
         );
     }
 
-    public function asAssociativeArrayType(bool $unused_can_reduce_size): ArrayType
+    /**
+     * @override
+     * @unused-param $can_reduce_size
+     */
+    public function asAssociativeArrayType(bool $can_reduce_size): ArrayType
     {
         return $this;
+    }
+
+    /**
+     * @override
+     */
+    public function castToListTypes(): UnionType
+    {
+        if ($this->canCastToList()) {
+            // NOTE: This is a bad approximation for array{0:T1, 1?:T2, 2?:T3}
+            return $this->asPHPDocUnionType();
+        }
+        // If this has at least one string type the condition array_is_list does not hold
+        foreach ($this->field_types as $k => $v) {
+            if (\is_string($k) && !$v->isPossiblyUndefined()) {
+                return UnionType::empty();
+            }
+        }
+        return $this->genericArrayElementUnionType()->asListTypes();
     }
 
     public function getTypesRecursively(): Generator

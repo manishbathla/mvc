@@ -17,6 +17,8 @@ use Phan\Language\UnionType;
  */
 final class CallableStringType extends StringType implements CallableInterface
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'callable-string';
 
@@ -130,9 +132,17 @@ final class CallableStringType extends StringType implements CallableInterface
         return self::instance($is_nullable);
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
+        // TODO: check if literal string is possibly callable
         return $other instanceof StringType ||
+            $other instanceof MixedType ||
+            $other instanceof TemplateType ||
+            $other instanceof CallableDeclarationType ||
             $other instanceof CallableType;
     }
 }

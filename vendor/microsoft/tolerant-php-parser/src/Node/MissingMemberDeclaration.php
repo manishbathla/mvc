@@ -6,13 +6,16 @@
 
 namespace Microsoft\PhpParser\Node;
 
+use Microsoft\PhpParser\ModifiedTypeInterface;
+use Microsoft\PhpParser\ModifiedTypeTrait;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Token;
 
-class MissingMemberDeclaration extends Node {
+class MissingMemberDeclaration extends Node implements ModifiedTypeInterface {
+    use ModifiedTypeTrait;
 
-    /** @var Token[] */
-    public $modifiers;
+    /** @var AttributeGroup[]|null */
+    public $attributes;
 
     /** @var Token|null needed along with typeDeclaration for what looked like typed property declarations but was missing VariableName */
     public $questionToken;
@@ -24,6 +27,7 @@ class MissingMemberDeclaration extends Node {
     public $otherTypeDeclarations;
 
     const CHILD_NAMES = [
+        'attributes',
         'modifiers',
         'questionToken',
         'typeDeclaration',

@@ -9,11 +9,14 @@ use ast\Node;
 use Closure;
 use LogicException;
 use Phan\Analysis\AbstractMethodAnalyzer;
+use Phan\Analysis\ClassConstantTypesAnalyzer;
 use Phan\Analysis\ClassInheritanceAnalyzer;
 use Phan\Analysis\CompositionAnalyzer;
 use Phan\Analysis\DuplicateClassAnalyzer;
 use Phan\Analysis\ParentConstructorCalledAnalyzer;
 use Phan\Analysis\PropertyTypesAnalyzer;
+use Phan\AST\ASTReverter;
+use Phan\AST\UnionTypeVisitor;
 use Phan\CodeBase;
 use Phan\Config;
 use Phan\Exception\CodeBaseException;
@@ -36,6 +39,7 @@ use Phan\Language\Type\IterableType;
 use Phan\Language\Type\LiteralStringType;
 use Phan\Language\Type\MixedType;
 use Phan\Language\Type\StaticType;
+use Phan\Language\Type\StringType;
 use Phan\Language\Type\TemplateType;
 use Phan\Language\UnionType;
 use Phan\Library\None;
@@ -48,8 +52,15 @@ use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
 
+use function array_key_exists;
+use function array_merge;
+use function array_values;
 use function count;
+use function in_array;
+use function is_int;
+use function is_object;
 use function is_string;
+use function strtolower;
 
 /**
  * Clazz represents the information Phan knows about a class, trait, or interface,
@@ -65,6 +76,7 @@ class Clazz extends AddressableElement
 {
     use Memoize;
     use ClosedScopeElement;
+    use HasAttributesTrait;
 
     /**
      * @var Type|null
@@ -139,6 +151,23 @@ class Clazz extends AddressableElement
      * @var list<Type>
      */
     private $mixin_types = [];
+
+    /**
+     * @var array<mixed,string> maps value to the name of the case declaring that value
+     * (for backed enums)
+     */
+    private $enum_case_map = [];
+
+    /**
+     * @var list<string> list of enum case names with values that could not be determined
+     */
+    private $enum_case_map_unknown = [];
+
+    /**
+     * @var list<string> list of enum case names
+     * (for unit enums)
+     */
+    private $enum_case_list = [];
 
     /**
      * @param Context $context
@@ -234,6 +263,12 @@ class Clazz extends AddressableElement
         if ($class->isAbstract()) {
             $flags |= \ast\flags\CLASS_ABSTRACT;
         }
+        if (\PHP_VERSION_ID >= 80100) {
+            // @phan-suppress-next-line PhanUndeclaredMethod this was added in 8.1
+            if ($class->isEnum()) {
+                $flags |= \ast\flags\CLASS_ENUM;
+            }
+        }
 
         $context = new Context();
 
@@ -299,18 +334,22 @@ class Clazz extends AddressableElement
                 $property_name
             );
 
-            $flags = 0;
             if ($class->hasProperty($property_name)) {
-                $flags = self::getASTFlagsForReflectionProperty($class->getProperty($property_name));
+                $reflection_property = $class->getProperty($property_name);
+                $flags = self::getASTFlagsForReflectionProperty($reflection_property);
+                $real_type = self::getRealTypeForReflectionProperty($reflection_property);
+            } else {
+                $flags = 0;
+                $real_type = UnionType::empty();
             }
 
             $property = new Property(
                 $property_context,
                 $property_name,
-                $property_type,
+                $property_type->withRealTypeSet($real_type->getTypeSet()),
                 $flags,
                 $property_fqsen,
-                UnionType::empty()
+                $real_type
             );
             // Record that Phan has known union types for this internal property,
             // so that analysis of assignments to the property can account for it.
@@ -336,17 +375,46 @@ class Clazz extends AddressableElement
             if ($clazz->hasPropertyWithName($code_base, $name)) {
                 continue;
             }
-            $flags = 0;
             if ($class->hasProperty($name)) {
-                $flags = self::getASTFlagsForReflectionProperty($class->getProperty($name));
+                $reflection_property = $class->getProperty($name);
+                $flags = self::getASTFlagsForReflectionProperty($reflection_property);
+                $real_type = self::getRealTypeForReflectionProperty($reflection_property);
+            } else {
+                $flags = 0;
+                $real_type = UnionType::empty();
             }
             $property = new Property(
                 $property_context,
                 $name,
-                Type::fromObject($default_value)->asPHPDocUnionType(),
+                Type::fromObject($default_value)->asPHPDocUnionType()->withRealTypeSet($real_type->getTypeSet()),
                 $flags,
                 $property_fqsen,
-                UnionType::empty()
+                $real_type
+            );
+
+            $clazz->addProperty($code_base, $property, None::instance());
+        }
+        foreach ($class->getProperties() as $reflection_property) {
+            // In PHP 7.4, it's possible for internal classes to have properties without defaults if they're uninitialized.
+            $name = $reflection_property->name;
+            if ($clazz->hasPropertyWithName($code_base, $name)) {
+                continue;
+            }
+            $property_context = $context->withScope($class_scope);
+
+            $property_fqsen = FullyQualifiedPropertyName::make(
+                $clazz->getFQSEN(),
+                $name
+            );
+
+            $real_type = self::getRealTypeForReflectionProperty($reflection_property);
+            $property = new Property(
+                $property_context,
+                $name,
+                $real_type->asRealUnionType(),
+                self::getASTFlagsForReflectionProperty($reflection_property),
+                $property_fqsen,
+                $real_type
             );
 
             $clazz->addProperty($code_base, $property, None::instance());
@@ -391,6 +459,9 @@ class Clazz extends AddressableElement
         }
 
         foreach ($class->getMethods() as $reflection_method) {
+            if ($reflection_method->getDeclaringClass()->name !== $class_name) {
+                continue;
+            }
             $method_context = $context->withScope($class_scope);
 
             $method_list =
@@ -406,6 +477,19 @@ class Clazz extends AddressableElement
         }
 
         return $clazz;
+    }
+
+    /**
+     * @suppress PhanUndeclaredMethod
+     */
+    private static function getRealTypeForReflectionProperty(ReflectionProperty $property): UnionType
+    {
+        if (\PHP_VERSION_ID >= 70400) {
+            if ($property->hasType()) {
+                return UnionType::fromReflectionType($property->getType());
+            }
+        }
+        return UnionType::empty();
     }
 
     /**
@@ -560,6 +644,10 @@ class Clazz extends AddressableElement
      * It should not be used for traits or interfaces.
      *
      * This returns false if $this === $other
+     *
+     * @deprecated This may lead to infinite recursion when analyzing invalid code. asExpandedTypes should be used instead.
+     * @suppress PhanUnreferencedPublicMethod
+     * @suppress PhanDeprecatedFunction
      */
     public function isSubclassOf(CodeBase $code_base, Clazz $other): bool
     {
@@ -766,6 +854,7 @@ class Clazz extends AddressableElement
         Property $inherited_property,
         Property $overriding_property
     ): void {
+        $overriding_property->setIsOverride(true);
         if ($inherited_property->isFromPHPDoc() || $inherited_property->isDynamicProperty() ||
             $overriding_property->isFromPHPDoc() || $overriding_property->isDynamicProperty()) {
             return;
@@ -878,7 +967,7 @@ class Clazz extends AddressableElement
                 $flags |= \ast\flags\MODIFIER_STATIC;
             }
             $method_name = $comment_method->getName();
-            if ($this->hasMethodWithName($code_base, $method_name)) {
+            if ($this->hasMethodWithName($code_base, $method_name, true)) {
                 // No point, and this would hurt inference accuracy.
                 continue;
             }
@@ -1028,7 +1117,7 @@ class Clazz extends AddressableElement
 
         // Check to see if we can use a __get magic method
         // TODO: What about __set?
-        if (!$is_static && $this->hasMethodWithName($code_base, '__get')) {
+        if (!$is_static && $this->hasMethodWithName($code_base, '__get', true)) {
             $method = $this->getMethodByName($code_base, '__get');
 
             // Make sure the magic method is accessible
@@ -1384,6 +1473,21 @@ class Clazz extends AddressableElement
             );
             return;
         }
+        // Warn if inheriting a class constant declared as @abstract without overriding it.
+        // Optionally, could check if other interfaces declared class constants with the same value, but low priority.
+        if ($constant->isPHPDocAbstract() && !$constant->isPrivate() && !$this->isAbstract() && $this->isClass()) {
+            Issue::maybeEmit(
+                $code_base,
+                $this->getContext(),
+                Issue::CommentAbstractOnInheritedConstant,
+                $this->getContext()->getLineNumberStart(),
+                $this->getFQSEN(),
+                $constant->getRealDefiningFQSEN(),
+                $constant->getContext()->getFile(),
+                $constant->getContext()->getLineNumberStart(),
+                '@abstract'
+            );
+        }
 
         // Update the FQSEN if it's not associated with this
         // class yet (always true)
@@ -1430,6 +1534,67 @@ class Clazz extends AddressableElement
         }
     }
 
+    /**
+     * Add an enum case (this is a specialization of a class constant)
+     */
+    public function addEnumCase(CodeBase $code_base, EnumCase $enum_case): void
+    {
+        $this->addConstant($code_base, $enum_case);
+
+        // TODO need to update minimum enum version to get enum's declared type
+        $value = $enum_case->getNodeForValue();
+        $name = $enum_case->getName();
+        if ($value !== null) {
+            if ($value instanceof Node) {
+                // TODO: Phan has a limit on how long of a string it will evaluate.
+                // The default max_literal_string_type_length config settings will cause problems for case values longer than 200 bytes, which are hopefully rare
+                $value = UnionTypeVisitor::unionTypeFromNode($code_base, $this->getContext(), $value)->asSingleScalarValueOrNullOrSelf();
+            }
+            if (is_int($value) || is_string($value)) {
+                $enum_case->setEnumCaseValue($value);
+                $old_name = $this->enum_case_map[$value] ?? null;
+                if (is_string($old_name)) {
+                    $old_enum_case_fqsen = FullyQualifiedClassConstantName::make($this->getFQSEN(), $old_name);
+                    $old_enum_case = $code_base->getClassConstantByFQSEN($old_enum_case_fqsen);
+                    Issue::maybeEmit(
+                        $code_base,
+                        $enum_case->getContext(),
+                        Issue::ReusedEnumCaseValue,
+                        $enum_case->getContext()->getLineNumberStart(),
+                        $name,
+                        ASTReverter::toShortString($value),
+                        $old_name,
+                        $old_enum_case->getFileRef()->getFile(),
+                        $old_enum_case->getFileRef()->getLineNumberStart()
+                    );
+                    return;
+                }
+                $this->enum_case_map[$value] = $name;
+            } elseif (!is_object($value)) {
+                Issue::maybeEmit(
+                    $code_base,
+                    $enum_case->getContext(),
+                    Issue::TypeInvalidEnumCaseType,
+                    $enum_case->getContext()->getLineNumberStart(),
+                    $name,
+                    ASTReverter::toShortString($value),
+                    'int|string'
+                );
+                $this->enum_case_map_unknown[] = $name;
+            }
+        } else {
+            $this->enum_case_list[] = $name;
+        }
+        if (count($this->enum_case_list) > 0 && (count($this->enum_case_map) > 0 || count($this->enum_case_map_unknown) > 0)) {
+            Issue::maybeEmit(
+                $code_base,
+                $this->getContext(),
+                Issue::SyntaxInconsistentEnum,
+                $this->getContext()->getLineNumberStart(),
+                $this->getFQSEN()
+            );
+        }
+    }
 
     /**
      * Add a class constant
@@ -1517,8 +1682,7 @@ class Clazz extends AddressableElement
                     $context->getFile(),
                     $context->getLineNumberStart(),
                     [
-                        (string)$constant_fqsen,
-                        (string)$this->getFQSEN()
+                        $this->getFQSEN() . '::' . $constant_fqsen
                     ],
                     IssueFixSuggester::suggestSimilarClassConstant($code_base, $context, $constant_fqsen)
                 )
@@ -1536,15 +1700,8 @@ class Clazz extends AddressableElement
 
         // Visibility checks for private/protected class constants:
 
-        // Are we within a class referring to the class
-        // itself?
-        $is_local_access = (
-            $context->isInClassScope()
-            && $context->getClassInScope($code_base) === $constant->getClass($code_base)
-        );
-
-        if ($is_local_access) {
-            // Classes can always access constants declared in the same class
+        $accessing_class = $context->getClassFQSENOrNull();
+        if ($accessing_class && $constant->isAccessibleFromClass($code_base, $accessing_class)) {
             return $constant;
         }
 
@@ -1564,33 +1721,17 @@ class Clazz extends AddressableElement
         }
 
         // We now know that $constant is a protected constant
-
-        // Are we within a class or an extending sub-class
-        // referring to the class?
-        $is_remote_access = $context->isInClassScope()
-            && $context->getClassInScope($code_base)
-            ->getUnionType()->canCastToExpandedUnionType(
-                $this->getUnionType(),
-                $code_base
-            );
-
-        if (!$is_remote_access) {
-            // And the access is not from anywhere on the class hierarchy, so throw
-            throw new IssueException(
-                Issue::fromType(Issue::AccessClassConstantProtected)(
-                    $context->getFile(),
-                    $context->getLineNumberStart(),
-                    [
-                        (string)$constant_fqsen,
-                        $constant->getContext()->getFile(),
-                        $constant->getContext()->getLineNumberStart()
-                    ]
-                )
-            );
-        }
-
-        // Valid access to a protected constant.
-        return $constant;
+        throw new IssueException(
+            Issue::fromType(Issue::AccessClassConstantProtected)(
+                $context->getFile(),
+                $context->getLineNumberStart(),
+                [
+                    (string)$constant_fqsen,
+                    $constant->getContext()->getFile(),
+                    $constant->getContext()->getLineNumberStart()
+                ]
+            )
+        );
     }
 
     /**
@@ -1648,6 +1789,9 @@ class Clazz extends AddressableElement
                 self::markMethodAsOverridden($code_base, $existing_method_defining_fqsen);
             }
 
+            if ($existing_method->getRealDefiningFQSEN() === $method->getRealDefiningFQSEN()) {
+                return;
+            }
             if ($existing_method->getRealDefiningFQSEN() === $method_fqsen || $method->isAbstract() || !$existing_method->isAbstract() || $existing_method->isNewConstructor()) {
                 // TODO: What if both of these are abstract, and those get combined into an abstract class?
                 //       Should phan check compatibility of the abstract methods it inherits?
@@ -1738,6 +1882,7 @@ class Clazz extends AddressableElement
     }
 
     /**
+     * @param bool $is_direct_invocation @phan-mandatory-param
      * @return bool
      * True if this class has a method with the given name
      */
@@ -1826,7 +1971,7 @@ class Clazz extends AddressableElement
      */
     public function hasCallMethod(CodeBase $code_base): bool
     {
-        return $this->hasMethodWithName($code_base, '__call');
+        return $this->hasMethodWithName($code_base, '__call', true);
     }
 
     /**
@@ -1883,7 +2028,7 @@ class Clazz extends AddressableElement
      */
     public function hasCallStaticMethod(CodeBase $code_base): bool
     {
-        return $this->hasMethodWithName($code_base, '__callStatic');
+        return $this->hasMethodWithName($code_base, '__callStatic', true);
     }
 
     /**
@@ -1924,7 +2069,7 @@ class Clazz extends AddressableElement
      */
     public function hasGetMethod(CodeBase $code_base): bool
     {
-        return $this->hasMethodWithName($code_base, '__get');
+        return $this->hasMethodWithName($code_base, '__get', true);
     }
 
     /**
@@ -1937,7 +2082,7 @@ class Clazz extends AddressableElement
      */
     public function hasSetMethod(CodeBase $code_base): bool
     {
-        return $this->hasMethodWithName($code_base, '__set');
+        return $this->hasMethodWithName($code_base, '__set', true);
     }
 
     /**
@@ -2055,7 +2200,7 @@ class Clazz extends AddressableElement
     }
 
     /**
-     * Returns whether this class is `(at)immutable`
+     * Returns whether this class is `(at)immutable` in phpdoc
      *
      * This will warn if instance properties of instances of the class will not change after the object is constructed.
      * - Methods of (at)immutable classes may change external state (e.g. perform I/O, modify other objects)
@@ -2105,16 +2250,6 @@ class Clazz extends AddressableElement
         }
     }
 
-    /**
-     * True if this class has dynamic properties. (e.g. stdClass)
-     * @deprecated use hasDynamicProperties
-     * @suppress PhanUnreferencedPublicMethod
-     */
-    final public function getHasDynamicProperties(CodeBase $code_base): bool
-    {
-        return $this->hasDynamicProperties($code_base);
-    }
-
     public function setHasDynamicProperties(
         bool $has_dynamic_properties
     ): void {
@@ -2124,7 +2259,6 @@ class Clazz extends AddressableElement
             $has_dynamic_properties
         ));
     }
-
 
     /**
      * @return bool
@@ -2146,6 +2280,66 @@ class Clazz extends AddressableElement
 
     /**
      * @return bool
+     * True if this is an enum
+     */
+    public function isEnum(): bool
+    {
+        return $this->getFlagsHasState(\ast\flags\CLASS_ENUM);
+    }
+
+    private const IMMUTABLE_CLASS_SET = [
+        '\addressinfo' => true,
+        '\closure' => true,
+        '\curlhandle' => true,
+        '\curlmultihandle' => true,
+        '\curlsharehandle' => true,
+        '\deflatecontext' => true,
+        '\enchantbroker' => true,
+        '\enchantdictionary' => true,
+        '\fiber' => true,
+        '\ftp\connection' => true,
+        '\gdfont' => true,
+        '\gdimage' => true,
+        '\generator' => true,
+        '\imap\connection' => true,
+        '\inflatecontext' => true,
+        '\ldap\connection' => true,
+        '\ldap\resultentry' => true,
+        '\ldap\result' => true,
+        '\opensslasymmetrickey' => true,
+        '\opensslcertificatesigningrequest' => true,
+        '\opensslcertificate' => true,
+        '\pgsql\connection' => true,
+        '\pgsql\lob' => true,
+        '\pgsql\result' => true,
+        '\pspell\config' => true,
+        '\pspell\dictionary' => true,
+        '\shmop' => true,
+        '\socket' => true,
+        '\sysvmessagequeue' => true,
+        '\sysvsemaphore' => true,
+        '\sysvsharedmemory' => true,
+        '\weakmap' => true,
+        '\weakreference' => true,
+        '\xmlparser' => true,
+    ];
+
+    /**
+     * @return bool
+     * True if this is an object with immutable properties such as an enum or closure
+     * (for non-enums, this corresponds loosely to `ZEND_ACC_NO_DYNAMIC_PROPERTIES` in php-src or PECLs,
+     * which is typically set on classes with no accessible properties at all)
+     */
+    public function isImmutableAtRuntime(): bool
+    {
+        if ($this->isEnum()) {
+            return true;
+        }
+        return array_key_exists(strtolower($this->getFQSEN()->__toString()), self::IMMUTABLE_CLASS_SET);
+    }
+
+    /**
+     * @return bool
      * True if this is an interface
      */
     public function isInterface(): bool
@@ -2156,6 +2350,8 @@ class Clazz extends AddressableElement
     /**
      * @return bool
      * True if this is a class (i.e. neither a trait nor an interface)
+     *
+     * This also returns true for classes - enums are a specialization of a class.
      */
     public function isClass(): bool
     {
@@ -2169,6 +2365,22 @@ class Clazz extends AddressableElement
     public function isTrait(): bool
     {
         return $this->getFlagsHasState(\ast\flags\CLASS_TRAIT);
+    }
+
+    /**
+     * Returns a string representing which type of classlike type this is, for issue messages
+     */
+    public function getClasslikeType(): string
+    {
+        $flags = $this->getFlags();
+        if ($flags & ast\flags\CLASS_TRAIT) {
+            return 'trait';
+        } elseif ($flags & ast\flags\CLASS_INTERFACE) {
+            return 'interface';
+        } elseif ($flags & ast\flags\CLASS_ENUM) {
+            return 'enum';
+        }
+        return 'class';
     }
 
     /**
@@ -2390,7 +2602,7 @@ class Clazz extends AddressableElement
                 // Skip __invoke, and private/protected methods
                 continue;
             }
-            if ($this->hasMethodWithName($code_base, $name)) {
+            if ($this->hasMethodWithName($code_base, $name, true)) {
                 continue;
             }
             // Treat it as if all of the methods were added, with their real and phpdoc union types.
@@ -2416,15 +2628,12 @@ class Clazz extends AddressableElement
         }
     }
 
-    /*
-     * Add properties, constants and methods from the
-     * parent of this class
+    /**
+     * Add constants from the parent of this class
      *
      * @param CodeBase $code_base
      * The entire code base from which we'll find ancestor
      * details
-     *
-     * @return void
      */
     private function importConstantsFromParentClass(CodeBase $code_base): void
     {
@@ -2454,15 +2663,13 @@ class Clazz extends AddressableElement
         $this->importConstantsFromAncestorClass($code_base, $parent);
     }
 
-    /*
+    /**
      * Add properties, constants and methods from the
      * parent of this class
      *
      * @param CodeBase $code_base
      * The entire code base from which we'll find ancestor
      * details
-     *
-     * @return void
      */
     private function importParentClass(CodeBase $code_base): void
     {
@@ -2669,6 +2876,21 @@ class Clazz extends AddressableElement
 
         // Copy properties
         foreach ($class->getPropertyMap($code_base) as $property) {
+            if ($property->isPHPDocAbstract() && !$property->isPrivate() &&
+                $this->isClass() && !$this->isAbstract() && !$this->hasPropertyWithName($code_base, $property->getName())) {
+                Issue::maybeEmit(
+                    $code_base,
+                    $this->getContext(),
+                    Issue::CommentAbstractOnInheritedProperty,
+                    $this->getContext()->getLineNumberStart(),
+                    $this->getFQSEN(),
+                    $property->getRealDefiningFQSEN(),
+                    $property->getContext()->getFile(),
+                    $property->getContext()->getLineNumberStart(),
+                    '@abstract'
+                );
+            }
+
             // TODO: check for conflicts in visibility and default values for traits.
             // TODO: Check for ancestor classes with the same private property?
             $this->addProperty(
@@ -2781,7 +3003,7 @@ class Clazz extends AddressableElement
     ): void {
         foreach ($trait_adaptations->alias_methods ?? [] as $alias_method_name => $original_trait_alias_source) {
             $source_method_name = $original_trait_alias_source->getSourceMethodName();
-            if ($class->hasMethodWithName($code_base, $source_method_name)) {
+            if ($class->hasMethodWithName($code_base, $source_method_name, true)) {
                 $source_method = $class->getMethodByName($code_base, $source_method_name);
             } else {
                 $source_method = null;
@@ -2916,6 +3138,9 @@ class Clazz extends AddressableElement
             $string .= 'Interface ';
         } elseif ($this->isTrait()) {
             $string .= 'Trait ';
+        } elseif ($this->isEnum()) {
+            // Remove the 'final' qualifier.
+            $string = 'Enum ';
         } else {
             $string .= 'Class ';
         }
@@ -2941,6 +3166,9 @@ class Clazz extends AddressableElement
             $string .= 'interface ';
         } elseif ($this->isTrait()) {
             $string .= 'trait ';
+        } elseif ($this->isEnum()) {
+            // Remove the 'final' qualifier
+            $string = 'enum ';
         } else {
             $string .= 'class ';
         }
@@ -3027,7 +3255,12 @@ class Clazz extends AddressableElement
     {
         $signature = $this->toStubSignature($code_base);
 
-        $stub = $signature;
+        $stub = '';
+        if (self::shouldAddDescriptionsToStubs()) {
+            $description = (string)MarkupDescription::extractDescriptionFromDocComment($this);
+            $stub .= MarkupDescription::convertStringToDocComment($description);
+        }
+        $stub .= $signature;
 
         $stub .= " {";
 
@@ -3053,10 +3286,7 @@ class Clazz extends AddressableElement
                 return false;
             }
             $reflection_method = $reflection_class->getMethod($method->getName());
-            if ($reflection_method->class !== $reflection_class->name) {
-                return false;
-            }
-            return true;
+            return $reflection_method->class === $reflection_class->name;
         });
         if (count($method_map) > 0) {
             $stub .= "\n\n    // methods\n";
@@ -3136,7 +3366,12 @@ class Clazz extends AddressableElement
             }
         }
 
+        // Fetch the properties declared within the class, to check if they have override annotations later.
+        $original_declared_properties = $this->getPropertyMap($code_base);
+
         $this->importAncestorClasses($code_base);
+
+        self::analyzePropertyOverrides($code_base, $original_declared_properties);
 
         // Make sure there are no abstract methods on non-abstract classes
         AbstractMethodAnalyzer::analyzeAbstractMethodsAreImplemented(
@@ -3162,6 +3397,28 @@ class Clazz extends AddressableElement
                     Issue::CommentOverrideOnNonOverrideConstant,
                     $context->getLineNumberStart(),
                     (string)$constant->getFQSEN()
+                );
+            }
+        }
+    }
+
+    /**
+     * @param array<string, Property> $original_declared_properties
+     */
+    private static function analyzePropertyOverrides(CodeBase $code_base, array $original_declared_properties): void
+    {
+        foreach ($original_declared_properties as $property) {
+            if ($property->isOverrideIntended() && !$property->isOverride()) {
+                if ($property->checkHasSuppressIssueAndIncrementCount(Issue::CommentOverrideOnNonOverrideProperty)) {
+                    continue;
+                }
+                $context = $property->getContext();
+                Issue::maybeEmit(
+                    $code_base,
+                    $context,
+                    Issue::CommentOverrideOnNonOverrideProperty,
+                    $context->getLineNumberStart(),
+                    (string)$property->getFQSEN()
                 );
             }
         }
@@ -3198,6 +3455,11 @@ class Clazz extends AddressableElement
             $this
         );
 
+        ClassConstantTypesAnalyzer::analyzeClassConstantTypes(
+            $code_base,
+            $this
+        );
+
         // Analyze this class to make sure that we don't have conflicting
         // types between similar inherited methods.
         CompositionAnalyzer::analyzeComposition(
@@ -3205,11 +3467,39 @@ class Clazz extends AddressableElement
             $this
         );
 
+        $this->analyzeInheritedMethods($code_base);
+
+        $this->analyzeAndUpdateEnum($code_base);
+
         // Let any configured plugins analyze the class
         ConfigPluginSet::instance()->analyzeClass(
             $code_base,
             $this
         );
+    }
+
+    private function analyzeInheritedMethods(CodeBase $code_base): void
+    {
+        if ($this->isClass() && !$this->isAbstract()) {
+            foreach ($this->getMethodMap($code_base) as $method) {
+                if ($method->getRealDefiningFQSEN() === $method->getFQSEN()) {
+                    continue;
+                }
+                if ($method->isPHPDocAbstract() && !$method->isPrivate()) {
+                    Issue::maybeEmit(
+                        $code_base,
+                        $this->getContext(),
+                        Issue::CommentAbstractOnInheritedMethod,
+                        $this->getContext()->getLineNumberStart(),
+                        $this->getFQSEN(),
+                        $method->getRealDefiningFQSEN(),
+                        $method->getContext()->getFile(),
+                        $method->getContext()->getLineNumberStart(),
+                        '@abstract'
+                    );
+                }
+            }
+        }
     }
 
     public function setDidFinishParsing(bool $did_finish_parsing): void
@@ -3478,7 +3768,7 @@ class Clazz extends AddressableElement
         $ancestor_class = $code_base->getClassByFQSEN($ancestor_fqsen);
         $name = $element->getName();
         if ($element instanceof Method) {
-            if (!$ancestor_class->hasMethodWithName($code_base, $name)) {
+            if (!$ancestor_class->hasMethodWithName($code_base, $name, true)) {
                 return null;
             }
             return $ancestor_class->getMethodByName($code_base, $name);
@@ -3535,5 +3825,199 @@ class Clazz extends AddressableElement
     public function getInternalContext(): Context
     {
         return $this->internal_context;
+    }
+
+    /**
+     * Returns true if this is a class that can be used as an attribute
+     * @suppress PhanUnreferencedPublicMethod
+     */
+    public function isAttribute(): bool
+    {
+        return $this->memoize(__METHOD__, function (): bool {
+            // TODO: Fix for internal classes
+            if (!$this->isClass()) {
+                return false;
+            }
+            foreach ($this->attribute_list as $attribute) {
+                $fqsen = $attribute->getFQSEN();
+                if ($fqsen->getName() === 'Attribute' && $fqsen->getNamespace() === '\\') {
+                    return true;
+                }
+            }
+            if ($this->isPHPInternal()) {
+                // Check this after checking if it's an internal stub
+                $fqsen_string = $this->fqsen->__toString();
+                if ($fqsen_string === '\Attribute') {
+                    // Handle the most common case in php 8
+                    return true;
+                }
+                if (\PHP_MAJOR_VERSION >= 8 && \class_exists($fqsen_string)) {
+                    // @phan-suppress-next-line PhanUndeclaredMethod this is added in php 8.0
+                    foreach ((new ReflectionClass($fqsen_string))->getAttributes() as $php_attribute) {
+                        // @phan-suppress-next-line PhanPluginUnknownObjectMethodCall unable to infer type as a result of target_php_version being 7.2
+                        if ($php_attribute->getName() === 'Attribute') {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        });
+    }
+
+    /**
+     * Returns the attribute flags associated with this attribute declaration.
+     *
+     * E.g. for `X` in `#[Attribute(Attribute::TARGET_FUNCTION)] class X {}`, returns `Attribute::TARGET_FUNCTION`.
+     *
+     * TODO: Support internal attributes using Reflection
+     */
+    public function getAttributeFlags(CodeBase $code_base): int
+    {
+        return $this->memoize(__METHOD__, function () use ($code_base): int {
+            foreach ($this->attribute_list as $attribute) {
+                $fqsen = $attribute->getFQSEN();
+                if ($fqsen->getName() === 'Attribute' && $fqsen->getNamespace() === '\\') {
+                    $args = $attribute->getArgs()->children ?? [];
+                    if ($args) {
+                        $value = UnionTypeVisitor::unionTypeFromNode($code_base, $this->getContext(), \reset($args))->asSingleScalarValueOrNullOrSelf();
+                        if (\is_int($value)) {
+                            return $value;
+                        }
+                    }
+                    break;
+                }
+            }
+            if ($this->isPHPInternal()) {
+                // Check this after checking if it's an internal stub
+                $fqsen_string = $this->fqsen->__toString();
+                if ($fqsen_string === '\Attribute') {
+                    // Handle the most common case in php 8
+                    return Attribute::TARGET_CLASS;
+                }
+                if (\PHP_MAJOR_VERSION >= 8 && \class_exists($fqsen_string)) {
+                    // @phan-suppress-next-line PhanUndeclaredMethod this is added in php 8.0
+                    foreach ((new ReflectionClass($fqsen_string))->getAttributes() as $php_attribute) {
+                        // @phan-suppress-next-line PhanPluginUnknownObjectMethodCall unable to infer type as a result of target_php_version being 7.2
+                        if ($php_attribute->getName() === 'Attribute') {
+                            // @phan-suppress-next-line PhanPluginUnknownObjectMethodCall unable to infer type as a result of target_php_version being 7.2
+                            return $php_attribute->getTarget();
+                        }
+                    }
+                }
+            }
+            return Attribute::TARGET_ALL;
+        });
+    }
+
+    private function analyzeAndUpdateEnum(CodeBase $code_base): void
+    {
+        if (!$this->isEnum()) {
+            return;
+        }
+        // Inherit properties from traits
+        $this->hydrate($code_base);
+
+        $fqsen = $this->getFQSEN();
+        foreach ($this->getPropertyMap($code_base) as $property) {
+            $context = $property->getRealDefiningFQSEN()->getFullyQualifiedClassName() === $fqsen ? $property->getContext() : $this->getContext();
+            Issue::maybeEmit(
+                $code_base,
+                $context,
+                Issue::EnumCannotHaveProperties,
+                $context->getLineNumberStart(),
+                $this->getFQSEN(),
+                $property->getName(),
+                $property->getContext()->getFile(),
+                $property->getContext()->getLineNumberStart()
+            );
+        }
+        $cases = array_merge(array_values($this->enum_case_map), $this->enum_case_map_unknown, $this->enum_case_list);
+        if (!$cases) {
+            foreach ($this->getMethodMap($code_base) as $method) {
+                $method_name_lc = strtolower($method->getName());
+                $context = $method->getRealDefiningFQSEN()->getFullyQualifiedClassName() === $fqsen ? $method->getContext() : $this->getContext();
+                if (array_key_exists($method_name_lc, FullyQualifiedMethodName::MAGIC_METHOD_NAME_SET)) {
+                    if (!in_array($method_name_lc, ['__call', '__callstatic', '__invoke'], true)) {
+                        Issue::maybeEmit(
+                            $code_base,
+                            $context,
+                            Issue::EnumForbiddenMagicMethod,
+                            $context->getLineNumberStart(),
+                            $this->getFQSEN(),
+                            $method->getName() . '()',
+                            $method->getContext()->getFile(),
+                            $method->getContext()->getLineNumberStart()
+                        );
+                    }
+                }
+                if ($method->isStatic()) {
+                    continue;
+                }
+                Issue::maybeEmit(
+                    $code_base,
+                    $context,
+                    Issue::InstanceMethodWithNoEnumCases,
+                    $context->getLineNumberStart(),
+                    $this->getFQSEN(),
+                    $method->getName() . '()',
+                    $method->getContext()->getFile(),
+                    $method->getContext()->getLineNumberStart()
+                );
+            }
+        }
+        $this->addEnumProperties($code_base);
+    }
+
+    private function getEnumType(CodeBase $code_base): ?string
+    {
+        // TODO: Remove this when Phan switches to AST version 85
+        foreach ($this->enum_case_map as $case_name) {
+            $constant_fqsen = FullyQualifiedClassConstantName::make($this->getFQSEN(), $case_name);
+            if (!$code_base->hasClassConstantWithFQSEN($constant_fqsen)) {
+                continue;
+            }
+            $case = $code_base->getClassConstantByFQSEN($constant_fqsen);
+            if (!$case instanceof EnumCase) {
+                continue;
+            }
+
+            $value = $case->getEnumCaseValue();
+            if (is_int($value)) {
+                return 'int';
+            } elseif (is_string($value)) {
+                return 'string';
+            }
+        }
+        return null;
+    }
+
+    private function addEnumProperties(CodeBase $code_base): void
+    {
+        $string_type = StringType::instance(false)->asRealUnionType();
+        $name_property = new Property(
+            $this->getContext(),
+            'name',
+            $string_type,
+            ast\flags\MODIFIER_PUBLIC,
+            FullyQualifiedPropertyName::make($this->getFQSEN(), 'name'),
+            $string_type
+        );
+        $name_property->setPhanFlags(Flags::IS_READ_ONLY | Flags::IS_ENUM_PROPERTY);
+        $this->addProperty($code_base, $name_property, None::instance());
+        $enum_type = $this->getEnumType($code_base);
+        if (is_string($enum_type)) {
+            $value_type = UnionType::fromFullyQualifiedRealString($enum_type);
+            $value_property = new Property(
+                $this->getContext(),
+                'value',
+                $value_type,
+                ast\flags\MODIFIER_PUBLIC,
+                FullyQualifiedPropertyName::make($this->getFQSEN(), 'name'),
+                $value_type
+            );
+            $value_property->setPhanFlags(Flags::IS_READ_ONLY | Flags::IS_ENUM_PROPERTY);
+            $this->addProperty($code_base, $value_property, None::instance());
+        }
     }
 }

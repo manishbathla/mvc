@@ -16,6 +16,8 @@ use RuntimeException;
  */
 final class LiteralFloatType extends FloatType implements LiteralTypeInterface
 {
+    use NativeTypeTrait;
+
     /** @var float $value */
     private $value;
 
@@ -27,10 +29,11 @@ final class LiteralFloatType extends FloatType implements LiteralTypeInterface
 
     /**
      * Only exists to prevent accidentally calling this
+     * @unused-param $is_nullable
      * @internal - do not call
      * @deprecated
      */
-    public static function instance(bool $unused_is_nullable)
+    public static function instance(bool $is_nullable)
     {
         throw new RuntimeException('Call ' . self::class . '::instanceForValue() instead');
     }
@@ -278,6 +281,21 @@ final class LiteralFloatType extends FloatType implements LiteralTypeInterface
             return $other->value === $this->value;
         }
         return parent::canCastToDeclaredType($code_base, $context, $other);
+    }
+
+    public function asNonTruthyType(): Type
+    {
+        return $this->value ? NullType::instance(false) : $this;
+    }
+
+    /**
+     * Returns true if the value can be used in bitwise operands and cast to integers without precision loss.
+     *
+     * @override
+     */
+    public function isValidBitwiseOperand(): bool
+    {
+        return \fmod($this->value, 1.0) === 0.0 && $this->value >= -0xffffffffffffffff && $this->value <= 0xffffffffffffffff;
     }
 }
 

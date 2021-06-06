@@ -13,6 +13,7 @@ use Phan\Language\FQSEN\FullyQualifiedMethodName;
 use Phan\Language\Type;
 use Phan\Language\Type\NullType;
 use Phan\Language\UnionType;
+use ReflectionFunctionAbstract;
 
 /**
  * This returns internal function declarations for a given function/method FQSEN,
@@ -24,6 +25,7 @@ class FunctionFactory
      * @return list<Func>
      * One or more (alternate) functions begotten from
      * reflection info and internal functions data
+     * @suppress PhanUndeclaredMethod
      */
     public static function functionListFromReflectionFunction(
         FullyQualifiedFunctionName $fqsen,
@@ -52,7 +54,8 @@ class FunctionFactory
             - $reflection_function->getNumberOfRequiredParameters()
         );
         $function->setIsDeprecated($reflection_function->isDeprecated());
-        $real_return_type = UnionType::fromReflectionType($reflection_function->getReturnType());
+
+        $real_return_type = self::getRealReturnTypeFromReflection($reflection_function);
         if (Config::getValue('assume_real_types_for_internal_functions')) {
             // @phan-suppress-next-line PhanAccessMethodInternal
             $real_type_string = UnionType::getLatestRealFunctionSignatureMap(Config::get_closest_target_php_version_id())[$namespaced_name] ?? null;
@@ -172,11 +175,23 @@ class FunctionFactory
         $method->setIsDeprecated($reflection_method->isDeprecated());
         // https://github.com/phan/phan/issues/888 - Reflection for that class's parameters causes php to throw/hang
         if ($class_name !== 'ServerResponse') {
-            $method->setRealReturnType(UnionType::fromReflectionType($reflection_method->getReturnType()));
+            $method->setRealReturnType(self::getRealReturnTypeFromReflection($reflection_method));
             $method->setRealParameterList(Parameter::listFromReflectionParameterList($reflection_method->getParameters()));
         }
 
         return self::functionListFromFunction($method);
+    }
+
+    /**
+     * Get the return type from reflection (or the tentative return type)
+     * @suppress PhanUndeclaredMethod
+     */
+    public static function getRealReturnTypeFromReflection(ReflectionFunctionAbstract $function): UnionType
+    {
+        if (\PHP_VERSION_ID >= 80100 && $function->hasTentativeReturnType() && Config::getValue('use_tentative_return_type')) {
+            return UnionType::fromReflectionType($function->getTentativeReturnType());
+        }
+        return UnionType::fromReflectionType($function->getReturnType());
     }
 
     /**
@@ -197,6 +212,10 @@ class FunctionFactory
         );
 
         if (!$map_list) {
+            if (!$function->getParameterList()) {
+                $function->setParameterList($function->getRealParameterList());
+            }
+            $function->inheritRealParameterDefaults();
             return [$function];
         }
 
@@ -269,13 +288,11 @@ class FunctionFactory
                     $flags
                 );
                 $parameter->enablePhanFlagBits($phan_flags);
-
                 if ($is_optional) {
-                    // TODO: could check isDefaultValueAvailable and getDefaultValue, for a better idea.
-                    // I don't see any cases where this will be used for internal types, though.
-                    $parameter->setDefaultValueType(
-                        NullType::instance(false)->asPHPDocUnionType()
-                    );
+                    if (!$parameter->hasDefaultValue()) {
+                        // Placeholder value. PHP 8.0+ is better at actually providing real parameter defaults.
+                        $parameter->setDefaultValueType(NullType::instance(false)->asPHPDocUnionType());
+                    }
                 }
 
                 // Add the parameter
@@ -308,6 +325,7 @@ class FunctionFactory
                     $alternate_function->setNumberOfRequiredParameters(0);
                 }
             }
+            $alternate_function->inheritRealParameterDefaults();
 
             return $alternate_function;
         }, $map_list);

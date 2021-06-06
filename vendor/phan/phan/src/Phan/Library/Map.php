@@ -14,7 +14,9 @@ use SplObjectStorage;
  * @template K
  * @template V
  * @suppress PhanTemplateTypeNotDeclaredInFunctionParams
- * @phan-file-suppress PhanParamSignaturePHPDocMismatchHasParamType, PhanParamSignatureMismatchInternal
+ * @phan-file-suppress PhanParamSignaturePHPDocMismatchHasParamType, PhanParamSignaturePHPDocMismatchParamType, PhanParamSignatureMismatchInternal
+ * TODO: Add a way to indicate in Phan that T is subtype of object
+ *
  * @method void attach(K $object,V $data = null)
  * @method void detach(K $object)
  * @method bool offsetExists(K $object)
@@ -83,6 +85,7 @@ class Map extends SplObjectStorage
             /**
              * @param K|V $element
              * @return K|V
+             * @suppress PhanTypePossiblyInvalidCloneNotObject phan does not support base types of template types yet.
              */
             static function ($element) {
                 return clone($element);

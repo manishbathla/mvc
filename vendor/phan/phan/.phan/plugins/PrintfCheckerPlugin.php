@@ -190,7 +190,10 @@ class PrintfCheckerPlugin extends PluginV3 implements AnalyzeFunctionCallCapabil
         return new PrimitiveValue($str);
     }
 
-    public function getReturnTypeOverrides(CodeBase $unused_code_base): array
+    /**
+     * @unused-param $code_base
+     */
+    public function getReturnTypeOverrides(CodeBase $code_base): array
     {
         $string_union_type = StringType::instance(false)->asPHPDocUnionType();
         /**
@@ -468,7 +471,7 @@ class PrintfCheckerPlugin extends PluginV3 implements AnalyzeFunctionCallCapabil
                 // emit issues with 1-based offsets
                 $emit_issue(
                     'PhanPluginPrintfNonexistentArgument',
-                    'Format string {STRING_LITERAL} refers to nonexistent argument #{INDEX} in {STRING_LITERAL}. This will be an ArgumentCountError in PHP 8',
+                    'Format string {STRING_LITERAL} refers to nonexistent argument #{INDEX} in {STRING_LITERAL}. This will be an ArgumentCountError in PHP 8.',
                     [self::encodeString($fmt_str), $largest_positional, \implode(',', $examples)],
                     Issue::SEVERITY_CRITICAL,
                     self::ERR_UNTRANSLATED_NONEXISTENT
@@ -505,9 +508,9 @@ class PrintfCheckerPlugin extends PluginV3 implements AnalyzeFunctionCallCapabil
                 // emit issues with 1-based offsets
                 $emit_issue(
                     'PhanPluginPrintfNonexistentArgument',
-                    'Format string {STRING_LITERAL} refers to nonexistent argument #{INDEX} in {STRING_LITERAL}',
+                    'Format string {STRING_LITERAL} refers to nonexistent argument #{INDEX} in {STRING_LITERAL}. This will be an ArgumentCountError in PHP 8.',
                     [self::encodeString($fmt_str), $largest_positional, \implode(',', $examples)],
-                    Issue::SEVERITY_NORMAL,
+                    Issue::SEVERITY_CRITICAL,
                     self::ERR_UNTRANSLATED_NONEXISTENT
                 );
             } elseif ($largest_positional < count($arg_nodes)) {
@@ -601,7 +604,7 @@ class PrintfCheckerPlugin extends PluginV3 implements AnalyzeFunctionCallCapabil
                     // TODO: Move into a common helper method?
                     try {
                         foreach ($actual_union_type->asExpandedTypes($code_base)->asClassList($code_base, $context) as $clazz) {
-                            if ($clazz->hasMethodWithName($code_base, '__toString')) {
+                            if ($clazz->hasMethodWithName($code_base, '__toString', true)) {
                                 $can_cast_to_string = true;
                                 break;
                             }

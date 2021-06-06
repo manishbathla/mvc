@@ -16,6 +16,8 @@ use Phan\Language\Type;
  */
 final class CallableObjectType extends ObjectType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'callable-object';
 
@@ -27,7 +29,10 @@ final class CallableObjectType extends ObjectType
     protected function canCastToNonNullableType(Type $type): bool
     {
         // Inverse of check in Type->canCastToNullableType
-        if ($type instanceof CallableType) {
+        if (!$type->isPossiblyObject()) {
+            return false;
+        }
+        if ($type instanceof CallableInterface) {
             return true;
         }
         return parent::canCastToNonNullableType($type);
@@ -36,7 +41,10 @@ final class CallableObjectType extends ObjectType
     protected function canCastToNonNullableTypeWithoutConfig(Type $type): bool
     {
         // Inverse of check in Type->canCastToNullableType
-        if ($type instanceof CallableType) {
+        if (!$type->isPossiblyObject()) {
+            return false;
+        }
+        if ($type instanceof CallableInterface) {
             return true;
         }
         return parent::canCastToNonNullableTypeWithoutConfig($type);
@@ -98,7 +106,11 @@ final class CallableObjectType extends ObjectType
         return self::instance($is_nullable);
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         // TODO: Filter out final classes, etc.
         return $other->isPossiblyObject();
