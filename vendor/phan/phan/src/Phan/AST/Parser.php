@@ -15,6 +15,7 @@ use Phan\AST\TolerantASTConverter\ParseException;
 use Phan\AST\TolerantASTConverter\ParseResult;
 use Phan\AST\TolerantASTConverter\ShimFunctions;
 use Phan\AST\TolerantASTConverter\TolerantASTConverter;
+use Phan\AST\TolerantASTConverter\TolerantASTConverterPreservingOriginal;
 use Phan\AST\TolerantASTConverter\TolerantASTConverterWithNodeMapping;
 use Phan\CodeBase;
 use Phan\Config;
@@ -117,9 +118,7 @@ class Parser
                 return self::parseCodePolyfill($code_base, $context, $file_path, $file_contents, $suppress_parse_errors, $request);
             }
             return self::parseCodeHandlingDeprecation($code_base, $context, $file_contents, $file_path);
-        } catch (ParseError $native_parse_error) {
-            return self::handleParseError($code_base, $context, $file_path, $file_contents, $suppress_parse_errors, $native_parse_error, $request);
-        } catch (CompileError $native_parse_error) {
+        } catch (CompileError | ParseError $native_parse_error) {
             return self::handleParseError($code_base, $context, $file_path, $file_contents, $suppress_parse_errors, $native_parse_error, $request);
         }
     }
@@ -195,12 +194,14 @@ class Parser
         Error $native_parse_error,
         ?Request $request = null
     ): Node {
-        if (!$suppress_parse_errors) {
-            self::emitSyntaxErrorForNativeParseError($code_base, $context, $file_path, new FileCacheEntry($file_contents), $native_parse_error, $request);
-        }
-        if (!Config::getValue('use_fallback_parser')) {
-            // By default, don't try to re-parse files with syntax errors.
-            throw $native_parse_error;
+        if ($file_path !== 'internal') {
+            if (!$suppress_parse_errors) {
+                self::emitSyntaxErrorForNativeParseError($code_base, $context, $file_path, new FileCacheEntry($file_contents), $native_parse_error, $request);
+            }
+            if (!Config::getValue('use_fallback_parser')) {
+                // By default, don't try to re-parse files with syntax errors.
+                throw $native_parse_error;
+            }
         }
 
         // If there's a parse error in a file that's excluded from analysis, give up on parsing it.
@@ -277,9 +278,10 @@ class Parser
             return 0;
         }
         $message = $native_parse_error->getMessage();
-        if (!\preg_match("/ unexpected '(.+)' \((T_\w+)\)/", $message, $matches)) {
-            if (!\preg_match("/ unexpected '(.+)', expecting/", $message, $matches)) {
-                if (!\preg_match("/ unexpected '(.+)'$/", $message, $matches)) {
+        $prefix = "unexpected (?:token )?('(?:.+)'|\"(?:.+)\")";
+        if (!\preg_match("/$prefix \((T_\w+)\)/", $message, $matches)) {
+            if (!\preg_match("/$prefix, expecting/", $message, $matches)) {
+                if (!\preg_match("/$prefix$/D", $message, $matches)) {
                     return 0;
                 }
             }
@@ -293,7 +295,7 @@ class Parser
         } else {
             $token_kind = null;
         }
-        $token_str = $matches[1];
+        $token_str = \substr($matches[1], 1, -1);
         $tokens = \token_get_all($file_cache_entry->getContents());
         $candidates = [];
         $desired_line = $native_parse_error->getLine();
@@ -370,8 +372,9 @@ class Parser
         static $errors = [];
 
         if ($last_file_contents !== $file_contents) {
-            unset($errors);
-            $errors = [];
+            // Create a brand new reference group
+            $new_errors = [];
+            $errors =& $new_errors;
             try {
                 self::parseCodePolyfill($code_base, $context, $file_path, $file_contents, true, $request, $errors);
             } catch (Throwable $_) {
@@ -418,9 +421,14 @@ class Parser
      * @param ?Request $request - May affect the parser used for $file_path
      * @param list<Diagnostic> &$errors @phan-output-reference
      * @throws ParseException
+     * @suppress PhanThrowTypeMismatch
      */
     public static function parseCodePolyfill(CodeBase $code_base, Context $context, string $file_path, string $file_contents, bool $suppress_parse_errors, ?Request $request, array &$errors = []): Node
     {
+        // @phan-suppress-next-line PhanRedundantCondition
+        if (!\in_array(Config::AST_VERSION, TolerantASTConverter::SUPPORTED_AST_VERSIONS, true)) {
+            throw new \Error(\sprintf("Unexpected polyfill version: want %s, got %d", \implode(', ', TolerantASTConverter::SUPPORTED_AST_VERSIONS), Config::AST_VERSION));
+        }
         $converter = self::createConverter($file_path, $file_contents, $request);
         $converter->setPHPVersionId(Config::get_closest_target_php_version_id());
         $errors = [];
@@ -488,11 +496,17 @@ class Parser
     {
         if (\in_array($error['type'], [\E_DEPRECATED, \E_COMPILE_WARNING], true) &&
             \basename($error['file']) === 'PhpTokenizer.php') {
+            $line = $error['line'];
+            if (\preg_match('/line ([0-9]+)$/D', $error['message'], $matches)) {
+                $line = (int)$matches[1];
+            }
+
+
             Issue::maybeEmit(
                 $code_base,
                 $context,
                 $error['type'] === \E_COMPILE_WARNING ? Issue::SyntaxCompileWarning : Issue::CompatibleSyntaxNotice,
-                $error['line'],
+                $line,
                 $error['message']
             );
         }
@@ -561,6 +575,9 @@ class Parser
             }
             return new CachingTolerantASTConverter();
         }
+        if (Config::getValue('__parser_keep_original_node')) {
+            return new TolerantASTConverterPreservingOriginal();
+        }
 
         return new TolerantASTConverter();
     }
@@ -583,10 +600,12 @@ class Parser
     // TODO: Refactor and make more code use this check
     private static function shouldUseNativeAST(): bool
     {
-        if (\PHP_VERSION_ID >= 70400) {
+        if (\PHP_VERSION_ID >= 80000) {
+            $min_version = '1.0.10';
+        } elseif (\PHP_VERSION_ID >= 70400) {
             $min_version = '1.0.2';
         } else {
-            $min_version = '1.0.1';
+            $min_version = Config::MINIMUM_AST_EXTENSION_VERSION;
         }
         return \version_compare(\phpversion('ast') ?: '0.0.0', $min_version) >= 0;
     }

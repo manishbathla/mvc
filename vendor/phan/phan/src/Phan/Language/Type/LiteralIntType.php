@@ -16,6 +16,8 @@ use RuntimeException;
  */
 final class LiteralIntType extends IntType implements LiteralTypeInterface
 {
+    use NativeTypeTrait;
+
     /** @var int $value */
     private $value;
 
@@ -27,10 +29,11 @@ final class LiteralIntType extends IntType implements LiteralTypeInterface
 
     /**
      * Only exists to prevent accidentally calling this
+     * @unused-param $is_nullable
      * @internal - do not call
      * @deprecated
      */
-    public static function instance(bool $unused_is_nullable)
+    public static function instance(bool $is_nullable)
     {
         throw new RuntimeException('Call ' . self::class . '::instanceForValue() instead');
     }
@@ -287,6 +290,11 @@ final class LiteralIntType extends IntType implements LiteralTypeInterface
     public function asNonFalseyType(): Type
     {
         return $this->value ? $this->withIsNullable(false) : NonZeroIntType::instance(false);
+    }
+
+    public function asNonTruthyType(): Type
+    {
+        return $this->value ? NullType::instance(false) : $this;
     }
 }
 

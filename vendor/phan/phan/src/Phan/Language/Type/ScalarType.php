@@ -87,11 +87,13 @@ abstract class ScalarType extends NativeType
 
     /**
      * @override
+     * @unused-param $context
+     * @unused-param $code_base
      */
     public function isExclusivelyNarrowedFormOrEquivalentTo(
         UnionType $union_type,
-        Context $unused_context,
-        CodeBase $unused_code_base
+        Context $context,
+        CodeBase $code_base
     ): bool {
         return $union_type->hasType($this) || $this->asPHPDocUnionType()->canCastToUnionType($union_type);
     }
@@ -130,10 +132,18 @@ abstract class ScalarType extends NativeType
         return true;
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     * @override
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         // Allow casting scalars to other scalars, but not to null.
-        return $other instanceof ScalarType && !($other instanceof NullType);
+        if ($other instanceof ScalarType) {
+            return !($other instanceof NullType);
+        }
+        return $other instanceof MixedType || $other instanceof TemplateType;
     }
 
     /**
@@ -161,7 +171,12 @@ abstract class ScalarType extends NativeType
         return $this->withIsNullable(false);
     }
 
-    public function canPossiblyCastToClass(CodeBase $unused_codebase, Type $unused_class_type): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $class_type
+     * @override
+     */
+    public function canPossiblyCastToClass(CodeBase $code_base, Type $class_type): bool
     {
         return false;
     }

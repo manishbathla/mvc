@@ -14,6 +14,8 @@ use Phan\Language\Type;
  */
 class ObjectType extends NativeType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'object';
 
@@ -70,8 +72,10 @@ class ObjectType extends NativeType
 
     /**
      * Check if this type can possibly cast to the declared type, ignoring nullability of this type
+     * @unused-param $code_base
+     * @unused-param $context
      */
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         return $other->isPossiblyObject();
     }
@@ -93,7 +97,10 @@ class ObjectType extends NativeType
         return CallableObjectType::instance(false);
     }
 
-    public function asIterable(CodeBase $_): ?Type
+    /**
+     * @unused-param $code_base
+     */
+    public function asIterable(CodeBase $code_base): ?Type
     {
         return Type::traversableInstance();
     }

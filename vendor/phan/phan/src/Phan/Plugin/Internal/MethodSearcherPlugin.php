@@ -26,6 +26,8 @@ use function count;
  *
  * NOTE: This is automatically loaded by phan. Do not include it in a config.
  *
+ * @phan-file-suppress PhanPluginRemoveDebugAny outputting is deliberate
+ *
  * @internal
  */
 final class MethodSearcherPlugin extends PluginV3 implements
@@ -70,7 +72,7 @@ final class MethodSearcherPlugin extends PluginV3 implements
             }
             $result[] = UnionType::fromStringInContext($part, new Context(), Type::FROM_PHPDOC);
         }
-        // @phan-suppress-next-line PhanPossiblyFalseTypeMismatchProperty
+        // @phan-suppress-next-line PhanPossiblyNullTypeMismatchProperty
         self::$return_type = \array_pop($result);
         self::$param_types = $result;
         echo "Searching for function/method signatures similar to: " . \implode(' -> ', \array_merge(self::$param_types, [self::$return_type])) . "\n";
@@ -111,6 +113,7 @@ final class MethodSearcherPlugin extends PluginV3 implements
     }
 
     /**
+     * @param Type $type a type with the name of a class
      * @return Type[] a list of types to replace $type with
      */
     public static function getReplacementTypesForFullyQualifiedClassName(
@@ -268,6 +271,7 @@ final class MethodSearcherPlugin extends PluginV3 implements
         return UnionType::empty();
     }
 
+    // TODO: Handle non-null-mixed/non-empty-mixed
     private static function isMixed(UnionType $union_type): bool
     {
         foreach ($union_type->getTypeSet() as $type) {

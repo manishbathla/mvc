@@ -71,9 +71,9 @@ abstract class FullyQualifiedGlobalStructuralElement extends AbstractFQSEN
     }
 
     /** @internal */
-    public const VALID_STRUCTURAL_ELEMENT_REGEX = '/^\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*$/';
+    public const VALID_STRUCTURAL_ELEMENT_REGEX = '/^\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*$/D';
     /** @internal */
-    public const VALID_STRUCTURAL_ELEMENT_REGEX_PART = '/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/';
+    public const VALID_STRUCTURAL_ELEMENT_REGEX_PART = '/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/D';
 
     /**
      * Construct a fully-qualified global structural element from a namespace and name.
@@ -296,6 +296,7 @@ abstract class FullyQualifiedGlobalStructuralElement extends AbstractFQSEN
         if (($fqsen_string[0] ?? '') === '\\') {
             return static::fromFullyQualifiedString($fqsen_string);
         }
+        // @phan-suppress-next-line PhanAbstractStaticMethodCallInStatic Do not call fromStringInContext directly on this abstract class
         $namespace_map_type = static::getNamespaceMapType();
         if ($namespace_map_type === \ast\AST_CONST && \in_array(\strtolower($fqsen_string), ['true', 'false', 'null'], true)) {
             return static::fromFullyQualifiedString($fqsen_string);

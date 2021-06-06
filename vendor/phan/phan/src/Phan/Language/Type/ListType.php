@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phan\Language\Type;
 
 use Phan\Language\Type;
+use Phan\Language\UnionType;
 
 /**
  * Phan's representation for types such as `list` and `list<MyClass>`
@@ -15,15 +16,20 @@ use Phan\Language\Type;
  */
 class ListType extends GenericArrayType
 {
+    use NativeTypeTrait;
+
     protected function __construct(Type $type, bool $is_nullable)
     {
         parent::__construct($type, $is_nullable, GenericArrayType::KEY_INT);
     }
 
+    /**
+     * @unused-param $key_type
+     */
     public static function fromElementType(
         Type $type,
         bool $is_nullable,
-        int $unused_key_type = GenericArrayType::KEY_INT
+        int $key_type = GenericArrayType::KEY_INT
     ): GenericArrayType {
         // Make sure we only ever create exactly one
         // object for any unique type
@@ -98,5 +104,13 @@ class ListType extends GenericArrayType
     public function convertIntegerKeyArrayToList(): ArrayType
     {
         return $this;
+    }
+
+    /**
+     * Returns the equivalent (possibly nullable) list type for this type.
+     */
+    public function castToListTypes(): UnionType
+    {
+        return $this->asPHPDocUnionType();
     }
 }

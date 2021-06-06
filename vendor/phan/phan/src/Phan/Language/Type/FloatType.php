@@ -16,6 +16,8 @@ use Phan\Language\UnionType;
  */
 class FloatType extends ScalarType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'float';
 
@@ -61,6 +63,7 @@ class FloatType extends ScalarType
         if ($other instanceof ScalarType) {
             return $other instanceof FloatType || (!$context->isStrictTypes() && parent::canCastToDeclaredType($code_base, $context, $other));
         }
-        return $other instanceof CallableType || $other instanceof MixedType;
+        return $other instanceof TemplateType ||
+            $other instanceof MixedType;
     }
 }

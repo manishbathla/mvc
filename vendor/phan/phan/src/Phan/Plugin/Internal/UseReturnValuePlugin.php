@@ -19,6 +19,8 @@ use Phan\PluginV3\PostAnalyzeNodeCapability;
  * A plugin that checks for invocations of functions/methods where the return value should be used.
  * Also, gathers statistics on how often those functions/methods are used.
  *
+ * This also warns when the return value of an expression returning `never` is used.
+ *
  * This can be configured by fields of 'plugin_config', or by setting environment variables.
  *
  * Note: When this is using dynamic checks of the whole codebase, the run should be limited to a single process. That check is memory intensive.
@@ -54,6 +56,8 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     public const UseReturnValueInternal = 'PhanPluginUseReturnValueInternal';
     public const UseReturnValueInternalKnown = 'PhanPluginUseReturnValueInternalKnown';
     public const UseReturnValueNoopVoid = 'PhanPluginUseReturnValueNoopVoid';
+    public const UseReturnValueGenerator = 'PhanPluginUseReturnValueGenerator';
+    public const UseReturnValueOfNever = 'PhanUseReturnValueOfNever';
     // phpcs:enable Generic.NamingConventions.UpperCaseConstantName.ClassConstantNotUpperCase
 
     public const DEFAULT_THRESHOLD_PERCENTAGE = 98;
@@ -125,6 +129,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
             $used_percentage = $used_count / $total_count * 100;
             if ($total_count >= 5) {
                 if (self::$debug) {
+                    // @phan-suppress-next-line PhanPluginRemoveDebugCall
                     \fprintf(\STDERR, "%09.4f %% used: (%4d uses): %s (%s)\n", $used_percentage, $total_count, $fqsen, $counter->is_internal ? 'internal' : 'user-defined');
                 }
             }
@@ -136,7 +141,8 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
             if ($unused_count > 0 && $used_percentage >= $threshold_percentage) {
                 $percentage_string = \number_format($used_percentage, 2);
                 foreach ($counter->unused_locations as $key => $context) {
-                    if (!\preg_match('/:(\d+)$/', $key, $matches)) {
+                    if (!\preg_match('/:(\d+)$/D', $key, $matches)) {
+                        // @phan-suppress-next-line PhanPluginRemoveDebugCall
                         \fprintf(\STDERR, "Failed to extract line number from %s\n", $key);
                         continue;
                     }
@@ -201,6 +207,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'array_intersect_assoc' => true,
     'array_intersect_key' => true,
     'array_intersect' => true,
+    'array_is_list' => true,
     'arrayiterator::current' => true,
     'arrayiterator::key' => true,
     'arrayiterator::valid' => true,
@@ -350,6 +357,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'expm1' => true,
     'exp' => true,
     'extension_loaded' => true,
+    'fdiv' => true,
     'feof' => true,
     'ffi::addr' => true,
     'ffi::alignof' => true,
@@ -397,6 +405,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'get_class' => true,
     'getcwd' => true,
     'getdate' => true,
+    'get_debug_type' => true,
     'get_declared_classes' => true,
     'get_declared_interfaces' => true,
     'get_declared_traits' => true,
@@ -413,6 +422,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'get_object_vars' => true,
     'get_parent_class' => true,
     'getrandmax' => true,
+    'get_resource_id' => true,
     'get_resource_type' => true,
     'gettext' => true,
     'gettype' => true,
@@ -571,9 +581,12 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'long2ip' => true,
     'ltrim' => true,
     'max' => true,
+    'mb_chr' => true,
     'mb_convert_case' => true,
     'mb_convert_encoding' => true,
     'mb_detect_encoding' => true,
+    'mb_list_encodings' => true,
+    'mb_ord' => true,
     'mb_strlen' => true,
     'mb_strpos' => true,
     'mb_strtolower' => true,
@@ -618,7 +631,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'pdo::getattribute' => true,
     'pdo::prepare' => true,
     'pdo::quote' => true,
-    'pdostatement::execute' => true,
+    'pdostatement::execute' => false,  // Callers may check the return value of fetch() or configure the pdo to throw on exceptions
     'pdostatement::fetchall' => true,
     'pdostatement::fetchcolumn' => true,
     'pdostatement::fetch' => true,
@@ -626,6 +639,10 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'php_sapi_name' => true,
     'php_uname' => true,
     'phpversion' => true,
+    'phptoken::getall' => true,
+    'phptoken::gettokenname' => true,
+    'phptoken::is' => true,
+    'phptoken::isignorable' => true,
     'pi' => true,
     'popen' => true,
     'posix_isatty' => true,
@@ -633,6 +650,7 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'preg_filter' => true,
     'preg_grep' => true,
     'preg_last_error' => true,
+    'preg_last_error_msg' => true,
     'preg_quote' => true,
     'preg_replace_callback' => true,  // TODO: Handle w_count for preg_replace*, preg_filter
     'preg_replace_callback_array' => true,
@@ -708,11 +726,13 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'reflectionparameter::allowsnull' => true,
     'reflectionparameter::getclass' => true,
     'reflectionparameter::getdefaultvalue' => true,
+    'reflectionparameter::getdefaultvalueconstantname' => true,
     'reflectionparameter::getname' => true,
     'reflectionparameter::gettype' => true,
     'reflectionparameter::hastype' => true,
     'reflectionparameter::isarray' => true,
     'reflectionparameter::isdefaultvalueavailable' => true,
+    'reflectionparameter::isdefaultvalueconstant' => true,
     'reflectionparameter::isoptional' => true,
     'reflectionparameter::ispassedbyreference' => true,
     'reflectionparameter::isvariadic' => true,
@@ -771,6 +791,9 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'strcasecmp' => true,
     'strchr' => true,
     'strcmp' => true,
+    'str_contains' => true,
+    'str_ends_with' => true,
+    'str_starts_with' => true,
     'strcoll' => true,
     'strcspn' => true,
     'stream_context_create' => true,
@@ -842,11 +865,15 @@ class UseReturnValuePlugin extends PluginV3 implements PostAnalyzeNodeCapability
     'utf8_encode' => true,
     'version_compare' => true,
     'vsprintf' => true,
+    'weakreference::create' => true,
+    'weakreference::get' => true,
     'wordwrap' => true,
     'xml_get_error_code' => true,
     'xml_parser_create' => true,
     'xmlreader::getattribute' => true,
     'ziparchive::getfromname' => true,
+    'ziparchive::iscompressionmethodsupported' => true,
+    'ziparchive::isencryptionmethodsupported' => true,
     'ziparchive::locatename' => true,
     'zlib_decode' => true,
     'zlib_encode' => true,

@@ -18,6 +18,8 @@ use Phan\Language\Type;
  */
 final class ClosureType extends Type
 {
+    use NativeTypeTrait;
+
     /** Not an override */
     public const NAME = 'Closure';
 
@@ -127,39 +129,6 @@ final class ClosureType extends Type
     }
 
     /**
-     * @param bool $is_nullable
-     * If true, returns a nullable instance of this closure type
-     *
-     * @return static an instance of this closure type with appropriate nullability
-     */
-    public static function instance(bool $is_nullable)
-    {
-        if ($is_nullable) {
-            static $nullable_instance = null;
-
-            if (!$nullable_instance) {
-                $nullable_instance = self::make('\\', self::NAME, [], true, Type::FROM_NODE);
-            }
-            if (!($nullable_instance instanceof self)) {
-                throw new AssertionError("Expected ClosureType::make to return ClosureType");
-            }
-
-            return $nullable_instance;
-        }
-
-        static $instance = null;
-
-        if ($instance === null) {
-            $instance = self::make('\\', self::NAME, [], false, Type::FROM_NODE);
-        }
-
-        if (!($instance instanceof self)) {
-            throw new AssertionError("Expected ClosureType::make to return ClosureType");
-        }
-        return $instance;
-    }
-
-    /**
      * @return bool
      * True if this type is a callable or a Closure.
      */
@@ -168,7 +137,7 @@ final class ClosureType extends Type
         return true;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         if ($this->func) {
             $result = $this->func->asFunctionLikeDeclarationType()->__toString();
@@ -193,16 +162,26 @@ final class ClosureType extends Type
      * Gets the function-like this type was created from.
      *
      * TODO: Uses of this may keep outdated data in language server mode.
-     * @deprecated use asFunctionInterfaceOrNull
-     * @suppress PhanUnreferencedPublicMethod
+     * @param CodeBase $code_base @unused-param
+     * @param Context $context @unused-param
      */
-    public function getFunctionLikeOrNull(): ?FunctionInterface
+    public function asFunctionInterfaceOrNull(CodeBase $code_base, Context $context): ?FunctionInterface
     {
         return $this->func;
     }
 
-    public function asFunctionInterfaceOrNull(CodeBase $unused_codebase, Context $unused_context): ?FunctionInterface
+    /**
+     * @param CodeBase $code_base @unused-param
+     * @param Context $context @unused-param
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        return $this->func;
+        if (!$other->isPossiblyObject()) {
+            return false;
+        }
+        if ($other->isObjectWithKnownFQSEN()) {
+            return $other instanceof FunctionLikeDeclarationType || $other instanceof ClosureType || $other->asFQSEN()->__toString() === '\Closure';
+        }
+        return true;
     }
 }

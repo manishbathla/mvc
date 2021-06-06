@@ -14,8 +14,10 @@ use Phan\Language\UnionType;
  * Represents the return type `void`
  * @phan-pure
  */
-final class VoidType extends NativeType
+final class VoidType extends NativeType implements LiteralTypeInterface
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'void';
 
@@ -48,9 +50,14 @@ final class VoidType extends NativeType
         );
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     * @override
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        return $other->isNullable();
+        return $other->isNullable() || $other instanceof TemplateType;
     }
 
     public function isSubtypeOf(Type $type): bool
@@ -58,7 +65,12 @@ final class VoidType extends NativeType
         return $type->isNullable();
     }
 
-    public function isSubtypeOfNonNullableType(Type $unused_type): bool
+    /**
+     * void cannot be a subtype of a non-nullable type
+     *
+     * @unused-param $type
+     */
+    public function isSubtypeOfNonNullableType(Type $type): bool
     {
         return false;
     }
@@ -86,10 +98,11 @@ final class VoidType extends NativeType
         }
 
         // Null(void) can cast to a nullable type.
-        if ($type->is_nullable) {
+        if ($type->isNullable()) {
             return true;
         }
 
+        // TODO Make this more strict with real types, somehow?
         if (Config::get_null_casts_as_any_type()) {
             return true;
         }
@@ -106,9 +119,6 @@ final class VoidType extends NativeType
                 return true;
             }
         }
-        if (\get_class($type) === MixedType::class) {
-            return true;
-        }
 
         return false;
     }
@@ -120,16 +130,8 @@ final class VoidType extends NativeType
             return true;
         }
 
-        // Null(void) can cast to a nullable type or mixed.
-        if ($type->is_nullable) {
-            return true;
-        }
-
-        if (\get_class($type) === MixedType::class) {
-            return true;
-        }
-
-        return false;
+        // Null(void) can cast to a nullable type or mixed (but not non-null-mixed).
+        return $type->isNullable();
     }
 
     /**
@@ -176,7 +178,7 @@ final class VoidType extends NativeType
             }
         }
         if ($type instanceof MixedType) {
-            return !$type instanceof NonEmptyMixedType;
+            return $type->isNullable();
         }
 
         // Test to see if we can cast to the non-nullable version
@@ -184,19 +186,31 @@ final class VoidType extends NativeType
         return parent::canCastToNonNullableTypeHandlingTemplates($type, $code_base);
     }
 
-    public function canCastToNonNullableType(Type $_): bool
+    /**
+     * @unused-param $type
+     * @override
+     */
+    public function canCastToNonNullableType(Type $type): bool
     {
         // null_casts_as_any_type means that null or nullable can cast to any type?
         // But don't allow it for void?
         return false;
     }
 
-    public function canCastToNonNullableTypeWithoutConfig(Type $_): bool
+    /**
+     * @unused-param $type
+     * @override
+     */
+    public function canCastToNonNullableTypeWithoutConfig(Type $type): bool
     {
         return false;
     }
 
-    public function withIsNullable(bool $unused_is_nullable): Type
+    /**
+     * @unused-param $is_nullable
+     * @override
+     */
+    public function withIsNullable(bool $is_nullable): Type
     {
         return $this;
     }
@@ -207,6 +221,11 @@ final class VoidType extends NativeType
     }
 
     public function isNullable(): bool
+    {
+        return true;
+    }
+
+    public function isNullableLabeled(): bool
     {
         return true;
     }
@@ -281,5 +300,16 @@ final class VoidType extends NativeType
     public function isScalar(): bool
     {
         return false;
+    }
+
+    /** @return null */
+    public function getValue()
+    {
+        return null;
+    }
+
+    public function asNonLiteralType(): Type
+    {
+        return $this;
     }
 }

@@ -45,6 +45,9 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
 {
     use ConditionVisitorUtil;
 
+    /** @internal */
+    public const CONSTANT_EXISTS_PREFIX = "__phan\x00constant_exists_";
+
     /**
      * @var Context
      * The context in which the node we're going to be looking
@@ -554,6 +557,11 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
         return $this->removeFalseyFromVariable($node, $this->context, false);
     }
 
+    public function visitNullsafeProp(Node $node): Context
+    {
+        return $this->visitProp($node);
+    }
+
     /**
      * @param Node $node
      * A node to parse, with kind ast\AST_PROP (e.g. `if ($this->prop_name)`)
@@ -564,6 +572,7 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
      */
     public function visitProp(Node $node): Context
     {
+        // TODO: Make this imply $expr_node is an object?
         $expr_node = $node->children['expr'];
         if (!($expr_node instanceof Node)) {
             return $this->context;
@@ -721,7 +730,7 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
         foreach ($old_type->getRealTypeSet() as $type) {
             if ($type instanceof MixedType) {
                 // MixedType can cast to other types
-                return $asserted_object_type;
+                return UnionType::of($new_type_set, $old_type->getRealTypeSet());
             }
             if (!$type->isObject()) {
                 // ignore non-object types
@@ -789,6 +798,16 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
         /**
          * @param list<Node|mixed> $args
          */
+        $list_callback = static function (CodeBase $code_base, Context $context, Variable $variable, array $args): void {
+            // Change the type to match the array_is_list relationship
+            // If we already have generic array types, then keep those
+            // (E.g. T[]|false becomes T[], ?array|null becomes array, callable becomes callable-array)
+            $variable->setUnionType($variable->getUnionType()->listTypesStrictCast());
+        };
+
+        /**
+         * @param list<Node|mixed> $args
+         */
         $object_callback = static function (CodeBase $unused_code_base, Context $unused_context, Variable $variable, array $args): void {
             self::analyzeIsObjectAssertion($variable);
         };
@@ -846,10 +865,12 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
                     // FIXME move this to PostOrderAnalysisVisitor so that all expressions can be analyzed, not just variables?
                     $new_type = $default_if_empty;
                 } else {
-                    $new_type = $new_type->nonNullableClone();
+                    // Add the missing type set before making the non-nullable clone.
+                    // Otherwise, it'd have the real type set non-null-mixed.
                     if (!$new_type->hasRealTypeSet()) {
                         $new_type = $new_type->withRealTypeSet($default_if_empty->getRealTypeSet());
                     }
+                    $new_type = $new_type->nonNullableClone();
                     if (!$allow_undefined) {
                         $new_type = $new_type->withIsPossiblyUndefined(false);
                     }
@@ -876,6 +897,20 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
             // (E.g. ?ArrayObject|false becomes ArrayObject)
             $variable->setUnionType($variable->getUnionType()->withStaticResolvedInContext($context)->countableTypesStrictCast($code_base));
         };
+        /**
+         * @param list<Node|mixed> $args
+         */
+        $has_count_callback = static function (CodeBase $code_base, Context $context, Variable $variable, array $args): void {
+            // Change the type to match the is_countable relationship
+            // If we already have possible countable types, then keep those
+            // (E.g. ?ArrayObject|false becomes ArrayObject)
+            $variable->setUnionType(
+                $variable->getUnionType()
+                ->withStaticResolvedInContext($context)
+                ->countableTypesStrictCast($code_base)
+                ->nonFalseyClone()
+            );
+        };
         $class_exists_callback = $make_callback('classStringTypes', ClassStringType::instance(false)->asRealUnionType());
         $method_exists_callback = $make_callback('classStringOrObjectTypes', UnionType::fromFullyQualifiedRealString('class-string|object'));
         /** @return void */
@@ -893,7 +928,11 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
 
         return [
             'class_exists' => $class_exists_callback,
+            'count' => $has_count_callback,  // handle `if (count($x))` but not yet `if (count($x) > 0)`
+            'interface_exists' => $class_exists_callback,  // Currently, there's just class-string, not trait-string or interface-string.
+            'trait_exists' => $class_exists_callback,
             'method_exists' => $method_exists_callback,
+            'array_is_list' => $list_callback,
             'is_a' => $is_a_callback,
             'is_array' => $array_callback,
             'is_bool' => $bool_callback,
@@ -949,10 +988,15 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
         }
         // TODO: Check if the return value of the function is void/always truthy (e.g. object)
 
-        if (\strcasecmp($raw_function_name, 'array_key_exists') === 0 && \count($args) === 2) {
-            // @phan-suppress-next-line PhanPartialTypeMismatchArgument
-            return $this->analyzeArrayKeyExists($args);
+        switch (\strtolower($raw_function_name)) {
+            case 'array_key_exists':
+                // @phan-suppress-next-line PhanPartialTypeMismatchArgument
+                return $this->analyzeArrayKeyExists($args);
+            case 'defined':
+                // @phan-suppress-next-line PhanPartialTypeMismatchArgument
+                return $this->analyzeDefined($args);
         }
+
         // Only look at things of the form
         // `\is_string($variable)`
         if (!($first_arg instanceof Node && $first_arg->kind === ast\AST_VAR)) {
@@ -1042,6 +1086,31 @@ class ConditionVisitor extends KindVisitorImplementation implements ConditionVis
             true,
             false
         );
+    }
+
+    /**
+     * @param list<Node|string|int|float> $args
+     */
+    private function analyzeDefined(array $args): Context
+    {
+        if (\count($args) !== 1) {
+            return $this->context;
+        }
+        $constant_name = $args[0];
+        if ($constant_name instanceof Node) {
+            $constant_name = UnionTypeVisitor::unionTypeFromNode($this->code_base, $this->context, $constant_name)->asSingleScalarValueOrNullOrSelf();
+        }
+        if (!\is_string($constant_name)) {
+            return $this->context;
+        }
+        $context = $this->context->withClonedScope();
+        $context->addScopeVariable(new Variable(
+            $context,
+            self::CONSTANT_EXISTS_PREFIX . \ltrim($constant_name, '\\'),
+            UnionType::empty(),
+            0
+        ));
+        return $context;
     }
 
     /**

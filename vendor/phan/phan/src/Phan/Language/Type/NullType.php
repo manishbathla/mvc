@@ -14,8 +14,10 @@ use Phan\Language\UnionType;
  * Singleton representing the type `null`
  * @phan-pure
  */
-final class NullType extends ScalarType
+final class NullType extends ScalarType implements LiteralTypeInterface
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'null';
 
@@ -56,9 +58,14 @@ final class NullType extends ScalarType
             || parent::canCastToNonNullableType($type);
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     * @override
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
-        return $other->isNullable();
+        return $other->isNullable() || $other instanceof TemplateType;
     }
 
     public function isSubtypeOf(Type $type): bool
@@ -66,7 +73,11 @@ final class NullType extends ScalarType
         return $type->isNullable();
     }
 
-    public function isSubtypeOfNonNullableType(Type $unused_type): bool
+    /**
+     * @unused-param $type
+     * @override
+     */
+    public function isSubtypeOfNonNullableType(Type $type): bool
     {
         return false;
     }
@@ -84,7 +95,7 @@ final class NullType extends ScalarType
         }
 
         // Null can cast to a nullable type.
-        if ($type->is_nullable) {
+        if ($type->isNullable()) {
             return true;
         }
 
@@ -103,9 +114,6 @@ final class NullType extends ScalarType
                 \in_array($type->getName(), $scalar_implicit_partial['null'] ?? [], true)) {
                 return true;
             }
-        }
-        if (\get_class($type) === MixedType::class) {
-            return true;
         }
 
         return false;
@@ -123,16 +131,8 @@ final class NullType extends ScalarType
             return true;
         }
 
-        // Null can cast to a nullable type or mixed.
-        if ($type->is_nullable) {
-            return true;
-        }
-
-        if (\get_class($type) === MixedType::class) {
-            return true;
-        }
-
-        return false;
+        // Null can cast to a nullable type or mixed (but not non-null-mixed).
+        return $type->isNullable();
     }
 
     /**
@@ -148,7 +148,7 @@ final class NullType extends ScalarType
         }
 
         // Null can cast to a nullable type.
-        if ($type->is_nullable) {
+        if ($type->isNullable()) {
             return true;
         }
 
@@ -167,9 +167,6 @@ final class NullType extends ScalarType
                 \in_array($type->getName(), $scalar_implicit_partial['null'] ?? [], true)) {
                 return true;
             }
-        }
-        if ($type instanceof MixedType) {
-            return $type->isPossiblyFalsey();
         }
 
         // Test to see if we can cast to the non-nullable version
@@ -197,6 +194,11 @@ final class NullType extends ScalarType
     }
 
     public function isNullable(): bool
+    {
+        return true;
+    }
+
+    public function isNullableLabeled(): bool
     {
         return true;
     }
@@ -270,5 +272,16 @@ final class NullType extends ScalarType
     public function isScalar(): bool
     {
         return false;
+    }
+
+    /** @return null */
+    public function getValue()
+    {
+        return null;
+    }
+
+    public function asNonLiteralType(): Type
+    {
+        return $this;
     }
 }

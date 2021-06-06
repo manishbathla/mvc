@@ -19,12 +19,19 @@ use function class_exists;
  */
 class MixedType extends NativeType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'mixed';
 
-    // mixed or ?mixed can cast to/from anything.
-    // For purposes of analysis, there's usually no difference between mixed and nullable mixed.
-    public function canCastToType(Type $unused_type): bool
+    /**
+     * mixed or ?mixed can cast to/from anything.
+     * For purposes of analysis, there's usually no difference between mixed and nullable mixed.
+     *
+     * @unused-param $type
+     * @override
+     */
+    public function canCastToType(Type $type): bool
     {
         return true;
     }
@@ -38,18 +45,41 @@ class MixedType extends NativeType
         return true;
     }
 
-    // mixed or ?mixed can cast to/from anything.
-    // For purposes of analysis, there's no difference between mixed and nullable mixed.
-    protected function canCastToNonNullableType(Type $unused_type): bool
+    /**
+     * Overridden in NonNullMixedType and NonEmptyMixedType
+     * @unused-param $type
+     * @override
+     */
+    public function canCastToTypeWithoutConfig(Type $type): bool
     {
         return true;
     }
 
-    protected function canCastToNonNullableTypeWithoutConfig(Type $unused_type): bool
+    /**
+     * mixed or ?mixed can cast to/from anything even if nullable.
+     * For purposes of analysis, there's usually no difference between mixed and nullable mixed.
+     *
+     * @unused-param $type
+     * @override
+     */
+    protected function canCastToNonNullableType(Type $type): bool
     {
         return true;
     }
 
+    /**
+     * mixed or ?mixed can cast to/from anything even if nullable.
+     * For purposes of analysis, there's usually no difference between mixed and nullable mixed.
+     *
+     * @unused-param $type
+     * @override
+     */
+    protected function canCastToNonNullableTypeWithoutConfig(Type $type): bool
+    {
+        return true;
+    }
+
+    // FIXME: non-empty-mixed/non-null-mixed is a subtype of mixed, but not vice versa?
     public function isSubtypeOf(Type $type): bool
     {
         return $type instanceof MixedType;
@@ -60,10 +90,15 @@ class MixedType extends NativeType
         return $type instanceof MixedType;
     }
 
+    /**
+     * @unused-param $context
+     * @unused-param $code_base
+     * @override
+     */
     public function isExclusivelyNarrowedFormOrEquivalentTo(
         UnionType $union_type,
-        Context $unused_context,
-        CodeBase $unused_code_base
+        Context $context,
+        CodeBase $code_base
     ): bool {
         // Type casting rules allow mixed to cast to anything.
         // But we don't want `@param mixed $x` to take precedence over `int $x` in the signature.
@@ -78,7 +113,11 @@ class MixedType extends NativeType
         return ArrayType::instance(false);
     }
 
-    public function isArrayOrArrayAccessSubType(CodeBase $unused_code_base): bool
+    /**
+     * @unused-param $code_base
+     * @override
+     */
+    public function isArrayOrArrayAccessSubType(CodeBase $code_base): bool
     {
         return true;
     }
@@ -108,7 +147,10 @@ class MixedType extends NativeType
         return true;  // It's possible.
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $unused_other): bool
+    /**
+     * @suppress PhanUnusedPublicMethodParameter
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         return true;  // It's possible.
     }
@@ -138,6 +180,16 @@ class MixedType extends NativeType
         return false;
     }
 
+    public function isPossiblyFalse(): bool
+    {
+        return true;
+    }
+
+    public function isPossiblyTrue(): bool
+    {
+        return true;
+    }
+
     public function asObjectType(): ?Type
     {
         return ObjectType::instance(false);
@@ -152,5 +204,45 @@ class MixedType extends NativeType
     {
         return NonEmptyMixedType::instance(false);
     }
+
+    /** Overridden by NonEmptyMixedType */
+    public function isNullable(): bool
+    {
+        return true;
+    }
+
+    public function isNullableLabeled(): bool
+    {
+        return $this->is_nullable;
+    }
+
+    /** Overridden by NonEmptyMixedType */
+    public function __toString(): string
+    {
+        return $this->is_nullable ? '?mixed' : 'mixed';
+    }
+
+    /** @unused-param $other */
+    public function weaklyOverlaps(Type $other): bool
+    {
+        return true;
+    }
+
+    public function withIsNullable(bool $is_nullable): Type
+    {
+        if ($is_nullable) {
+            if ($this->is_nullable) {
+                return $this;
+            }
+            return static::instance(false);
+        }
+        return NonNullMixedType::instance(false);
+    }
+
+    public function asScalarType(): ?Type
+    {
+        return ScalarRawType::instance(false);
+    }
 }
 class_exists(NonEmptyMixedType::class);
+class_exists(NonNullMixedType::class);

@@ -9,19 +9,29 @@ use Phan\Language\Context;
 use Phan\Language\Type;
 
 /**
- * Represents the PHPDoc `non-empty-mixed` type, which can cast to/from any type and is truthy.
+ * Represents the PHPDoc `non-empty-mixed` type, which can cast to/from any non-empty type and is truthy.
  *
  * For purposes of analysis, there's usually no difference between mixed and nullable mixed.
  * @phan-pure
  */
 final class NonEmptyMixedType extends MixedType
 {
+    use NativeTypeTrait;
+
     /** @phan-override */
     public const NAME = 'non-empty-mixed';
 
     public function canCastToType(Type $type): bool
     {
         return $type->isPossiblyTruthy() || ($this->is_nullable && $type->is_nullable);
+    }
+
+    /**
+     * @override
+     */
+    public function canCastToTypeWithoutConfig(Type $type): bool
+    {
+        return $this->canCastToType($type);
     }
 
     /**
@@ -53,7 +63,11 @@ final class NonEmptyMixedType extends MixedType
         return GenericArrayType::fromElementType($this, false, $key_type);
     }
 
-    public function canCastToDeclaredType(CodeBase $unused_code_base, Context $unused_context, Type $other): bool
+    /**
+     * @unused-param $code_base
+     * @unused-param $context
+     */
+    public function canCastToDeclaredType(CodeBase $code_base, Context $context, Type $other): bool
     {
         return $other->isPossiblyTruthy();
     }
@@ -61,6 +75,11 @@ final class NonEmptyMixedType extends MixedType
     public function isPossiblyFalsey(): bool
     {
         return $this->is_nullable;
+    }
+
+    public function isPossiblyFalse(): bool
+    {
+        return false;
     }
 
     public function isAlwaysTruthy(): bool
@@ -84,6 +103,28 @@ final class NonEmptyMixedType extends MixedType
 
     public function asNonFalseyType(): Type
     {
-        return $this->withIsNullable(false);
+        return $this->is_nullable ? $this->withIsNullable(false) : $this;
+    }
+
+    /** @override */
+    public function isNullable(): bool
+    {
+        return $this->is_nullable;
+    }
+
+    /** @override */
+    public function __toString(): string
+    {
+        return $this->is_nullable ? '?non-empty-mixed' : 'non-empty-mixed';
+    }
+
+    public function weaklyOverlaps(Type $other): bool
+    {
+        return $other->isPossiblyTruthy();
+    }
+
+    public function withIsNullable(bool $is_nullable): Type
+    {
+        return $is_nullable === $this->is_nullable ? $this : self::instance($is_nullable);
     }
 }

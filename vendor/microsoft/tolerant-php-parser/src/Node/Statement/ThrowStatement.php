@@ -10,6 +10,7 @@ use Microsoft\PhpParser\Node\Expression;
 use Microsoft\PhpParser\Node\StatementNode;
 use Microsoft\PhpParser\Token;
 
+// TODO: Remove this and replace with ThrowExpression in a backwards incompatible major release
 class ThrowStatement extends StatementNode {
     /** @var Token */
     public $throwKeyword;

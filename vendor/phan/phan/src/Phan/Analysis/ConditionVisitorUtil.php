@@ -361,9 +361,9 @@ trait ConditionVisitorUtil
 
     /**
      * overridden in subclasses
-     * @param Node|mixed $_
+     * @param Node|mixed $node @unused-param
      */
-    protected function chooseIssueForUnconditionallyTrue(bool $is_negated, $_): string
+    protected function chooseIssueForUnconditionallyTrue(bool $is_negated, $node): string
     {
         return $is_negated ? Issue::ImpossibleCondition : Issue::RedundantCondition;
     }
@@ -496,6 +496,8 @@ trait ConditionVisitorUtil
                 };
             }
         } else {
+            // Remove loosely equal types.
+            // TODO: Does this properly remove null for `$var != 0`?
             $cb = static function (Type $type) use ($value): bool {
                 return $type instanceof LiteralTypeInterface && $type->getValue() == $value;
             };
@@ -730,13 +732,14 @@ trait ConditionVisitorUtil
      * and infer the effects on $this->prop_name in the local scope.
      *
      * @param Node $node a node of kind ast\AST_PROP
+     * @unused-param $suppress_issues
      */
     final protected function updatePropertyExpressionWithConditionalFilter(
         Node $node,
         Context $context,
         Closure $should_filter_cb,
         Closure $filter_union_type_cb,
-        bool $unused_suppress_issues
+        bool $suppress_issues
     ): Context {
         if (!self::isThisVarNode($node->children['expr'])) {
             return $context;
@@ -819,6 +822,9 @@ trait ConditionVisitorUtil
         $new_real_union_type = $new_union_type->getRealUnionType();
         $combined_real_types = [];
         foreach ($old_union_type->getRealTypeSet() as $type) {
+            if (!$type->asPHPDocUnionType()->hasAnyWeakTypeOverlap($new_real_union_type)) {
+                continue;
+            }
             // @phan-suppress-next-line PhanAccessMethodInternal
             // TODO: Implement Type->canWeakCastToUnionType?
             if ($type->isPossiblyFalsey() && !$new_real_union_type->containsFalsey()) {
@@ -835,12 +841,14 @@ trait ConditionVisitorUtil
                 $type = $type->asNonTruthyType();
             }
             if ($type instanceof LiteralTypeInterface) {
+                // If this is a literal type, we only want types that could possibly be loosely equal to this
                 foreach ($new_real_union_type->getTypeSet() as $other_type) {
                     if (!$other_type instanceof LiteralTypeInterface || $type->getValue() == $other_type->getValue()) {
                         $combined_real_types[] = $type;
                         continue 2;
                     }
                 }
+                continue;
             }
             $combined_real_types[] = $type;
         }
@@ -860,8 +868,6 @@ trait ConditionVisitorUtil
         $new_real_union_type = $new_union_type->getRealUnionType();
         $combined_real_types = [];
         foreach ($old_union_type->getRealTypeSet() as $type) {
-            // @phan-suppress-next-line PhanAccessMethodInternal
-            // TODO: Implement Type->canWeakCastToUnionType?
             if ($type->isPossiblyFalsey() && !$new_real_union_type->containsFalsey()) {
                 if ($type->isAlwaysFalsey()) {
                     continue;
@@ -1094,7 +1100,7 @@ trait ConditionVisitorUtil
      * @param Node|int|float|string $right
      * @return Context - Context after inferring type from the negation of a condition such as `if ($x !== false)`
      */
-    protected function analyzeAndUpdateToBeIdentical($left, $right): Context
+    public function analyzeAndUpdateToBeIdentical($left, $right): Context
     {
         return $this->analyzeBinaryConditionPattern(
             $left,
@@ -1122,7 +1128,7 @@ trait ConditionVisitorUtil
      * @param Node|int|float|string $right
      * @return Context - Context after inferring type from an expression such as `if ($x !== false)`
      */
-    protected function analyzeAndUpdateToBeNotIdentical($left, $right): Context
+    public function analyzeAndUpdateToBeNotIdentical($left, $right): Context
     {
         return $this->analyzeBinaryConditionPattern(
             $left,
@@ -1287,7 +1293,7 @@ trait ConditionVisitorUtil
      * @param Node|int|float|string $right
      * @return Context - Context after inferring type from an expression such as `if ($x == 'literal')`
      */
-    protected function analyzeAndUpdateToBeNotEqual($left, $right): Context
+    public function analyzeAndUpdateToBeNotEqual($left, $right): Context
     {
         return $this->analyzeBinaryConditionPattern(
             $left,
@@ -1390,19 +1396,6 @@ trait ConditionVisitorUtil
         return $context->getScope()->getVariableByName(
             $variable_name
         );
-    }
-
-    /**
-     * @param array<mixed,?(Node|string|int|float)> $args
-     */
-    final protected static function isArgumentListWithVarAsFirstArgument(array $args): bool
-    {
-        if (\count($args) >= 1) {
-            $arg = $args[0];
-            // Phan also supports `if (!is_array($x['field']))` and `if (!is_array($this->propName))`
-            return ($arg instanceof Node) && (\in_array($arg->kind, [ast\AST_VAR, ast\AST_DIM, ast\AST_PROP], true));
-        }
-        return false;
     }
 
     /**

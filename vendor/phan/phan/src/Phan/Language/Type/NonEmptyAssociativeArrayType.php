@@ -15,6 +15,8 @@ use Phan\Language\Type;
  */
 final class NonEmptyAssociativeArrayType extends AssociativeArrayType implements NonEmptyArrayInterface
 {
+    use NativeTypeTrait;
+
     /**
      * @override
      */
@@ -24,7 +26,7 @@ final class NonEmptyAssociativeArrayType extends AssociativeArrayType implements
         int $key_type = GenericArrayType::KEY_INT
     ): GenericArrayType {
         if ($key_type === GenericArrayType::KEY_STRING) {
-            return NonEmptyGenericArrayType::fromElementType($type, $is_nullable, $key_type);
+            return NonEmptyGenericArrayType::fromElementType($type, $is_nullable, GenericArrayType::KEY_STRING);
         }
         // Make sure we only ever create exactly one
         // object for any unique type

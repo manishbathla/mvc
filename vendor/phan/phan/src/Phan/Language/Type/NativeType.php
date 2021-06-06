@@ -25,34 +25,6 @@ abstract class NativeType extends Type
     /** @phan-override */
     public const KEY_PREFIX = '!';
 
-    /**
-     * @param bool $is_nullable
-     * If true, returns a nullable instance of this native type
-     *
-     * @return static
-     * Returns a nullable/non-nullable instance of this native type (possibly unchanged)
-     */
-    public static function instance(bool $is_nullable)
-    {
-        if ($is_nullable) {
-            static $nullable_instance = null;
-
-            if ($nullable_instance === null) {
-                $nullable_instance = static::make('\\', static::NAME, [], true, Type::FROM_NODE);
-            }
-
-            return $nullable_instance;
-        }
-
-        static $instance = null;
-
-        if ($instance === null) {
-            $instance = static::make('\\', static::NAME, [], false, Type::FROM_NODE);
-        }
-
-        return $instance;
-    }
-
     public function isNativeType(): bool
     {
         return true;
@@ -68,12 +40,18 @@ abstract class NativeType extends Type
         return false;
     }
 
-    public function isArrayOrArrayAccessSubType(CodeBase $unused_code_base): bool
+    /**
+     * @unused-param $code_base
+     */
+    public function isArrayOrArrayAccessSubType(CodeBase $code_base): bool
     {
         return false;
     }
 
-    public function isCountable(CodeBase $_): bool
+    /**
+     * @unused-param $code_base
+     */
+    public function isCountable(CodeBase $code_base): bool
     {
         return false;
     }
@@ -210,7 +188,9 @@ abstract class NativeType extends Type
                 FalseType::NAME    => in_array(FalseType::NAME, $permitted_cast_type_names, true),
                 FloatType::NAME    => in_array(FloatType::NAME, $permitted_cast_type_names, true),
                 IntType::NAME      => in_array(IntType::NAME, $permitted_cast_type_names, true),
+                // TODO: Handle other subtypes of mixed?
                 MixedType::NAME    => true,
+                NeverType::NAME => in_array(NeverType::NAME, $permitted_cast_type_names, true),
                 NullType::NAME     => in_array(NullType::NAME, $permitted_cast_type_names, true),
                 ObjectType::NAME   => in_array(ObjectType::NAME, $permitted_cast_type_names, true),
                 ResourceType::NAME => in_array(ResourceType::NAME, $permitted_cast_type_names, true),
@@ -238,6 +218,7 @@ abstract class NativeType extends Type
             IntType::NAME      => $generate_row(IntType::NAME, FloatType::NAME, ScalarRawType::NAME),
             IterableType::NAME => $generate_row(IterableType::NAME),
             MixedType::NAME    => $generate_row(MixedType::NAME),  // MixedType overrides the methods which would use this
+            NeverType::NAME => $generate_row(NeverType::NAME),  // NeverType also overrides methods which would use this
             NullType::NAME     => $generate_row(NullType::NAME),
             ObjectType::NAME   => $generate_row(ObjectType::NAME),
             ResourceType::NAME => $generate_row(ResourceType::NAME),
@@ -311,32 +292,38 @@ abstract class NativeType extends Type
     }
 
     /**
+     * @unused-param $code_base
      * @return ?UnionType returns the iterable value's union type if this is a subtype of iterable, null otherwise.
      */
-    public function iterableKeyUnionType(CodeBase $unused_code_base): ?UnionType
+    public function iterableKeyUnionType(CodeBase $code_base): ?UnionType
     {
         return null;
     }
 
     /**
+     * @unused-param $code_base
      * @return ?UnionType returns the iterable value's union type if this is a subtype of iterable, null otherwise.
      */
-    public function iterableValueUnionType(CodeBase $unused_code_base): ?UnionType
+    public function iterableValueUnionType(CodeBase $code_base): ?UnionType
     {
         return null;
     }
 
     /**
-     * @param array<string,UnionType> $unused_template_parameter_type_map
+     * @param array<string,UnionType> $template_parameter_type_map @unused-param
      * @override
      */
     public function withTemplateParameterTypeMap(
-        array $unused_template_parameter_type_map
+        array $template_parameter_type_map
     ): UnionType {
         return $this->asPHPDocUnionType();
     }
 
-    public function isTemplateSubtypeOf(Type $unused_type): bool
+    /**
+     * @unused-param $type
+     * @override
+     */
+    public function isTemplateSubtypeOf(Type $type): bool
     {
         return false;
     }
@@ -351,12 +338,18 @@ abstract class NativeType extends Type
         return false;
     }
 
-    public function getTemplateTypeExtractorClosure(CodeBase $unused_code_base, TemplateType $unused_template_type): ?\Closure
+    /**
+     * @suppress PhanUnusedPublicMethodParameter
+     */
+    public function getTemplateTypeExtractorClosure(CodeBase $code_base, TemplateType $template_type): ?\Closure
     {
         return null;
     }
 
-    public function asFunctionInterfaceOrNull(CodeBase $unused_codebase, Context $unused_context): ?\Phan\Language\Element\FunctionInterface
+    /**
+     * @suppress PhanUnusedPublicMethodParameter
+     */
+    public function asFunctionInterfaceOrNull(CodeBase $codebase, Context $context): ?\Phan\Language\Element\FunctionInterface
     {
         // overridden in subclasses
         return null;
@@ -378,12 +371,20 @@ abstract class NativeType extends Type
         return null;
     }
 
-    public function asIterable(CodeBase $_): ?Type
+    /**
+     * @override
+     * @unused-param $code_base
+     */
+    public function asIterable(CodeBase $code_base): ?Type
     {
         return null;
     }
 
-    public function hasStaticOrSelfTypesRecursive(CodeBase $_): bool
+    /**
+     * @override
+     * @unused-param $code_base
+     */
+    public function hasStaticOrSelfTypesRecursive(CodeBase $code_base): bool
     {
         return false;
     }
