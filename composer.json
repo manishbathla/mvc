@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "twig/twig": "3.0.3",
+    "twig/twig": "3.4.2",
     "rollbar/rollbar": "2.0.0",
     "ezyang/htmlpurifier": "4.12.0",
     "paragonie/anti-csrf": "2.2.1",
