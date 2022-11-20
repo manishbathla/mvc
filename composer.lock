@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "47cde08022f1c598e8d9b833127d85a9",
+    "content-hash": "c9002ae2e49647fcff5b79cfc4308a1c",
     "packages": [
         {
             "name": "aidantwoods/secureheaders",
@@ -313,25 +313,25 @@
         },
         {
             "name": "paragonie/anti-csrf",
-            "version": "v2.2.1",
+            "version": "v2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/anti-csrf.git",
-                "reference": "b1b861266b04b80108996729e34339444817ef59"
+                "reference": "2b2579108d35e569ff8b312fb87728db12bfd90d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/anti-csrf/zipball/b1b861266b04b80108996729e34339444817ef59",
-                "reference": "b1b861266b04b80108996729e34339444817ef59",
+                "url": "https://api.github.com/repos/paragonie/anti-csrf/zipball/2b2579108d35e569ff8b312fb87728db12bfd90d",
+                "reference": "2b2579108d35e569ff8b312fb87728db12bfd90d",
                 "shasum": ""
             },
             "require": {
                 "paragonie/constant_time_encoding": "^2",
-                "php": "^7"
+                "php": "^7|^8"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4|^5",
-                "vimeo/psalm": "^0|^1"
+                "phpunit/phpunit": "^7|^8|^9",
+                "vimeo/psalm": "^1|^3|^4"
             },
             "type": "library",
             "autoload": {
@@ -358,28 +358,28 @@
                 "security",
                 "session"
             ],
-            "time": "2019-01-03T21:24:21+00:00"
+            "time": "2020-12-03T14:37:16+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v2.3.0",
+            "version": "v2.6.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "47a1cedd2e4d52688eb8c96469c05ebc8fd28fa2"
+                "reference": "58c3f47f650c94ec05a151692652a868995d2938"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/47a1cedd2e4d52688eb8c96469c05ebc8fd28fa2",
-                "reference": "47a1cedd2e4d52688eb8c96469c05ebc8fd28fa2",
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/58c3f47f650c94ec05a151692652a868995d2938",
+                "reference": "58c3f47f650c94ec05a151692652a868995d2938",
                 "shasum": ""
             },
             "require": {
                 "php": "^7|^8"
             },
             "require-dev": {
-                "phpunit/phpunit": "^6|^7",
-                "vimeo/psalm": "^1|^2|^3"
+                "phpunit/phpunit": "^6|^7|^8|^9",
+                "vimeo/psalm": "^1|^2|^3|^4"
             },
             "type": "library",
             "autoload": {
@@ -420,7 +420,7 @@
                 "hex2bin",
                 "rfc4648"
             ],
-            "time": "2019-11-06T19:20:29+00:00"
+            "time": "2022-06-14T06:56:20+00:00"
         },
         {
             "name": "php-kit/ext-pdo",
@@ -630,6 +630,7 @@
                 "mail",
                 "mailer"
             ],
+            "abandoned": "symfony/mailer",
             "time": "2019-11-12T09:31:26+00:00"
         },
         {
@@ -2478,5 +2479,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }
