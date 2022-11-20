@@ -1,16 +1,18 @@
-<?php namespace Rollbar;
+<?php declare(strict_types=1);
+
+namespace Rollbar;
 
 class Scrubber implements ScrubberInterface
 {
     protected static $defaults;
     protected $scrubFields;
-    protected $whitelist;
+    protected $safelist;
 
     public function __construct($config)
     {
         self::$defaults = Defaults::get();
         $this->setScrubFields($config);
-        $this->setWhitelist($config);
+        $this->setSafelist($config);
     }
 
     protected function setScrubFields($config)
@@ -27,18 +29,18 @@ class Scrubber implements ScrubberInterface
         return $this->scrubFields;
     }
 
-    protected function setWhitelist($config)
+    protected function setSafelist($config)
     {
-        $fromConfig = isset($config['scrubWhitelist']) ? $config['scrubWhitelist'] : null;
+        $fromConfig = isset($config['scrubSafelist']) ? $config['scrubSafelist'] : null;
         if (!isset($fromConfig)) {
-            $fromConfig = isset($config['scrub_whitelist']) ? $config['scrub_whitelist'] : null;
+            $fromConfig = isset($config['scrub_safelist']) ? $config['scrub_safelist'] : null;
         }
-        $this->whitelist = $fromConfig ? $fromConfig : array();
+        $this->safelist = $fromConfig ? $fromConfig : array();
     }
 
-    public function getWhitelist()
+    public function getSafelist()
     {
-        return $this->whitelist;
+        return $this->safelist;
     }
 
     /**
@@ -78,7 +80,8 @@ class Scrubber implements ScrubberInterface
                     $data
                 );
             } else {
-                parse_str($data, $parsedData);
+                // PHP reports warning if parse_str() detects more than max_input_vars items.
+                @parse_str($data, $parsedData);
                 if (http_build_query($parsedData) === $data) {
                     $data = $this->scrubQueryString($data, $fields);
                 }
@@ -107,11 +110,13 @@ class Scrubber implements ScrubberInterface
             $parent = $path;
             $current = !$path ? $key : $path . '.' . $key;
 
-            if (in_array($current, $scrubber->getWhitelist())) {
+            if (in_array($current, $scrubber->getSafelist())) {
                 return;
             }
 
-            if (isset($fields[strtolower($key)])) {
+            // $key may be an integer (proper), such as when scrubbing
+            // backtraces -- coerce to string to satisfy strict types
+            if (isset($fields[strtolower((string)$key)])) {
                 $val = $replacement;
             } else {
                 $val = $scrubber->internalScrub($val, $fields, $replacement, $current);
@@ -127,7 +132,8 @@ class Scrubber implements ScrubberInterface
 
     protected function scrubQueryString($query, $fields, $replacement = 'xxxxxxxx')
     {
-        parse_str($query, $parsed);
+        // PHP reports warning if parse_str() detects more than max_input_vars items.
+        @parse_str($query, $parsed);
         $scrubbed = $this->internalScrub($parsed, $fields, $replacement, '');
         return http_build_query($scrubbed);
     }

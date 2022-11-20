@@ -13,7 +13,7 @@ class DataBuilderTest extends BaseRollbarTest
      */
     private $dataBuilder;
 
-    public function setUp()
+    public function setUp(): void
     {
         $_SESSION = array();
         
@@ -23,6 +23,20 @@ class DataBuilderTest extends BaseRollbarTest
             'levelFactory' => new LevelFactory,
             'utilities' => new Utilities
         ));
+    }
+
+    /**
+     * We support passing level by well-known string ("error", "notice",
+     * "info"), etc. But if a bogus string is passed, we want that to come
+     * out as a null level.
+     *
+     * @testWith [ "bogus", null ]
+     *           [ "error", "error" ]
+     */
+    public function testMakeDataLevel($given, $resolved)
+    {
+        $output = $this->dataBuilder->makeData($given, "testing", array());
+        $this->assertEquals($resolved, $output->getLevel());
     }
 
     public function testMakeData()
@@ -436,9 +450,8 @@ class DataBuilderTest extends BaseRollbarTest
         );
     }
     
-    public function testExceptionTraceArguments()
+    public function testStackFramesAreUnavailableWhenLocalVarsDumpConfigUnset()
     {
-        // Negative test
         $dataBuilder = new DataBuilder(array(
             'accessToken' => $this->getTestAccessToken(),
             'environment' => 'tests',
@@ -451,8 +464,16 @@ class DataBuilderTest extends BaseRollbarTest
             $frames[count($frames)-1]->getArgs(),
             "Frames arguments available in trace when they should not be."
         );
+    }
         
-        // Positive test
+    /**
+     * @testWith [0]
+     *           [1]
+     */
+    public function testStackFramesAreAvailableWhenLocalVarsDumpRequested($valueOfZendExceptionIgnoreArgs)
+    {
+        ini_set('zend.exception_ignore_args', $valueOfZendExceptionIgnoreArgs);
+
         $dataBuilder = new DataBuilder(array(
             'accessToken' => $this->getTestAccessToken(),
             'environment' => 'tests',
@@ -741,6 +762,25 @@ class DataBuilderTest extends BaseRollbarTest
         $output = $dataBuilder->makeData(Level::ERROR, "testing", array());
         $this->assertEquals('123', $output->getPerson()->getId());
     }
+
+    public function testPersonIntID()
+    {
+        $dataBuilder = new DataBuilder(array(
+            'accessToken' => $this->getTestAccessToken(),
+            'environment' => 'tests',
+            'person' => array(
+                'id' => 123,
+                'username' => 'tester',
+                'email' => 'test@test.com'
+            ),
+            'levelFactory' => new LevelFactory,
+            'utilities' => new Utilities
+        ));
+        $output = $dataBuilder->makeData(Level::ERROR, "testing", array());
+        $this->assertEquals('123', $output->getPerson()->getId());
+        $this->assertNull($output->getPerson()->getUsername());
+        $this->assertNull($output->getPerson()->getEmail());
+    }
     
     public function testPersonFuncException()
     {
@@ -797,9 +837,6 @@ class DataBuilderTest extends BaseRollbarTest
         $requestBody = $output->getRequest()->getBody();
         
         $this->assertEquals($streamInput, $requestBody);
-        if (version_compare(PHP_VERSION, '5.6.0') < 0) {
-            $this->assertEquals($streamInput, $_SERVER['php://input']);
-        }
         
         stream_wrapper_restore("php");
     }
@@ -879,12 +916,17 @@ class DataBuilderTest extends BaseRollbarTest
             'levelFactory' => new LevelFactory,
             'utilities' => new Utilities
         ));
-        $frames = $dataBuilder->makeFrames(new \Exception(), false);
+        $frames = $dataBuilder->makeFrames(new \Exception(), false); // A
         $this->assertStringEndsWith(
             'tests/DataBuilderTest.php',
             $frames[count($frames)-1]->getFilename()
         );
-        $this->assertEquals(882, $frames[count($frames)-1]->getLineno());
+        // 919 is the line number where the comment "// A" is found
+        $this->assertEquals(
+            919,
+            $frames[count($frames)-1]->getLineno(),
+            "Possible false negative: did this file change? Check the line number for line with '// A' comment"
+        );
         $this->assertEquals('Rollbar\DataBuilderTest::testFramesOrder', $frames[count($frames)-2]->getMethod());
     }
     

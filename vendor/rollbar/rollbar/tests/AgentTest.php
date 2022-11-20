@@ -13,7 +13,7 @@ class AgentTest extends Rollbar\BaseRollbarTest
 {
     private $path = '/tmp/rollbar-php';
 
-    protected function setUp()
+    protected function setUp(): void
     {
         if (!file_exists($this->path)) {
             mkdir($this->path);
@@ -32,10 +32,10 @@ class AgentTest extends Rollbar\BaseRollbarTest
         $logger->info("this is a test");
         $file = fopen($this->path . '/rollbar-relay.' . getmypid() . '.' . microtime(true) . '.rollbar', 'r');
         $line = fgets($file);
-        $this->assertContains('this is a test', $line);
+        $this->assertStringContainsString('this is a test', $line);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         parent::tearDown();
         $this->rrmdir($this->path);

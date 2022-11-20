@@ -1,21 +1,23 @@
 <?php namespace Rollbar;
 
-use \Mockery as m;
+use Exception;
+use Mockery as m;
+use Psr\Log\LogLevel as PsrLogLevel;
 use Rollbar\Payload\Level;
 use Rollbar\Payload\Payload;
 use Rollbar\TestHelpers\Exceptions\SilentExceptionSampleRate;
-use Psr\Log\LogLevel as PsrLogLevel;
+use StdClass;
 
 class RollbarLoggerTest extends BaseRollbarTest
 {
     
-    public function setUp()
+    public function setUp(): void
     {
         $_SESSION = array();
         parent::setUp();
     }
     
-    public function tearDown()
+    public function tearDown(): void
     {
         Rollbar::destroy();
         parent::tearDown();
@@ -577,7 +579,7 @@ class RollbarLoggerTest extends BaseRollbarTest
         $result = $this->scrubTestHelper(
             array(
                 'person' => $testData,
-                'scrub_whitelist' => array(
+                'scrub_safelist' => array(
                     'data.person.recursive.sensitive'
                 )
             )
@@ -592,7 +594,7 @@ class RollbarLoggerTest extends BaseRollbarTest
         $this->assertNotEquals(
             str_repeat('*', 8),
             $result['data']['person']['recursive']['sensitive'],
-            "Person recursive.sensitive DID get scrubbed even though it's whitelisted."
+            "Person recursive.sensitive DID get scrubbed even though it's safelisted."
         );
     }
     
@@ -668,7 +670,17 @@ class RollbarLoggerTest extends BaseRollbarTest
         );
     }
 
-    public function testPsr3Emergency()
+    /**
+     * @testWith ["emergency"]
+     *           ["alert"]
+     *           ["critical"]
+     *           ["error"]
+     *           ["warning"]
+     *           ["notice"]
+     *           ["info"]
+     *           ["debug"]
+     */
+    public function testPsr3MethodCallsDoNotCrash($method)
     {
         $l = new RollbarLogger(array(
             "access_token" => $this->getTestAccessToken(),
@@ -676,86 +688,10 @@ class RollbarLoggerTest extends BaseRollbarTest
         ));
 
         // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->emergency("Testing PHP Notifier");
+        $l->$method("Testing PHP Notifier");
+        $this->assertTrue(true);
     }
 
-    public function testPsr3Alert()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->alert("Testing PHP Notifier");
-    }
-
-    public function testPsr3Critical()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->critical("Testing PHP Notifier");
-    }
-
-    public function testPsr3Error()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->error("Testing PHP Notifier");
-    }
-
-    public function testPsr3Warning()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->warning("Testing PHP Notifier");
-    }
-
-    public function testPsr3Notice()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->notice("Testing PHP Notifier");
-    }
-
-    public function testPsr3Info()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->info("Testing PHP Notifier");
-    }
-
-    public function testPsr3Debug()
-    {
-        $l = new RollbarLogger(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => "testing-php"
-        ));
-
-        // Test that no \Psr\Log\InvalidArgumentException is thrown
-        $l->debug("Testing PHP Notifier");
-    }
-    
     /**
      * @dataProvider maxItemsProvider
      */
@@ -795,9 +731,6 @@ class RollbarLoggerTest extends BaseRollbarTest
         );
     }
     
-    /**
-     * @expectedException Exception
-     */
     public function testRaiseOnError()
     {
         $logger = new RollbarLogger(array(
@@ -806,10 +739,38 @@ class RollbarLoggerTest extends BaseRollbarTest
             "raise_on_error" => true
         ));
         
+        $this->expectException(\Exception::class);
         try {
             throw new \Exception();
         } catch (\Exception $ex) {
             $logger->log(Level::ERROR, $ex);
         }
+    }
+
+    /**
+     * @dataProvider providesToLogEntityForUncaughtCheck
+     */
+    public function testIsUncaughtLogData(mixed $toLog, bool $expected, string $message)
+    {
+        $logger = new RollbarLogger(array(
+            "access_token" => $this->getTestAccessToken(),
+            "environment" => 'test',
+            "raise_on_error" => true
+        ));
+
+        $this->assertSame($logger->isUncaughtLogData($toLog), $expected, $message);
+    }
+
+    public static function providesToLogEntityForUncaughtCheck()
+    {
+        $uncaught = new Exception;
+        $uncaught->isUncaught = true;
+        return [
+            [ 'some string', false, 'String log data should not be seen as uncaught' ],
+            [ [], false, 'Array log data should not be seen as uncaught' ],
+            [ new StdClass, false, 'An object not deriving from Throwable should not be seen as uncaught' ],
+            [ new Exception, false, 'A raw exception is not seen as uncaught' ],
+            [ $uncaught, true, 'A Throwable-derived object marked as uncaught must be seen as uncaught' ],
+        ];
     }
 }

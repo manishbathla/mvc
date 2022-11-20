@@ -8,7 +8,7 @@ class FrameTest extends BaseRollbarTest
     private $exception;
     private $frame;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->exception = m::mock("Rollbar\Payload\ExceptionInfo");
         $this->frame = new Frame("tests/FrameTest.php", $this->exception);
@@ -64,7 +64,7 @@ class FrameTest extends BaseRollbarTest
 
     public function testEncode()
     {
-        $context = m::mock("Rollbar\Payload\Context, \Serializable")
+        $context = m::mock("Rollbar\Payload\Context, Rollbar\SerializerInterface")
             ->shouldReceive("serialize")
             ->andReturn("{CONTEXT}")
             ->mock();

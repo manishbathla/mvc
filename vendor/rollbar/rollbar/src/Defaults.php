@@ -1,8 +1,11 @@
-<?php namespace Rollbar;
+<?php declare(strict_types=1);
+
+namespace Rollbar;
 
 use Monolog\Logger;
 use Rollbar\Payload\Notifier;
 use Psr\Log\LogLevel;
+use Throwable;
 
 class Defaults
 {
@@ -10,30 +13,22 @@ class Defaults
     public static function get()
     {
         if (is_null(self::$singleton)) {
-            self::$singleton = new Defaults(new Utilities());
+            self::$singleton = new Defaults;
         }
         return self::$singleton;
     }
 
-    public function __construct($utilities)
+    public function __construct()
     {
         $this->psrLevels = array(
             LogLevel::EMERGENCY => "critical",
-            "emergency" => "critical",
             LogLevel::ALERT => "critical",
-            "alert" => "critical",
             LogLevel::CRITICAL => "critical",
-            "critical" => "critical",
             LogLevel::ERROR => "error",
-            "error" => "error",
             LogLevel::WARNING => "warning",
-            "warning" => "warning",
             LogLevel::NOTICE => "info",
-            "notice" => "info",
             LogLevel::INFO => "info",
-            "info" => "info",
             LogLevel::DEBUG => "debug",
-            "debug" => "debug"
         );
         $this->errorLevels = array(
             E_ERROR => "error",
@@ -65,11 +60,13 @@ class Defaults
         $this->serverRoot = isset($_ENV["HEROKU_APP_DIR"]) ? $_ENV["HEROKU_APP_DIR"] : null;
         $this->platform = php_uname('a');
         $this->notifier = Notifier::defaultNotifier();
-        $this->baseException = version_compare(phpversion(), '7.0', '<') ? '\Exception' : '\Throwable';
+        $this->baseException = Throwable::class;
         $this->errorSampleRates = array();
         $this->exceptionSampleRates = array();
-        
-        $this->utilities = $utilities;
+
+        if (defined('ROLLBAR_INCLUDED_ERRNO_BITMASK')) {
+            $this->includedErrno = ROLLBAR_INCLUDED_ERRNO_BITMASK;
+        }
     }
     
     public function fromSnakeCase($option)
@@ -84,7 +81,6 @@ class Defaults
         }
     }
     
-    private $utilities;
     private $data;
     private static $singleton = null;
     
@@ -355,7 +351,7 @@ class Defaults
     private $maxNestingDepth = -1;
     private $errorSampleRates = array();
     private $exceptionSampleRates = array();
-    private $includedErrno = ROLLBAR_INCLUDED_ERRNO_BITMASK;
+    private $includedErrno = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
     private $includeErrorCodeContext = null;
     private $includeExceptionCodeContext = null;
     private $agentLogLocation = '/var/tmp';

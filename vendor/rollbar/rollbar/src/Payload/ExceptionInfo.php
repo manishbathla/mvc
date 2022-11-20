@@ -1,48 +1,49 @@
-<?php namespace Rollbar\Payload;
+<?php declare(strict_types=1);
 
-class ExceptionInfo implements \Serializable
+namespace Rollbar\Payload;
+
+use Rollbar\SerializerInterface;
+use Rollbar\UtilitiesTrait;
+
+class ExceptionInfo implements SerializerInterface
 {
-    private $class;
-    private $message;
-    private $description;
-    private $utilities;
+    use UtilitiesTrait;
 
-    public function __construct($class, $message, $description = null)
-    {
-        $this->utilities = new \Rollbar\Utilities();
-        $this->setClass($class);
-        $this->setMessage($message);
-        $this->setDescription($description);
+    public function __construct(
+        private string $class,
+        private string $message,
+        private ?string $description = null
+    ) {
     }
 
-    public function getClass()
+    public function getClass(): string
     {
         return $this->class;
     }
 
-    public function setClass($class)
+    public function setClass(string $class): self
     {
         $this->class = $class;
         return $this;
     }
 
-    public function getMessage()
+    public function getMessage(): string
     {
         return $this->message;
     }
 
-    public function setMessage($message)
+    public function setMessage(string $message): self
     {
         $this->message = $message;
         return $this;
     }
 
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    public function setDescription($description)
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
         return $this;
@@ -56,13 +57,6 @@ class ExceptionInfo implements \Serializable
             "description" => $this->description,
         );
         
-        $objectHashes = \Rollbar\Utilities::getObjectHashes();
-        
-        return $this->utilities->serializeForRollbar($result, null, $objectHashes);
-    }
-    
-    public function unserialize($serialized)
-    {
-        throw new \Exception('Not implemented yet.');
+        return $this->utilities()->serializeForRollbarInternal($result);
     }
 }

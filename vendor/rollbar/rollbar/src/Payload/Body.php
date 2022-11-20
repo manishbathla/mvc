@@ -1,39 +1,38 @@
-<?php namespace Rollbar\Payload;
+<?php declare(strict_types=1);
 
-class Body implements \Serializable
+namespace Rollbar\Payload;
+
+use Rollbar\SerializerInterface;
+use Rollbar\UtilitiesTrait;
+
+class Body implements SerializerInterface
 {
-    /**
-     * @var ContentInterface
-     */
-    private $value;
-    private $utilities;
-    private $extra;
+    use UtilitiesTrait;
 
-    public function __construct(ContentInterface $value, array $extra = array())
-    {
-        $this->utilities = new \Rollbar\Utilities();
-        $this->setValue($value);
-        $this->setExtra($extra);
+    public function __construct(
+        private ContentInterface $value,
+        private array $extra = array()
+    ) {
     }
 
-    public function getValue()
+    public function getValue(): ContentInterface
     {
         return $this->value;
     }
 
-    public function setValue(ContentInterface $value)
+    public function setValue(ContentInterface $value): self
     {
         $this->value = $value;
         return $this;
     }
     
-    public function setExtra(array $extra)
+    public function setExtra(array $extra): self
     {
         $this->extra = $extra;
         return $this;
     }
     
-    public function getExtra()
+    public function getExtra(): array
     {
         return $this->extra;
     }
@@ -47,17 +46,6 @@ class Body implements \Serializable
             $result['extra'] = $this->extra;
         }
         
-        $objectHashes = \Rollbar\Utilities::getObjectHashes();
-        
-        return $this->utilities->serializeForRollbar(
-            $result,
-            array('extra'),
-            $objectHashes
-        );
-    }
-    
-    public function unserialize($serialized)
-    {
-        throw new \Exception('Not implemented yet.');
+        return $this->utilities()->serializeForRollbarInternal($result, array('extra'));
     }
 }

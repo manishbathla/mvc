@@ -1,11 +1,13 @@
-<?php namespace Rollbar;
+<?php declare(strict_types=1);
 
+namespace Rollbar;
+
+use Throwable;
 use Psr\Log\AbstractLogger;
 use Rollbar\Payload\Payload;
 use Rollbar\Payload\Level;
 use Rollbar\Truncation\Truncation;
 use Monolog\Logger as MonologLogger;
-use Monolog\Handler\StreamHandler;
 use Rollbar\Payload\EncodedPayload;
 
 class RollbarLogger extends AbstractLogger
@@ -22,6 +24,14 @@ class RollbarLogger extends AbstractLogger
         $this->levelFactory = new LevelFactory();
         $this->truncation = new Truncation($this->config);
         $this->queue = array();
+    }
+
+    /**
+     * @since 3.0
+     */
+    public function getConfig()
+    {
+        return $this->config;
     }
     
     public function enable()
@@ -74,14 +84,26 @@ class RollbarLogger extends AbstractLogger
         return $this->config->getCustom();
     }
 
-    public function log($level, $toLog, array $context = array(), $isUncaught = false)
+    /**
+     * @param Level|string $level
+     * @param mixed $toLog
+     * @param array $context
+     */
+    public function log($level, $toLog, array $context = array())
     {
         if ($this->disabled()) {
             $this->verboseLogger()->notice('Rollbar is disabled');
             return new Response(0, "Disabled");
         }
         
-        if (!$this->levelFactory->isValidLevel($level)) {
+        // Convert a Level proper into a string proper, as the code paths that
+        // follow have allowed both only by virtue that a Level downcasts to a
+        // string. With strict types, that no longer happens. We should consider
+        // tightening the boundary so that we convert from string to Level
+        // enum here, and work with Level enum through protected level.
+        if ($level instanceof Level) {
+            $level = (string)$level;
+        } elseif (!$this->levelFactory->isValidLevel($level)) {
             $exception = new \Psr\Log\InvalidArgumentException("Invalid log level '$level'.");
             $this->verboseLogger()->error($exception->getMessage());
             throw $exception;
@@ -97,6 +119,7 @@ class RollbarLogger extends AbstractLogger
         $accessToken = $this->getAccessToken();
         $payload = $this->getPayload($accessToken, $level, $toLog, $context);
         
+        $isUncaught = $this->isUncaughtLogData($toLog);
         if ($this->config->checkIgnored($payload, $accessToken, $toLog, $isUncaught)) {
             $this->verboseLogger()->info('Occurrence ignored');
             $response = new Response(0, "Ignored");
@@ -118,19 +141,21 @@ class RollbarLogger extends AbstractLogger
             $this->verboseLogger()->error('Occurrence rejected by the SDK: ' . $response);
         } elseif ($response->getStatus() >= 400) {
             $info = $response->getInfo();
-            $this->verboseLogger()->error('Occurrence rejected by the API: ' . $info['message']);
+            $this->verboseLogger()->error(
+                'Occurrence rejected by the API: ' . ($info['message'] ?? 'message not set')
+            );
         } else {
             $this->verboseLogger()->info('Occurrence successfully logged');
         }
         
-        if ((is_a($toLog, 'Throwable') || is_a($toLog, 'Exception')) && $this->config->getRaiseOnError()) {
+        if ($toLog instanceof Throwable && $this->config->getRaiseOnError()) {
             throw $toLog;
         }
         
         return $response;
     }
 
-    public function flush()
+    public function flush(): ?Response
     {
         if ($this->getQueueSize() > 0) {
             $batch = $this->queue;
@@ -141,7 +166,7 @@ class RollbarLogger extends AbstractLogger
         return new Response(0, "Queue empty");
     }
 
-    public function flushAndWait()
+    public function flushAndWait(): void
     {
         $this->flush();
         $this->config->wait($this->getAccessToken());
@@ -152,12 +177,12 @@ class RollbarLogger extends AbstractLogger
         return $this->config->shouldIgnoreError($errno);
     }
 
-    public function getQueueSize()
+    public function getQueueSize(): int
     {
         return count($this->queue);
     }
 
-    protected function send(\Rollbar\Payload\EncodedPayload $payload, $accessToken)
+    protected function send(EncodedPayload $payload, string $accessToken): Response
     {
         if ($this->reportCount >= $this->config->getMaxItems()) {
             $response = new Response(
@@ -185,14 +210,14 @@ class RollbarLogger extends AbstractLogger
         return $this->config->send($payload, $accessToken);
     }
 
-    protected function getPayload($accessToken, $level, $toLog, $context)
+    protected function getPayload(string $accessToken, $level, $toLog, $context)
     {
         $data = $this->config->getRollbarData($level, $toLog, $context);
         $payload = new Payload($data, $accessToken);
         return $this->config->transform($payload, $level, $toLog, $context);
     }
 
-    protected function getAccessToken()
+    protected function getAccessToken(): string
     {
         return $this->config->getAccessToken();
     }
@@ -212,7 +237,7 @@ class RollbarLogger extends AbstractLogger
         return $this->config->verboseLogger();
     }
 
-    protected function handleResponse($payload, $response)
+    protected function handleResponse(Payload $payload, mixed $response): void
     {
         $this->config->handleResponse($payload, $response);
     }
@@ -221,7 +246,7 @@ class RollbarLogger extends AbstractLogger
      * @param array $serializedPayload
      * @return array
      */
-    protected function scrub(array &$serializedPayload)
+    protected function scrub(array &$serializedPayload): array
     {
         $serializedPayload['data'] = $this->config->getScrubber()->scrub($serializedPayload['data']);
         return $serializedPayload;
@@ -245,5 +270,23 @@ class RollbarLogger extends AbstractLogger
         $encoded = new EncodedPayload($payload);
         $encoded->encode();
         return $encoded;
+    }
+
+    /**
+     * Check whether the data to log represents an uncaught error, exception,
+     * or fatal error. This works in concert with src/Handlers/, which sets
+     * the `isUncaught` property on the `Throwable` representation of data.
+     *
+     * @since 3.0.1
+     */
+    public function isUncaughtLogData(mixed $toLog): bool
+    {
+        if (! $toLog instanceof Throwable) {
+            return false;
+        }
+        if (! isset($toLog->isUncaught)) {
+            return false;
+        }
+        return $toLog->isUncaught === true;
     }
 }

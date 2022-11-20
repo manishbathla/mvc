@@ -1,12 +1,14 @@
-<?php namespace Rollbar\Senders;
+<?php declare(strict_types=1);
+
+namespace Rollbar\Senders;
 
 use Rollbar\Payload\Payload;
 use Rollbar\Payload\EncodedPayload;
 
 interface SenderInterface
 {
-    public function send(EncodedPayload $payload, $accessToken);
-    public function sendBatch($batch, $accessToken);
-    public function wait($accessToken, $max);
+    public function send(EncodedPayload $payload, string $accessToken);
+    public function sendBatch(array $batch, string $accessToken): void;
+    public function wait(string $accessToken, int $max);
     public function toString();
 }

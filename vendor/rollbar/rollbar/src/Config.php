@@ -1,22 +1,31 @@
-<?php namespace Rollbar;
+<?php declare(strict_types=1);
 
+namespace Rollbar;
+
+use Psr\Log\LoggerInterface;
+use Rollbar\DataBuilder;
+use Rollbar\DataBuilderInterface;
+use Rollbar\Defaults;
 use Rollbar\Payload\Level;
 use Rollbar\Payload\Payload;
-use \Rollbar\Payload\EncodedPayload;
-
-if (!defined('ROLLBAR_INCLUDED_ERRNO_BITMASK')) {
-    define(
-        'ROLLBAR_INCLUDED_ERRNO_BITMASK',
-        E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR
-    );
-}
+use Rollbar\Payload\EncodedPayload;
+use Rollbar\ScrubberInterface;
+use Rollbar\Scrubber;
+use Rollbar\Senders\AgentSender;
+use Rollbar\Senders\CurlSender;
+use Rollbar\Senders\SenderInterface;
+use Rollbar\TransformerInterface;
+use Rollbar\UtilitiesTrait;
+use Throwable;
 
 class Config
 {
+    use UtilitiesTrait;
+
     const VERBOSE_NONE = 'none';
     const VERBOSE_NONE_INT = 1000;
 
-    private static $options = array(
+    private static array $options = array(
         'access_token',
         'agent_log_location',
         'allow_exec',
@@ -50,7 +59,7 @@ class Config
         'capture_email',
         'root',
         'scrub_fields',
-        'scrub_whitelist',
+        'scrub_safelist',
         'timeout',
         'transmit',
         'custom_truncation',
@@ -65,39 +74,41 @@ class Config
         'minimum_level',
         'verbose',
         'verbose_logger',
-        'raise_on_error'
+        'raise_on_error',
+        'transformer',
     );
-    
-    private $accessToken;
+
+    private string $accessToken;
+
     /**
      * @var boolean $enabled If this is false then do absolutely nothing,
      * try to be as close to the scenario where Rollbar did not exist at
      * all in the code.
      * Default: true
      */
-    private $enabled = true;
+    private bool $enabled = true;
 
     /**
      * @var boolean $transmit If this is false then we do everything except
      * make the post request at the end of the pipeline.
      * Default: true
      */
-    private $transmit;
+    private bool $transmit;
 
     /**
      * @var boolean $logPayload If this is true then we output the payload to
      * standard out or a configured logger right before transmitting.
      * Default: false
      */
-    private $logPayload;
+    private bool $logPayload;
 
     /**
-     * @var \Psr\Log\Logger $logPayloadLogger Logger responsible for logging request
+     * @var LoggerInterface $logPayloadLogger Logger responsible for logging request
      * payload and response dumps on. The messages logged can be controlled with
      * `log_payload` config options.
      * Default: \Monolog\Logger with \Monolog\Handler\ErrorLogHandler
      */
-    private $logPayloadLogger;
+    private LoggerInterface $logPayloadLogger;
 
     /**
      * @var string $verbose If this is set to any of the \Psr\Log\LogLevel options
@@ -113,46 +124,41 @@ class Config
      * to implement obeying the `verbose` config option yourself.
      * Default: Rollbar\Config::VERBOSE_NONE
      */
-    private $verbose;
+    private string $verbose;
 
     /**
-     * @var \Psr\Log\Logger $versbosity_logger The logger object used to log
+     * @var LoggerInterface $versbosity_logger The logger object used to log
      * the internal messages of the SDK. The verbosity level of the default
      * $verbosityLogger can be controlled with `verbose` config option.
      * Default: \Rollbar\VerboseLogger
      */
-    private $verboseLogger;
+    private LoggerInterface $verboseLogger;
 
     /**
      * @var DataBuilder
      */
     private $dataBuilder;
     private $configArray;
-    
+
     /**
      * @var LevelFactory
      */
     private $levelFactory;
-    
-    /**
-     * @var Utilities
-     */
-    private $utilities;
-    
+
     /**
      * @var TransformerInterface
      */
-    private $transformer;
+    private ?TransformerInterface $transformer = null;
     /**
      * @var FilterInterface
      */
     private $filter;
-    
+
     /**
      * @var int
      */
-    private $minimumLevel;
-    
+    private int $minimumLevel;
+
     /**
      * @var ResponseHandlerInterface
      */
@@ -160,26 +166,26 @@ class Config
     /**
      * @var \Rollbar\Senders\SenderInterface
      */
-    private $sender;
+    private ?SenderInterface $sender = null;
     private $reportSuppressed;
     /**
      * @var Scrubber
      */
     private $scrubber;
 
-    private $batched = false;
-    private $batchSize = 50;
+    private bool $batched = false;
+    private int $batchSize = 50;
 
-    private $maxNestingDepth = 10;
+    private int $maxNestingDepth = 10;
 
-    private $custom = array();
-    
+    private array $custom = array();
+
     /**
      * @var callable with parameters $toLog, $contextDataMethodContext. The return
      * value of the callable will be appended to the custom field of the item.
      */
     private $customDataMethod;
-    
+
     /**
      * @var callable
      */
@@ -189,49 +195,48 @@ class Config
     private $mtRandmax;
 
     private $includedErrno;
-    private $useErrorReporting = false;
-    
+    private bool $useErrorReporting = false;
+
     /**
      * @var boolean Should debug_backtrace() data be sent with string messages
      * sent through RollbarLogger::log().
      */
-    private $sendMessageTrace = false;
-    
+    private bool $sendMessageTrace = false;
+
     /**
      * @var string (fully qualified class name) The name of the your custom
      * truncation strategy class. The class should inherit from
      * Rollbar\Truncation\AbstractStrategy.
      */
     private $customTruncation;
-    
+
     /**
      * @var boolean Should the SDK raise an exception after logging an error.
      * This is useful in test and development enviroments.
      * https://github.com/rollbar/rollbar-php/issues/448
      */
-    private $raiseOnError = false;
-    
+    private bool $raiseOnError = false;
+
     /**
      * @var int The maximum number of items reported to Rollbar within one
      * request.
      */
-    private $maxItems;
+    private int $maxItems;
 
     public function __construct(array $configArray)
     {
-        $this->includedErrno = \Rollbar\Defaults::get()->includedErrno();
-        
+        $this->includedErrno = Defaults::get()->includedErrno();
+
         $this->levelFactory = new LevelFactory();
-        $this->utilities = new Utilities();
-        
+
         $this->updateConfig($configArray);
 
-        $this->errorSampleRates = \Rollbar\Defaults::get()->errorSampleRates();
+        $this->errorSampleRates = Defaults::get()->errorSampleRates();
         if (isset($configArray['error_sample_rates'])) {
             $this->errorSampleRates = $configArray['error_sample_rates'];
         }
-        
-        $this->exceptionSampleRates = \Rollbar\Defaults::get()->exceptionSampleRates();
+
+        $this->exceptionSampleRates = Defaults::get()->exceptionSampleRates();
         if (isset($configArray['exception_sample_rates'])) {
             $this->exceptionSampleRates = $configArray['exception_sample_rates'];
         }
@@ -251,28 +256,28 @@ class Config
         }
         $this->mtRandmax = mt_getrandmax();
     }
-    
-    public static function listOptions()
+
+    public static function listOptions(): array
     {
         return self::$options;
     }
 
-    public function configure($config)
+    public function configure(array $config): void
     {
         $this->updateConfig($this->extend($config));
     }
 
-    public function extend($config)
+    public function extend(array $config): array
     {
         return array_replace_recursive(array(), $this->configArray, $config);
     }
 
-    public function getConfigArray()
+    public function getConfigArray(): array
     {
         return $this->configArray;
     }
 
-    protected function updateConfig($config)
+    protected function updateConfig(array $config): void
     {
         $this->configArray = $config;
 
@@ -303,41 +308,41 @@ class Config
             $this->includedErrno = $config['included_errno'];
         }
 
-        $this->useErrorReporting = \Rollbar\Defaults::get()->useErrorReporting();
+        $this->useErrorReporting = Defaults::get()->useErrorReporting();
         if (isset($config['use_error_reporting'])) {
             $this->useErrorReporting = $config['use_error_reporting'];
         }
-        
-        $this->maxItems = \Rollbar\Defaults::get()->maxItems();
+
+        $this->maxItems = Defaults::get()->maxItems();
         if (isset($config['max_items'])) {
             $this->maxItems = $config['max_items'];
         }
-        
+
         if (isset($config['custom_truncation'])) {
             $this->customTruncation = $config['custom_truncation'];
         }
-        
-        $this->customDataMethod = \Rollbar\Defaults::get()->customDataMethod();
+
+        $this->customDataMethod = Defaults::get()->customDataMethod();
         if (isset($config['custom_data_method'])) {
             $this->customDataMethod = $config['custom_data_method'];
         }
     }
 
-    private function setAccessToken($config)
+    private function setAccessToken(array $config): void
     {
         if (isset($_ENV['ROLLBAR_ACCESS_TOKEN']) && !isset($config['access_token'])) {
             $config['access_token'] = $_ENV['ROLLBAR_ACCESS_TOKEN'];
         }
-        $this->utilities->validateString($config['access_token'], "config['access_token']", 32, false);
+        $this->utilities()->validateString($config['access_token'], "config['access_token']", 32, false);
         $this->accessToken = $config['access_token'];
     }
 
-    private function setEnabled($config)
+    private function setEnabled(array $config): void
     {
         if (array_key_exists('enabled', $config) && $config['enabled'] === false) {
             $this->disable();
         } else {
-            if (\Rollbar\Defaults::get()->enabled() === false) {
+            if (Defaults::get()->enabled() === false) {
                 $this->disable();
             } else {
                 $this->enable();
@@ -345,39 +350,32 @@ class Config
         }
     }
 
-    private function setTransmit($config)
+    private function setTransmit(array $config): void
     {
-        $this->transmit = isset($config['transmit']) ?
-            $config['transmit'] :
-            \Rollbar\Defaults::get()->transmit();
+        $this->transmit = $config['transmit'] ?? Defaults::get()->transmit();
     }
 
-    private function setLogPayload($config)
+    private function setLogPayload(array $config): void
     {
-        $this->logPayload = isset($config['log_payload']) ?
-            $config['log_payload'] :
-            \Rollbar\Defaults::get()->logPayload();
+        $this->logPayload = $config['log_payload'] ?? Defaults::get()->logPayload();
     }
 
-    private function setLogPayloadLogger($config)
+    private function setLogPayloadLogger(array $config): void
     {
-        $this->logPayloadLogger = isset($config['log_payload_logger']) ?
-            $config['log_payload_logger'] :
+        $this->logPayloadLogger = $config['log_payload_logger'] ??
             new \Monolog\Logger('rollbar.payload', array(new \Monolog\Handler\ErrorLogHandler()));
-        
+
         if (!($this->logPayloadLogger instanceof \Psr\Log\LoggerInterface)) {
             throw new \Exception('Log Payload Logger must implement \Psr\Log\LoggerInterface');
         }
     }
 
-    private function setVerbose($config)
+    private function setVerbose(array $config): void
     {
-        $this->verbose = isset($config['verbose']) ?
-            $config['verbose'] :
-            \Rollbar\Defaults::get()->verbose();
+        $this->verbose = $config['verbose'] ?? Defaults::get()->verbose();
     }
 
-    private function setVerboseLogger($config)
+    private function setVerboseLogger(array $config): void
     {
         if (isset($config['verbose_logger'])) {
             $this->verboseLogger = $config['verbose_logger'];
@@ -386,50 +384,50 @@ class Config
             $handler->setLevel($this->verboseInteger());
             $this->verboseLogger = new \Monolog\Logger('rollbar.verbose', array($handler));
         }
-        
+
         if (!($this->verboseLogger instanceof \Psr\Log\LoggerInterface)) {
             throw new \Exception('Verbose logger must implement \Psr\Log\LoggerInterface');
         }
     }
-    
-    public function enable()
+
+    public function enable(): void
     {
         $this->enabled = true;
     }
-    
-    public function disable()
+
+    public function disable(): void
     {
         $this->enabled = false;
     }
 
-    private function setDataBuilder($config)
+    private function setDataBuilder(array $config): void
     {
         if (!isset($config['levelFactory'])) {
             $config['levelFactory'] = $this->levelFactory;
         }
-        
+
         if (!isset($config['utilities'])) {
-            $config['utilities'] = $this->utilities;
+            $config['utilities'] = $this->utilities();
         }
-        
-        $exp = "Rollbar\DataBuilderInterface";
-        $def = "Rollbar\DataBuilder";
+
+        $exp = DataBuilderInterface::class;
+        $def = DataBuilder::class;
         $this->setupWithOptions($config, "dataBuilder", $exp, $def, true);
     }
 
-    private function setTransformer($config)
+    private function setTransformer(array $config): void
     {
-        $expected = "Rollbar\TransformerInterface";
+        $expected = TransformerInterface::class;
         $this->setupWithOptions($config, "transformer", $expected);
     }
 
-    private function setMinimumLevel($config)
+    private function setMinimumLevel(array $config): void
     {
         $this->minimumLevel = \Rollbar\Defaults::get()->minimumLevel();
-        
+
         $override = array_key_exists('minimum_level', $config) ? $config['minimum_level'] : null;
         $override = array_key_exists('minimumLevel', $config) ? $config['minimumLevel'] : $override;
-        
+
         if ($override instanceof Level) {
             $this->minimumLevel = $override->toInt();
         } elseif (is_string($override)) {
@@ -442,28 +440,27 @@ class Config
         }
     }
 
-    private function setReportSuppressed($config)
+    private function setReportSuppressed(array $config): void
     {
         $this->reportSuppressed = isset($config['reportSuppressed']) && $config['reportSuppressed'];
-        if (!isset($this->reportSuppressed)) {
+        if (!$this->reportSuppressed) {
             $this->reportSuppressed = isset($config['report_suppressed']) && $config['report_suppressed'];
         }
-        
-        if (!isset($this->reportSuppressed)) {
+
+        if (!$this->reportSuppressed) {
             $this->reportSuppressed = \Rollbar\Defaults::get()->reportSuppressed();
         }
     }
 
-    private function setFilters($config)
+    private function setFilters(array $config): void
     {
         $this->setupWithOptions($config, "filter", "Rollbar\FilterInterface");
     }
 
-    private function setSender($config)
+    private function setSender(array $config): void
     {
-        $expected = "Rollbar\Senders\SenderInterface";
-        
-        $default = "Rollbar\Senders\CurlSender";
+        $expected = SenderInterface::class;
+        $default = CurlSender::class;
 
         $this->setTransportOptions($config);
         $default = $this->setAgentSenderOptions($config, $default);
@@ -472,21 +469,21 @@ class Config
         $this->setupWithOptions($config, "sender", $expected, $default);
     }
 
-    private function setScrubber($config)
+    private function setScrubber(array $config): void
     {
-        $exp = "Rollbar\ScrubberInterface";
-        $def = "Rollbar\Scrubber";
+        $exp = ScrubberInterface::class;
+        $def = Scrubber::class;
         $this->setupWithOptions($config, "scrubber", $exp, $def, true);
     }
 
-    private function setBatched($config)
+    private function setBatched(array $config): void
     {
         if (array_key_exists('batched', $config)) {
             $this->batched = $config['batched'];
         }
     }
-    
-    private function setRaiseOnError($config)
+
+    private function setRaiseOnError(array $config): void
     {
         if (array_key_exists('raise_on_error', $config)) {
             $this->raiseOnError = $config['raise_on_error'];
@@ -495,36 +492,36 @@ class Config
         }
     }
 
-    private function setBatchSize($config)
+    private function setBatchSize(array $config): void
     {
         if (array_key_exists('batch_size', $config)) {
             $this->batchSize = $config['batch_size'];
         }
     }
 
-    private function setMaxNestingDepth($config)
+    private function setMaxNestingDepth(array $config): void
     {
         if (array_key_exists('max_nesting_depth', $config)) {
             $this->maxNestingDepth = $config['max_nesting_depth'];
         }
     }
 
-    public function setCustom($config)
+    public function setCustom(array $config): void
     {
         $this->dataBuilder->setCustom($config);
     }
-    
+
     public function addCustom($key, $data)
     {
         $this->dataBuilder->addCustom($key, $data);
     }
-    
+
     public function removeCustom($key)
     {
         $this->dataBuilder->removeCustom($key);
     }
 
-    public function transmitting()
+    public function transmitting(): bool
     {
         return $this->transmit;
     }
@@ -534,40 +531,40 @@ class Config
         return $this->logPayload;
     }
 
-    public function verbose()
+    public function verbose(): string
     {
         return $this->verbose;
     }
 
-    public function verboseInteger()
+    public function verboseInteger(): int
     {
         if ($this->verbose == self::VERBOSE_NONE) {
             return self::VERBOSE_NONE_INT;
         }
         return \Monolog\Logger::toMonologLevel($this->verbose);
     }
-    
+
     public function getCustom()
     {
         return $this->dataBuilder->getCustom();
     }
-    
+
     public function getAllowedCircularReferenceTypes()
     {
         return $this->allowedCircularReferenceTypes;
     }
-    
+
     public function setCustomTruncation($type)
     {
         $this->customTruncation = $type;
     }
-    
+
     public function getCustomTruncation()
     {
         return $this->customTruncation;
     }
 
-    private function setTransportOptions(&$config)
+    private function setTransportOptions(array &$config): void
     {
         if (array_key_exists('base_api_url', $config)) {
             $config['senderOptions']['endpoint'] = $config['base_api_url'] . 'item/';
@@ -590,12 +587,12 @@ class Config
         }
     }
 
-    private function setAgentSenderOptions(&$config, $default)
+    private function setAgentSenderOptions(array &$config, mixed $default): mixed
     {
         if (!array_key_exists('handler', $config) || $config['handler'] != 'agent') {
             return $default;
         }
-        $default = "Rollbar\Senders\AgentSender";
+        $default = AgentSender::class;
         if (array_key_exists('agent_log_location', $config)) {
             $config['senderOptions'] = array(
                 'agentLogLocation' => $config['agent_log_location']
@@ -604,7 +601,7 @@ class Config
         return $default;
     }
 
-    private function setFluentSenderOptions(&$config, $default)
+    private function setFluentSenderOptions(array &$config, mixed $default): mixed
     {
         if (!isset($config['handler']) || $config['handler'] != 'fluent') {
             return $default;
@@ -626,24 +623,24 @@ class Config
         return $default;
     }
 
-    private function setResponseHandler($config)
+    private function setResponseHandler(array $config): void
     {
         $this->setupWithOptions($config, "responseHandler", "Rollbar\ResponseHandlerInterface");
     }
 
-    private function setCheckIgnoreFunction($config)
+    private function setCheckIgnoreFunction(array $config): void
     {
         // Remain backwards compatible
         if (isset($config['checkIgnore'])) {
             $this->checkIgnore = $config['checkIgnore'];
         }
-        
+
         if (isset($config['check_ignore'])) {
             $this->checkIgnore = $config['check_ignore'];
         }
     }
 
-    private function setSendMessageTrace($config)
+    private function setSendMessageTrace(array $config): void
     {
         if (!isset($config['send_message_trace'])) {
             return;
@@ -670,21 +667,21 @@ class Config
      * `new MySender(array("speed"=>11,"protocol"=>"First Contact"));`
      * You can also just pass an instance in directly. (In which case options
      * are ignored)
-     * @param $config
-     * @param $keyName
-     * @param $expectedType
-     * @param mixed $defaultClass
+     * @param array $config
+     * @param string $keyName
+     * @param string $expectedType
+     * @param ?string $defaultClass
      * @param bool $passWholeConfig
      */
     protected function setupWithOptions(
-        $config,
-        $keyName,
-        $expectedType,
-        $defaultClass = null,
-        $passWholeConfig = false
-    ) {
+        array $config,
+        string $keyName,
+        string $expectedType,
+        ?string $defaultClass = null,
+        bool $passWholeConfig = false
+    ): void {
 
-        $class = isset($config[$keyName]) ? $config[$keyName] : null;
+        $class = $config[$keyName] ?? null;
 
         if (is_null($defaultClass) && is_null($class)) {
             return;
@@ -732,12 +729,12 @@ class Config
     {
         return $this->dataBuilder;
     }
-    
+
     public function getLevelFactory()
     {
         return $this->levelFactory;
     }
-    
+
     public function getSender()
     {
         return $this->sender;
@@ -748,45 +745,42 @@ class Config
         return $this->scrubber;
     }
 
-    public function getBatched()
+    public function getBatched(): bool
     {
         return $this->batched;
     }
 
-    public function getBatchSize()
+    public function getBatchSize(): int
     {
         return $this->batchSize;
     }
 
-    public function getMaxNestingDepth()
+    public function getMaxNestingDepth(): int
     {
         return $this->maxNestingDepth;
     }
-    
-    public function getMaxItems()
+
+    public function getMaxItems(): int
     {
         return $this->maxItems;
     }
 
-    public function getMinimumLevel()
+    public function getMinimumLevel(): int
     {
         return $this->minimumLevel;
     }
-    
-    public function getRaiseOnError()
+
+    public function getRaiseOnError(): bool
     {
         return $this->raiseOnError;
     }
 
-    /**
-     * @param Payload $payload
-     * @param Level $level
-     * @param \Exception | \Throwable $toLog
-     * @param array $context
-     * @return Payload
-     */
-    public function transform($payload, $level, $toLog, $context)
-    {
+    public function transform(
+        Payload $payload,
+        Level|string $level,
+        mixed $toLog,
+        array $context = array ()
+    ): ?Payload {
         if (count($this->custom) > 0) {
             $this->verboseLogger()->debug("Adding custom data to the payload.");
             $data = $payload->getData();
@@ -804,17 +798,17 @@ class Config
         return $this->transformer->transform($payload, $level, $toLog, $context);
     }
 
-    public function getAccessToken()
+    public function getAccessToken(): string
     {
         return $this->accessToken;
     }
 
-    public function enabled()
+    public function enabled(): bool
     {
         return $this->enabled === true;
     }
-    
-    public function disabled()
+
+    public function disabled(): bool
     {
         return !$this->enabled();
     }
@@ -824,22 +818,23 @@ class Config
         return $this->sendMessageTrace;
     }
 
-    public function checkIgnored($payload, $accessToken, $toLog, $isUncaught)
+    public function checkIgnored($payload, string $accessToken, $toLog, bool $isUncaught)
     {
         if (isset($this->checkIgnore)) {
             try {
-                if (call_user_func($this->checkIgnore, $isUncaught, $toLog, $payload)) {
+                $ok = ($this->checkIgnore)($isUncaught, $toLog, $payload);
+                if ($ok) {
                     $this->verboseLogger()->info('Occurrence ignored due to custom check_ignore logic');
                     return true;
                 }
-            } catch (\Exception $exception) {
+            } catch (Throwable $exception) {
                 $this->verboseLogger()->error(
                     'Exception occurred in the custom checkIgnore logic:' . $exception->getMessage()
                 );
                 $this->checkIgnore = null;
             }
         }
-        
+
         if ($this->payloadLevelTooLow($payload)) {
             $this->verboseLogger()->debug("Occurrence's level is too low");
             return true;
@@ -854,7 +849,7 @@ class Config
         return false;
     }
 
-    public function internalCheckIgnored($level, $toLog)
+    public function internalCheckIgnored(string $level, mixed $toLog): bool
     {
         if ($this->shouldSuppress()) {
             $this->verboseLogger()->debug('Ignoring (error reporting has been disabled in PHP config)');
@@ -869,11 +864,11 @@ class Config
         if ($toLog instanceof ErrorWrapper) {
             return $this->shouldIgnoreErrorWrapper($toLog);
         }
-        
+
         if ($toLog instanceof \Exception) {
             return $this->shouldIgnoreException($toLog);
         }
-        
+
         return false;
     }
 
@@ -885,7 +880,7 @@ class Config
      *
      * @return bool
      */
-    public function shouldIgnoreError($errno)
+    public function shouldIgnoreError(int $errno): bool
     {
         if ($this->useErrorReporting && ($errno & error_reporting()) === 0) {
             // ignore due to error_reporting level
@@ -909,7 +904,7 @@ class Config
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -921,11 +916,11 @@ class Config
      *
      * @return bool
      */
-    protected function shouldIgnoreErrorWrapper(ErrorWrapper $toLog)
+    protected function shouldIgnoreErrorWrapper(ErrorWrapper $toLog): bool
     {
         return $this->shouldIgnoreError($toLog->errorLevel);
     }
-    
+
     /**
      * Check if the exception should be ignored due to configured exception
      * sample rates.
@@ -934,7 +929,7 @@ class Config
      *
      * @return bool
      */
-    public function shouldIgnoreException(\Exception $toLog)
+    public function shouldIgnoreException(\Exception $toLog): bool
     {
         // get a float in the range [0, 1)
         // mt_rand() is inclusive, so add 1 to mt_randmax
@@ -944,10 +939,10 @@ class Config
             $this->verboseLogger()->debug("Skip exception due to exception sample rating");
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Calculate what's the chance of logging this exception according to
      * exception sampling.
@@ -956,28 +951,28 @@ class Config
      *
      * @return float
      */
-    public function exceptionSampleRate(\Exception $toLog)
+    public function exceptionSampleRate(\Exception $toLog): float
     {
         $sampleRate = 1.0;
         if (count($this->exceptionSampleRates) == 0) {
             return $sampleRate;
         }
-        
+
         $exceptionClasses = array();
-        
+
         $class = get_class($toLog);
         while ($class) {
             $exceptionClasses []= $class;
             $class = get_parent_class($class);
         }
         $exceptionClasses = array_reverse($exceptionClasses);
-        
+
         foreach ($exceptionClasses as $exceptionClass) {
             if (isset($this->exceptionSampleRates["$exceptionClass"])) {
                 $sampleRate = $this->exceptionSampleRates["$exceptionClass"];
             }
         }
-        
+
         return $sampleRate;
     }
 
@@ -985,7 +980,7 @@ class Config
      * @param Payload $payload
      * @return bool
      */
-    private function payloadLevelTooLow($payload)
+    private function payloadLevelTooLow(Payload $payload): bool
     {
         return $this->levelTooLow($payload->getData()->getLevel());
     }
@@ -994,17 +989,43 @@ class Config
      * @param Level $level
      * @return bool
      */
-    private function levelTooLow($level)
+    private function levelTooLow(Level $level): bool
     {
         return $level->toInt() < $this->minimumLevel;
     }
 
-    private function shouldSuppress()
+    /**
+     * Decides if a given log message should be suppressed by policy.
+     * If so, then a debug message is emitted: "Ignoring (error reporting has been disabled in PHP config"
+     * @since 3.0.1
+     */
+    public function shouldSuppress(): bool
     {
-        return error_reporting() === 0 && !$this->reportSuppressed;
+        // report_suppressed option forces reporting regardless of PHP settings.
+        if ($this->reportSuppressed) {
+            return false;
+        }
+
+        $errorReporting = error_reporting();
+
+        // For error control operator of PHP 8:
+        // > Prior to PHP 8.0.0, the error_reporting() called inside the
+        // > custom error handler always returned 0 if the error was
+        // > suppressed by the @ operator. As of PHP 8.0.0, it returns
+        // > the value E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR |
+        // > E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE.
+        // https://www.php.net/manual/en/language.operators.errorcontrol.php
+        if (version_compare(PHP_VERSION, '8.0', 'ge') && $errorReporting === (
+            E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE
+        )) {
+            return true;
+        }
+
+        // PHP 7 or manually disabled case:
+        return $errorReporting === 0;
     }
 
-    public function send(EncodedPayload $payload, $accessToken)
+    public function send(EncodedPayload $payload, string $accessToken): ?Response
     {
         if ($this->transmitting()) {
             $response = $this->sender->send($payload, $accessToken);
@@ -1023,7 +1044,7 @@ class Config
         return $response;
     }
 
-    public function sendBatch(&$batch, $accessToken)
+    public function sendBatch(array $batch, string $accessToken): ?Response
     {
         if ($this->transmitting()) {
             return $this->sender->sendBatch($batch, $accessToken);
@@ -1034,13 +1055,13 @@ class Config
         }
     }
 
-    public function wait($accessToken, $max = 0)
+    public function wait(string $accessToken, $max = 0): void
     {
         $this->verboseLogger()->debug("Sender waiting...");
         $this->sender->wait($accessToken, $max);
     }
 
-    public function handleResponse($payload, $response)
+    public function handleResponse(Payload $payload, mixed $response): void
     {
         if (!is_null($this->responseHandler)) {
             $this->verboseLogger()->debug(

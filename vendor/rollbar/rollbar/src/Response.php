@@ -1,39 +1,37 @@
-<?php namespace Rollbar;
+<?php declare(strict_types=1);
+
+namespace Rollbar;
 
 class Response
 {
-    private $status;
-    private $info;
-    private $uuid;
-
-    public function __construct($status, $info, $uuid = null)
-    {
-        $this->status = $status;
-        $this->info = $info;
-        $this->uuid = $uuid;
+    public function __construct(
+        private int $status,
+        private mixed $info,
+        private ?string $uuid = null
+    ) {
     }
 
-    public function getStatus()
+    public function getStatus(): int
     {
         return $this->status;
     }
 
-    public function getInfo()
+    public function getInfo(): mixed
     {
         return $this->info;
     }
 
-    public function getUuid()
+    public function getUuid(): string
     {
         return $this->uuid;
     }
 
-    public function wasSuccessful()
+    public function wasSuccessful(): bool
     {
         return $this->status >= 200 && $this->status < 300;
     }
 
-    public function getOccurrenceUrl()
+    public function getOccurrenceUrl(): ?string
     {
         if (is_null($this->uuid)) {
             return null;
@@ -41,7 +39,7 @@ class Response
         if (!$this->wasSuccessful()) {
             return null;
         }
-        return "https://rollbar.com/occurrence/uuid/?uuid=" . $this->uuid;
+        return "https://rollbar.com/occurrence/uuid/?uuid=" . urlencode($this->uuid);
     }
 
     public function __toString()

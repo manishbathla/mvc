@@ -1,6 +1,10 @@
-<?php namespace Rollbar\Payload;
+<?php declare(strict_types=1);
 
-interface ContentInterface extends \Serializable
+namespace Rollbar\Payload;
+
+use Rollbar\SerializerInterface;
+
+interface ContentInterface extends SerializerInterface
 {
-    public function getKey();
+    public function getKey(): string;
 }

@@ -1,18 +1,16 @@
-<?php namespace Rollbar;
+<?php declare(strict_types=1);
+
+namespace Rollbar;
 
 class RollbarJsHelper
 {
-
-    protected $config;
-    
     /**
      * @param array $config The array passed to he should have the same
      * available options that you can find in Rollbar.js, using symbols or
      * strings for the keys.
      */
-    public function __construct($config)
+    public function __construct(protected $config)
     {
-        $this->config = $config;
     }
     
     /**
@@ -42,7 +40,7 @@ class RollbarJsHelper
      * headers_list() used to verify if nonce should be added to script
      * tags based on Content-Security-Policy
      * @param string $nonce Content-Security-Policy nonce string if exists
-     * @param strong $customJs Additional JavaScript to add at the end of
+     * @param string $customJs Additional JavaScript to add at the end of
      * RollbarJs snippet
      *
      * @return string
