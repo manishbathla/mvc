@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phan\AST;
 
 use ast;
+use ast\flags;
 use ast\Node;
 use Closure;
 use Phan\Analysis\PostOrderAnalysisVisitor;
@@ -32,6 +33,14 @@ Shim::load();
  */
 class ASTReverter
 {
+    public const EXEC_NODE_FLAG_NAMES = [
+        flags\EXEC_EVAL => 'eval',
+        flags\EXEC_INCLUDE => 'include',
+        flags\EXEC_INCLUDE_ONCE => 'include_once',
+        flags\EXEC_REQUIRE => 'require',
+        flags\EXEC_REQUIRE_ONCE => 'require_once',
+    ];
+
     /** @var associative-array<int,Closure(Node):string> this contains maps from node kinds to closures to convert node kinds to strings */
     private static $closure_map;
     /** @var Closure(Node):string this maps unknown node types to strings */
@@ -150,6 +159,25 @@ class ASTReverter
             ast\AST_ARG_LIST => static function (Node $node): string {
                 return '(' . implode(', ', \array_map('self::toShortString', $node->children)) . ')';
             },
+            ast\AST_PARAM_LIST => static function (Node $node): string {
+                return '(' . implode(', ', \array_map('self::toShortString', $node->children)) . ')';
+            },
+            ast\AST_PARAM => static function (Node $node): string {
+                $str = '$' . $node->children['name'];
+                if ($node->flags & ast\flags\PARAM_VARIADIC) {
+                    $str = "...$str";
+                }
+                if ($node->flags & ast\flags\PARAM_REF) {
+                    $str = "&$str";
+                }
+                if (isset($node->children['type'])) {
+                    $str = ASTReverter::toShortString($node->children['type']) . ' ' . $str;
+                }
+                if (isset($node->children['default'])) {
+                    $str .= ' = ' . ASTReverter::toShortString($node->children['default']);
+                }
+                return $str;
+            },
             ast\AST_EXPR_LIST => static function (Node $node): string {
                 return implode(', ', \array_map('self::toShortString', $node->children));
             },
@@ -196,6 +224,9 @@ class ASTReverter
                     default:
                         return (string)$result;
                 }
+            },
+            ast\AST_NAME_LIST => static function (Node $node): string {
+                return implode('|', \array_map('self::toShortString', $node->children));
             },
             ast\AST_ARRAY => static function (Node $node): string {
                 $parts = [];
@@ -323,6 +354,7 @@ class ASTReverter
                 );
             },
             ast\AST_NEW => static function (Node $node): string {
+                // TODO: add parenthesis in case this is used as (new X())->method(), or properties, but only when necessary
                 return \sprintf(
                     'new %s%s',
                     self::toShortString($node->children['class']),
@@ -365,6 +397,43 @@ class ASTReverter
             ast\AST_UNPACK => static function (Node $node): string {
                 return \sprintf(
                     '...(%s)',
+                    self::toShortString($node->children['expr'])
+                );
+            },
+            ast\AST_INCLUDE_OR_EVAL => static function (Node $node): string {
+                return \sprintf(
+                    '%s(%s)',
+                    self::EXEC_NODE_FLAG_NAMES[$node->flags],
+                    self::toShortString($node->children['expr'])
+                );
+            },
+            ast\AST_ENCAPS_LIST => static function (Node $node): string {
+                $parts = [];
+                foreach ($node->children as $c) {
+                    if ($c instanceof Node) {
+                        $parts[] = '{' . self::toShortString($c) . '}';
+                    } else {
+                        $parts[] = self::escapeInnerString((string)$c);
+                    }
+                }
+                return '"' . implode('', $parts) . '"';
+            },
+            // Slightly better short placeholders than (unknown)
+            ast\AST_CLOSURE => static function (Node $_): string {
+                return '(function)';
+            },
+            ast\AST_ARROW_FUNC => static function (Node $_): string {
+                return '(fn)';
+            },
+            ast\AST_RETURN => static function (Node $node): string {
+                return \sprintf(
+                    'return %s;',
+                    self::toShortString($node->children['expr'])
+                );
+            },
+            ast\AST_THROW => static function (Node $node): string {
+                return \sprintf(
+                    '(throw %s)',
                     self::toShortString($node->children['expr'])
                 );
             },

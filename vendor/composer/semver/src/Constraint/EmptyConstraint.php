@@ -16,7 +16,7 @@ namespace Composer\Semver\Constraint;
  */
 class EmptyConstraint implements ConstraintInterface
 {
-    /** @var string */
+    /** @var string|null */
     protected $prettyString;
 
     /**
@@ -30,7 +30,7 @@ class EmptyConstraint implements ConstraintInterface
     }
 
     /**
-     * @param $prettyString
+     * @param string|null $prettyString
      */
     public function setPrettyString($prettyString)
     {
@@ -55,5 +55,21 @@ class EmptyConstraint implements ConstraintInterface
     public function __toString()
     {
         return '[]';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUpperBound()
+    {
+        return Bound::positiveInfinity();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getLowerBound()
+    {
+        return Bound::zero();
     }
 }

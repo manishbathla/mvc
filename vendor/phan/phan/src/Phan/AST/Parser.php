@@ -15,6 +15,7 @@ use Phan\AST\TolerantASTConverter\ParseException;
 use Phan\AST\TolerantASTConverter\ParseResult;
 use Phan\AST\TolerantASTConverter\ShimFunctions;
 use Phan\AST\TolerantASTConverter\TolerantASTConverter;
+use Phan\AST\TolerantASTConverter\TolerantASTConverterPreservingOriginal;
 use Phan\AST\TolerantASTConverter\TolerantASTConverterWithNodeMapping;
 use Phan\CodeBase;
 use Phan\Config;
@@ -117,9 +118,7 @@ class Parser
                 return self::parseCodePolyfill($code_base, $context, $file_path, $file_contents, $suppress_parse_errors, $request);
             }
             return self::parseCodeHandlingDeprecation($code_base, $context, $file_contents, $file_path);
-        } catch (ParseError $native_parse_error) {
-            return self::handleParseError($code_base, $context, $file_path, $file_contents, $suppress_parse_errors, $native_parse_error, $request);
-        } catch (CompileError $native_parse_error) {
+        } catch (CompileError | ParseError $native_parse_error) {
             return self::handleParseError($code_base, $context, $file_path, $file_contents, $suppress_parse_errors, $native_parse_error, $request);
         }
     }
@@ -560,6 +559,9 @@ class Parser
                 return $converter;
             }
             return new CachingTolerantASTConverter();
+        }
+        if (Config::getValue('__parser_keep_original_node')) {
+            return new TolerantASTConverterPreservingOriginal();
         }
 
         return new TolerantASTConverter();

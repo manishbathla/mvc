@@ -22,6 +22,8 @@ use Throwable;
  * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
+ *
+ * @psalm-template TReturn
  */
 class Promise
 {
@@ -142,7 +144,7 @@ class Promise
     }
 
     /**
-     * Marks this promise as rejected, and set it's rejection reason.
+     * Marks this promise as rejected, and set its rejection reason.
      */
     public function reject(Throwable $reason)
     {
@@ -168,6 +170,7 @@ class Promise
      * chain.
      *
      * @return mixed
+     * @psalm-return TReturn
      */
     public function wait()
     {
