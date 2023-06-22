@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "47cde08022f1c598e8d9b833127d85a9",
+    "content-hash": "ae1f1654038b97f8f8d6eb9c2aa8cab9",
     "packages": [
         {
             "name": "aidantwoods/secureheaders",
@@ -630,6 +630,7 @@
                 "mail",
                 "mailer"
             ],
+            "abandoned": "symfony/mailer",
             "time": "2019-11-12T09:31:26+00:00"
         },
         {
@@ -1137,16 +1138,16 @@
         },
         {
             "name": "kahlan/kahlan",
-            "version": "4.7.2",
+            "version": "4.7.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kahlan/kahlan.git",
-                "reference": "025114b7f13985abceff3ba0e28cca71cb0d40e8"
+                "reference": "36ec916f7c7b067239431d3da0dc1da172bc98bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kahlan/kahlan/zipball/025114b7f13985abceff3ba0e28cca71cb0d40e8",
-                "reference": "025114b7f13985abceff3ba0e28cca71cb0d40e8",
+                "url": "https://api.github.com/repos/kahlan/kahlan/zipball/36ec916f7c7b067239431d3da0dc1da172bc98bb",
+                "reference": "36ec916f7c7b067239431d3da0dc1da172bc98bb",
                 "shasum": ""
             },
             "require": {
@@ -1160,12 +1161,12 @@
             ],
             "type": "library",
             "autoload": {
-                "psr-4": {
-                    "Kahlan\\": "src/"
-                },
                 "files": [
                     "src/functions.php"
-                ]
+                ],
+                "psr-4": {
+                    "Kahlan\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -1187,7 +1188,7 @@
                 "testing",
                 "unit test"
             ],
-            "time": "2020-01-25T16:39:06+00:00"
+            "time": "2020-10-17T08:37:23+00:00"
         },
         {
             "name": "microsoft/tolerant-php-parser",
@@ -2478,5 +2479,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }

@@ -2,6 +2,27 @@
 
 ## Last changes
 
+
+## 4.7.7 (2020-10-17)
+
+  * **Bugfix:** Show fatal errors on file requirements.
+
+## 4.7.6 (2020-09-25)
+
+  * **Bugfix:** Ignore spaces after class names.
+
+## 4.7.5 (2020-04-25)
+
+  * **Bugfix:** Support isset() for scopes.
+
+## 4.7.4 (2020-04-11)
+
+  * **Bugfix:** Tweak autoload files that conflict when define constant.
+
+## 4.7.3 (2020-04-10)
+
+  * **Bugfix:** Fix autoloader to not load autoload files.
+
 ## 4.7.2 (2020-01-25)
 
   * **Bugfix:** Fix autoloader conficts when code coverage is enabled.
