@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Phan\Language\Element;
 
 use AssertionError;
+use ast;
 use ast\Node;
 use InvalidArgumentException;
+use Phan\AST\ASTReverter;
 use Phan\AST\UnionTypeVisitor;
 use Phan\CodeBase;
 use Phan\Exception\IssueException;
@@ -25,6 +27,7 @@ use Phan\Language\UnionType;
 use Phan\Library\StringUtil;
 use Phan\Parse\ParseVisitor;
 
+use function is_string;
 use function strlen;
 
 /**
@@ -62,6 +65,13 @@ class Parameter extends Variable
     private $default_value = null;
 
     /**
+     * @var ?string
+     * The value of ReflectionParameter->getDefaultConstantName(), if this is available from reflection.
+     * This gives better issue messages, hover text, and better output in tool/make_stubs
+     */
+    private $default_value_constant_name = null;
+
+    /**
      * @return static
      */
     public static function create(
@@ -70,7 +80,7 @@ class Parameter extends Variable
         UnionType $type,
         int $flags
     ) {
-        if (Flags::bitVectorHasState($flags, \ast\flags\PARAM_VARIADIC)) {
+        if (Flags::bitVectorHasState($flags, ast\flags\PARAM_VARIADIC)) {
             return new VariadicParameter($context, $name, $type, $flags);
         }
         return new Parameter($context, $name, $type, $flags);
@@ -83,7 +93,7 @@ class Parameter extends Variable
      */
     public function hasDefaultValue(): bool
     {
-        return $this->default_value_type !== null;
+        return $this->default_value_type !== null || $this->default_value_future_type !== null;
     }
 
     /**
@@ -203,23 +213,36 @@ class Parameter extends Variable
         $flags = 0;
         // Check to see if it's a pass-by-reference parameter
         if ($reflection_parameter->isPassedByReference()) {
-            $flags |= \ast\flags\PARAM_REF;
+            $flags |= ast\flags\PARAM_REF;
         }
 
         // Check to see if it's variadic
         if ($reflection_parameter->isVariadic()) {
-            $flags |= \ast\flags\PARAM_VARIADIC;
+            $flags |= ast\flags\PARAM_VARIADIC;
         }
+        $parameter_type = UnionType::fromReflectionType($reflection_parameter->getType());
         $parameter = self::create(
             new Context(),
             $reflection_parameter->getName() ?? "arg",
-            UnionType::fromReflectionType($reflection_parameter->getType()),
+            $parameter_type,
             $flags
         );
         if ($reflection_parameter->isOptional()) {
-            $parameter->setDefaultValueType(
-                NullType::instance(false)->asPHPDocUnionType()
-            );
+            if ($reflection_parameter->isDefaultValueAvailable()) {
+                $default_value = $reflection_parameter->getDefaultValue();
+                $parameter->setDefaultValue($default_value);
+                $default_type = Type::fromObject($default_value)->asPHPDocUnionType();
+                if ($reflection_parameter->isDefaultValueConstant()) {
+                    $parameter->default_value_constant_name = $reflection_parameter->getDefaultValueConstantName();
+                }
+            } else {
+                if (!$parameter_type->isEmpty() && !$parameter_type->containsNullable()) {
+                    $default_type = $parameter_type;
+                } else {
+                    $default_type = NullType::instance(false)->asPHPDocUnionType();
+                }
+            }
+            $parameter->setDefaultValueType($default_type);
         }
         return $parameter;
     }
@@ -235,9 +258,9 @@ class Parameter extends Variable
         }
         // XXX: This could be made more precise and handle things like unary/binary ops.
         // However, this doesn't know about constants that haven't been parsed yet.
-        if ($node->kind === \ast\AST_CONST) {
+        if ($node->kind === ast\AST_CONST) {
             $name = $node->children['name']->children['name'] ?? null;
-            if (\is_string($name)) {
+            if (is_string($name)) {
                 switch (\strtolower($name)) {
                     case 'false':
                         return FalseType::instance(false)->asRealUnionType();
@@ -280,7 +303,7 @@ class Parameter extends Variable
             $union_type,
             $node->flags
         );
-        if (($type_node->kind ?? null) === \ast\AST_NULLABLE_TYPE) {
+        if (($type_node->kind ?? null) === ast\AST_NULLABLE_TYPE) {
             $parameter->setIsUsingNullableSyntax();
         }
 
@@ -317,7 +340,7 @@ class Parameter extends Variable
                     throw new AssertionError("Somehow failed to infer type for the default_node - not a scalar or a Node");
                 }
 
-                if ($default_node->kind === \ast\AST_ARRAY) {
+                if ($default_node->kind === ast\AST_ARRAY) {
                     // We know the parameter default is some sort of array, but we don't know any more (e.g. key types, value types).
                     // When the future type is resolved, we'll know something more specific.
                     $default_value_union_type = ArrayType::instance(false)->asRealUnionType();
@@ -440,7 +463,7 @@ class Parameter extends Variable
      */
     public function isPassByReference(): bool
     {
-        return $this->getFlagsHasState(\ast\flags\PARAM_REF);
+        return $this->getFlagsHasState(ast\flags\PARAM_REF);
     }
 
     /**
@@ -519,12 +542,7 @@ class Parameter extends Variable
         $string .= "\${$this->getName()}";
 
         if ($this->hasDefaultValue() && !$this->isVariadic()) {
-            $default_value = $this->default_value;
-            if ($default_value instanceof Node) {
-                $string .= ' = null';
-            } else {
-                $string .= ' = ' . StringUtil::varExportPretty($default_value);
-            }
+            $string .= ' = ' . $this->generateDefaultNodeRepresentation();
         }
 
         return $string;
@@ -566,33 +584,44 @@ class Parameter extends Variable
         $string .= "\$$name";
 
         if ($this->hasDefaultValue() && !$this->isVariadic()) {
-            $default_value = $this->default_value;
-            if ($default_value instanceof Node) {
-                $kind = $default_value->kind;
-                if ($kind === \ast\AST_NAME) {
-                    $default_repr = (string)$default_value->children['name'];
-                } elseif ($kind === \ast\AST_ARRAY) {
-                    $default_repr = '[]';
-                } else {
-                    $default_repr = 'null';
-                }
-            } else {
-                $default_repr = StringUtil::varExportPretty($default_value);
-            }
-            if (\strtolower($default_repr) === 'null') {
-                $default_repr = 'null';
-                // If we're certain the parameter isn't nullable,
-                // then render the default as `default`, not `null`
-                if ($is_internal) {
-                    if (!$union_type->isEmpty() && !$union_type->containsNullable()) {
-                        $default_repr = 'default';
-                    }
-                }
-            }
-            $string .= ' = ' . $default_repr;
+            $string .= ' = ' . $this->generateDefaultNodeRepresentation($is_internal);
         }
 
         return $string;
+    }
+
+    private function generateDefaultNodeRepresentation(bool $is_internal = true): string
+    {
+        if (is_string($this->default_value_constant_name)) {
+            return '\\' . $this->default_value_constant_name;
+        }
+        $default_value = $this->default_value;
+        if ($default_value instanceof Node) {
+            $kind = $default_value->kind;
+            if (\in_array($kind, [ast\AST_CONST, ast\AST_CLASS_CONST, ast\AST_MAGIC_CONST], true)) {
+                $default_repr = ASTReverter::toShortString($default_value);
+            } elseif ($kind === ast\AST_NAME) {
+                $default_repr = (string)$default_value->children['name'];
+            } elseif ($kind === ast\AST_ARRAY) {
+                return '[]';
+            } else {
+                return 'unknown';
+            }
+        } else {
+            $default_repr = StringUtil::varExportPretty($default_value);
+        }
+        if (\strtolower($default_repr) === 'null') {
+            $default_repr = 'null';
+            // If we're certain the parameter isn't nullable,
+            // then render the default as `default`, not `null`
+            if ($is_internal) {
+                $union_type = $this->getNonVariadicUnionType();
+                if (!$union_type->isEmpty() && !$union_type->containsNullable()) {
+                    return 'unknown';
+                }
+            }
+        }
+        return $default_repr;
     }
 
     /**
@@ -632,27 +661,29 @@ class Parameter extends Variable
             $default_value = $this->default_value;
             if ($default_value instanceof Node) {
                 $kind = $default_value->kind;
-                if ($kind === \ast\AST_NAME) {
+                if (\in_array($kind, [ast\AST_CONST, ast\AST_CLASS_CONST, ast\AST_MAGIC_CONST], true)) {
+                    $default_repr = ASTReverter::toShortString($default_value);
+                } elseif ($kind === ast\AST_NAME) {
                     $default_repr = (string)$default_value->children['name'];
-                } elseif ($kind === \ast\AST_ARRAY) {
+                } elseif ($kind === ast\AST_ARRAY) {
                     $default_repr = '[]';
                 } else {
-                    $default_repr = 'null';
+                    $default_repr = 'unknown';
                 }
             } else {
                 $default_repr = StringUtil::varExportPretty($default_value);
                 if (strlen($default_repr) >= 50) {
-                    $default_repr = 'default';
+                    $default_repr = 'unknown';
                 }
             }
             if (\strtolower($default_repr) === 'null') {
                 $default_repr = 'null';
                 // If we're certain the parameter isn't nullable,
-                // then render the default as `default`, not `null`
+                // then render the default as `unknown`, not `null`
                 if ($is_internal) {
                     $union_type = $this->getNonVariadicUnionType();
                     if (!$union_type->isEmpty() && !$union_type->containsNullable()) {
-                        $default_repr = 'default';
+                        $default_repr = 'unknown';
                     }
                 }
             }

@@ -1628,6 +1628,7 @@ class ContextNode
 
             // For instance properties, ignore it,
             // because we'll create our own property
+            // @phan-suppress-next-line PhanPluginDuplicateCatchStatementBody
         } catch (UnanalyzableException $exception) {
             if ($is_static) {
                 throw $exception;
@@ -1855,6 +1856,16 @@ class ContextNode
             ))->getClassList(false, self::CLASS_LIST_ACCEPT_OBJECT_OR_CLASS_NAME);
         } catch (CodeBaseException $exception) {
             $exception_fqsen = $exception->getFQSEN();
+            if ($constant_name === 'class') {
+                throw new IssueException(
+                    Issue::fromType(Issue::UndeclaredClassReference)(
+                        $this->context->getFile(),
+                        $node->lineno,
+                        [(string)$exception_fqsen],
+                        IssueFixSuggester::suggestSimilarClassForGenericFQSEN($this->code_base, $this->context, $exception_fqsen)
+                    )
+                );
+            }
             throw new IssueException(
                 Issue::fromType(Issue::UndeclaredClassConstant)(
                     $this->context->getFile(),

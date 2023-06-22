@@ -114,11 +114,6 @@ class VersionParser
             $version = $match[1];
         }
 
-        // match master-like branches
-        if (preg_match('{^(?:dev-)?(?:master|trunk|default)$}i', $version)) {
-            return '9999999-dev';
-        }
-
         // if requirement is branch-like, use full name
         if (stripos($version, 'dev-') === 0) {
             return 'dev-' . substr($version, 4);
@@ -203,10 +198,6 @@ class VersionParser
     {
         $name = trim($name);
 
-        if (in_array($name, array('master', 'trunk', 'default'))) {
-            return $this->normalize($name);
-        }
-
         if (preg_match('{^v?(\d++)(\.(?:\d++|[xX*]))?(\.(?:\d++|[xX*]))?(\.(?:\d++|[xX*]))?$}i', $name, $matches)) {
             $version = '';
             for ($i = 1; $i < 5; ++$i) {
@@ -217,6 +208,22 @@ class VersionParser
         }
 
         return 'dev-' . $name;
+    }
+
+    /**
+     * Normalizes a default branch name (i.e. master on git) to 9999999-dev.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    public function normalizeDefaultBranch($name)
+    {
+        if ($name === 'dev-master' || $name === 'dev-default' || $name === 'dev-trunk') {
+            return '9999999-dev';
+        }
+
+        return $name;
     }
 
     /**
@@ -263,28 +270,7 @@ class VersionParser
             $orGroups[] = $constraint;
         }
 
-        if (1 === count($orGroups)) {
-            $constraint = $orGroups[0];
-        } elseif (2 === count($orGroups)
-            // parse the two OR groups and if they are contiguous we collapse
-            // them into one constraint
-            && $orGroups[0] instanceof MultiConstraint
-            && $orGroups[1] instanceof MultiConstraint
-            && 2 === count($orGroups[0]->getConstraints())
-            && 2 === count($orGroups[1]->getConstraints())
-            && ($a = (string) $orGroups[0])
-            && strpos($a, '[>=') === 0 && (false !== ($posA = strpos($a, '<', 4)))
-            && ($b = (string) $orGroups[1])
-            && strpos($b, '[>=') === 0 && (false !== ($posB = strpos($b, '<', 4)))
-            && substr($a, $posA + 2, -1) === substr($b, 4, $posB - 5)
-        ) {
-            $constraint = new MultiConstraint(array(
-                new Constraint('>=', substr($a, 4, $posA - 5)),
-                new Constraint('<', substr($b, $posB + 2, -1)),
-            ));
-        } else {
-            $constraint = new MultiConstraint($orGroups, false);
-        }
+        $constraint = MultiConstraint::create($orGroups, false);
 
         $constraint->setPrettyString($prettyConstraint);
 
@@ -487,12 +473,12 @@ class VersionParser
      *
      * Support function for {@link parseConstraint()}
      *
-     * @param array $matches Array with version parts in array indexes 1,2,3,4
-     * @param int $position 1,2,3,4 - which segment of the version to increment/decrement
-     * @param int $increment
-     * @param string $pad The string to pad version parts after $position
+     * @param array  $matches   Array with version parts in array indexes 1,2,3,4
+     * @param int    $position  1,2,3,4 - which segment of the version to increment/decrement
+     * @param int    $increment
+     * @param string $pad       The string to pad version parts after $position
      *
-     * @return string The new version
+     * @return string|null The new version
      */
     private function manipulateVersionString($matches, $position, $increment = 0, $pad = '0')
     {

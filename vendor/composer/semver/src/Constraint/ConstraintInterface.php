@@ -21,9 +21,24 @@ interface ConstraintInterface
     public function matches(ConstraintInterface $provider);
 
     /**
+     * @return Bound
+     */
+    public function getUpperBound();
+
+    /**
+     * @return Bound
+     */
+    public function getLowerBound();
+
+    /**
      * @return string
      */
     public function getPrettyString();
+
+    /**
+     * @param string|null $prettyString
+     */
+    public function setPrettyString($prettyString);
 
     /**
      * @return string

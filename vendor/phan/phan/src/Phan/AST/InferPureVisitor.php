@@ -11,12 +11,15 @@ use Phan\CodeBase;
 use Phan\Exception\CodeBaseException;
 use Phan\Exception\NodeException;
 use Phan\Language\Context;
+use Phan\Language\Element\Clazz;
 use Phan\Language\Element\FunctionInterface;
 use Phan\Language\FQSEN\FullyQualifiedClassName;
 use Phan\Language\FQSEN\FullyQualifiedFunctionName;
 use Phan\Plugin\Internal\UseReturnValuePlugin;
 use Phan\Plugin\Internal\UseReturnValuePlugin\PureMethodGraph;
 use Phan\Plugin\Internal\UseReturnValuePlugin\UseReturnValueVisitor;
+
+use function is_string;
 
 /**
  * Used to check if a method is pure.
@@ -202,7 +205,7 @@ class InferPureVisitor extends AnalysisVisitor
         $this->checkPureIncDec($node);
     }
 
-    private function checkPureIncDec(Node $node): void
+    protected function checkPureIncDec(Node $node): void
     {
         $var = $node->children['var'];
         if (!$var instanceof Node) {
@@ -352,6 +355,12 @@ class InferPureVisitor extends AnalysisVisitor
     }
 
     /** @override */
+    public function visitExprList(Node $node): void
+    {
+        $this->maybeInvokeAllChildNodes($node);
+    }
+
+    /** @override */
     public function visitGoto(Node $_): void
     {
     }
@@ -404,6 +413,7 @@ class InferPureVisitor extends AnalysisVisitor
         if (!($name_node instanceof Node && $name_node->kind === ast\AST_NAME)) {
             throw new NodeException($node);
         }
+        $this->visitArgList($node->children['args']);
         try {
             $class_list = (new ContextNode($this->code_base, $this->context, $name_node))->getClassList(false, ContextNode::CLASS_LIST_ACCEPT_OBJECT_OR_CLASS_NAME);
         } catch (Exception $_) {
@@ -536,26 +546,15 @@ class InferPureVisitor extends AnalysisVisitor
 
     public function visitMethodCall(Node $node): void
     {
-        if (!$this->context->isInClassScope()) {
-            // We don't track variables in UseReturnValuePlugin
-            throw new NodeException($node, 'method call seen outside class scope');
-        }
-
         $method_name = $node->children['method'];
         if (!\is_string($method_name)) {
             throw new NodeException($node);
         }
         $expr = $node->children['expr'];
-        if (!($expr instanceof Node)) {
+        if (!$expr instanceof Node) {
             throw new NodeException($node);
         }
-        if ($expr->kind !== ast\AST_VAR) {
-            throw new NodeException($expr, 'not a var');
-        }
-        if ($expr->children['name'] !== 'this') {
-            throw new NodeException($expr, 'not $this');
-        }
-        $class = $this->context->getClassInScope($this->code_base);
+        $class = $this->getClassForVariable($expr);
         if (!$class->hasMethodWithName($this->code_base, $method_name)) {
             throw new NodeException($expr, 'does not have method');
         }
@@ -564,10 +563,34 @@ class InferPureVisitor extends AnalysisVisitor
         $this->visitArgList($node->children['args']);
     }
 
+    protected function getClassForVariable(Node $expr): Clazz
+    {
+        if (!$this->context->isInClassScope()) {
+            // We don't track variables in UseReturnValuePlugin
+            throw new NodeException($expr, 'method call seen outside class scope');
+        }
+        if ($expr->kind !== ast\AST_VAR) {
+            throw new NodeException($expr, 'expected simple variable');
+        }
+
+        $var_name = $expr->children['name'];
+        if (!is_string($var_name)) {
+            // TODO: Support static properties, (new X()), other expressions with inferable types
+            throw new NodeException($expr, 'variable name is not a string');
+        }
+        if ($var_name !== 'this') {
+            throw new NodeException($expr, 'not $this');
+        }
+        if (!$this->context->isInClassScope()) {
+            throw new NodeException($expr, 'Not in class scope');
+        }
+        return $this->context->getClassInScope($this->code_base);
+    }
+
     /**
      * @param Node $node the node of the call, with 'args'
      */
-    private function checkCalledFunction(Node $node, FunctionInterface $method): void
+    protected function checkCalledFunction(Node $node, FunctionInterface $method): void
     {
         if ($method->isPure()) {
             return;

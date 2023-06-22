@@ -20,6 +20,7 @@ use Phan\Analysis\RedundantCondition;
 use Phan\AST\AnalysisVisitor;
 use Phan\AST\ASTReverter;
 use Phan\AST\ContextNode;
+use Phan\AST\InferPureSnippetVisitor;
 use Phan\AST\ScopeImpactCheckingVisitor;
 use Phan\AST\UnionTypeVisitor;
 use Phan\AST\Visitor\Element;
@@ -40,11 +41,13 @@ use Phan\Language\UnionType;
 use Phan\Library\StringUtil;
 use Phan\Parse\ParseVisitor;
 use Phan\Plugin\ConfigPluginSet;
+use Phan\Plugin\Internal\VariableTracker\VariableTrackerVisitor;
 
 use function array_map;
 use function count;
 use function end;
 use function explode;
+use function is_string;
 use function preg_match;
 use function rtrim;
 
@@ -722,6 +725,14 @@ class BlockAnalysisVisitor extends AnalysisVisitor
             $context = (new ContextMergeVisitor($context, [$context, $original_context]))->combineChildContextList();
         }
 
+        // Check if this is side effect free with the variable types inferred by analyzing the loop body (heuristic).
+        if (Config::getValue('unused_variable_detection') &&
+            InferPureSnippetVisitor::isSideEffectFreeSnippet($this->code_base, $context, $loop_node) &&
+            InferPureSnippetVisitor::isSideEffectFreeSnippet($this->code_base, $context, $condition_node) &&
+            InferPureSnippetVisitor::isSideEffectFreeSnippet($this->code_base, $context, $stmts_node)) {
+            VariableTrackerVisitor::recordHasLoopBodyWithoutSideEffects($node);
+        }
+
         // Now that we know all about our context (like what
         // 'self' means), we can analyze statements like
         // assignments and method calls.
@@ -845,6 +856,12 @@ class BlockAnalysisVisitor extends AnalysisVisitor
             $context = (new ContextMergeVisitor($context, [$context, $original_context]))->combineChildContextList();
         }
 
+        // Check if this is side effect free with the variable types inferred by analyzing the loop body (heuristic).
+        if (Config::getValue('unused_variable_detection') &&
+            InferPureSnippetVisitor::isSideEffectFreeSnippet($this->code_base, $context, $node)) {
+            VariableTrackerVisitor::recordHasLoopBodyWithoutSideEffects($node);
+        }
+
         // Now that we know all about our context (like what
         // 'self' means), we can analyze statements like
         // assignments and method calls.
@@ -936,6 +953,16 @@ class BlockAnalysisVisitor extends AnalysisVisitor
             $inner_context = $this->analyzeAndGetUpdatedContext($inner_context, $node, $stmts_node);
         }
 
+        // TODO: Also warn about object types when iterating over that class should not have side effects
+        if (Config::getValue('unused_variable_detection') &&
+            !$expression_union_type->isEmpty() && !$expression_union_type->hasPossiblyObjectTypes() &&
+            InferPureSnippetVisitor::isSideEffectFreeSnippet($this->code_base, $this->context, $stmts_node) &&
+            self::isLoopVariableWithoutSideEffects($node->children['key']) &&
+            self::isLoopVariableWithoutSideEffects($node->children['value'])
+        ) {
+            VariableTrackerVisitor::recordHasLoopBodyWithoutSideEffects($node);
+        }
+
         if ($has_at_least_one_iteration) {
             $context = $inner_context;
             $context_list = [$inner_context];
@@ -954,6 +981,33 @@ class BlockAnalysisVisitor extends AnalysisVisitor
         $context = $context->withExitLoop($node);
 
         return $this->postOrderAnalyze($context, $node);
+    }
+
+    /**
+     * @param Node|string|int|float|null $node
+     *
+     * Returns true if this is probably a loop variable without side effects
+     * (e.g. not a reference, not modifying properties, etc)
+     */
+    private static function isLoopVariableWithoutSideEffects($node): bool
+    {
+        if (!$node instanceof Node) {
+            return true;
+        }
+        switch ($node->kind) {
+            case ast\AST_VAR:
+                return is_string($node->children['name']);
+            case ast\AST_ARRAY:
+            case ast\AST_ARRAY_ELEM:
+                foreach ($node->children as $child_node) {
+                    if (!self::isLoopVariableWithoutSideEffects($child_node)) {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return ParseVisitor::isConstExpr($node);
+        }
     }
 
     /**
@@ -1000,15 +1054,17 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                 Closure::fromCallable([self::class, 'isEmptyIterable'])
             );
         }
-        if (!($node->children['stmts']->children ?? null) && self::isDefinitelyNotObject($union_type)) {
-            RedundantCondition::emitInstance(
-                $node->children['expr'],
-                $this->code_base,
-                (clone($this->context))->withLineNumberStart($node->children['expr']->lineno ?? $node->lineno),
-                Issue::EmptyForeachBody,
-                [(string)$union_type],
-                Closure::fromCallable([self::class, 'isDefinitelyNotObject'])
-            );
+        if (self::isDefinitelyNotObject($union_type)) {
+            if (!($node->children['stmts']->children ?? null)) {
+                RedundantCondition::emitInstance(
+                    $node->children['expr'],
+                    $this->code_base,
+                    (clone($this->context))->withLineNumberStart($node->children['expr']->lineno ?? $node->lineno),
+                    Issue::EmptyForeachBody,
+                    [(string)$union_type],
+                    Closure::fromCallable([self::class, 'isDefinitelyNotObject'])
+                );
+            }
         }
     }
 
@@ -1218,6 +1274,12 @@ class BlockAnalysisVisitor extends AnalysisVisitor
         }
         $context = $context->withExitLoop($node);
 
+        // Check if this is side effect free with the variable types inferred by analyzing the loop body (heuristic).
+        if (Config::getValue('unused_variable_detection') &&
+            InferPureSnippetVisitor::isSideEffectFreeSnippet($this->code_base, $context, $node)) {
+            VariableTrackerVisitor::recordHasLoopBodyWithoutSideEffects($node);
+        }
+
         return $this->postOrderAnalyze($context, $node);
     }
 
@@ -1370,7 +1432,6 @@ class BlockAnalysisVisitor extends AnalysisVisitor
         $context->setLineNumberStart($node->lineno);
         $context = $this->preOrderAnalyze(clone($context), $node);
 
-        $scope = $context->getScope();
         $child_context_list = [];
 
         // TODO: Improve inferences in switch statements?
@@ -1378,14 +1439,23 @@ class BlockAnalysisVisitor extends AnalysisVisitor
         $has_default = false;
         // parent_node_list should always end in AST_SWITCH
         // @phan-suppress-next-next-line PhanPossiblyUndeclaredProperty
-        [$switch_variable_node, $switch_variable_condition] = $this->createSwitchConditionAnalyzer(
+        [$switch_variable_node, $switch_variable_condition, $switch_variable_negated_condition] = $this->createSwitchConditionAnalyzer(
             end($this->parent_node_list)->children['cond']
         );
-        if ($switch_variable_condition && $switch_variable_node instanceof Node) {
+        if (($switch_variable_condition || $switch_variable_negated_condition) && $switch_variable_node instanceof Node) {
             $switch_variable_cond_variable_set = RedundantCondition::getVariableSet($switch_variable_node);
         } else {
             $switch_variable_cond_variable_set = [];
         }
+        $children = $node->children;
+        if (\count($children) <= 1 && !isset($children[0]->children['cond'])) {
+            $this->emitIssue(
+                Issue::NoopSwitchCases,
+                end($this->parent_node_list)->lineno ?? $node->lineno
+            );
+        }
+        $fallthrough_context = $context;
+
         $previous_child_context = null;
         foreach ($node->children as $i => $child_node) {
             if (!$child_node instanceof Node) {
@@ -1399,18 +1469,18 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                 // The previous case statement fell through some of the time or all of the time.
                 $child_context = (new ContextMergeVisitor(
                     $previous_child_context,
-                    [$previous_child_context, $context]
-                ))->combineScopeList([$previous_child_context->getScope(), $scope]);
+                    [$previous_child_context, $fallthrough_context]
+                ))->combineScopeList([$previous_child_context->getScope(), $fallthrough_context->getScope()]);
             } else {
                 // The previous case statement did not fall through, or does not exist.
-                $child_context = $context->withScope(new BranchScope($scope));
+                $child_context = $fallthrough_context->withScope(clone($fallthrough_context->getScope()));
             }
             $child_context->withLineNumberStart($child_node->lineno);
             try {
                 $this->parent_node_list[] = $node;
                 ConfigPluginSet::instance()->preAnalyzeNode(
                     $this->code_base,
-                    $context,
+                    $fallthrough_context,
                     $child_node
                 );
                 if ($case_cond_node !== null) {
@@ -1426,7 +1496,6 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                             // Add the variable type from the above case statements, if it was possible for it to fall through
                             // TODO: Also support switch(get_class($variable))
                             $child_context = $switch_variable_condition($child_context, $case_cond_node);
-                            '@phan-var Context $child_context';
                             if ($previous_child_context !== null) {
                                 $variable = $child_context->getScope()->getVariableByNameOrNull($var_name);
                                 if ($variable) {
@@ -1441,6 +1510,36 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                             }
                         }
                     }
+                    if ($switch_variable_negated_condition) {
+                        // e.g. make sure to handle $x from `switch (true) { case $x instanceof stdClass: }` or `switch ($x)`
+                        // Note that this won't properly combine types from `case $x = expr: case $x = expr2:` (latter would override former),
+                        // but I don't expect to see that in reasonable code.
+                        $variables_to_check = $switch_variable_cond_variable_set + RedundantCondition::getVariableSet($case_cond_node);
+                        foreach ($variables_to_check as $var_name) {
+                            // Add the variable type that were ruled out by the above case statements, if it was possible for it to fall through
+                            // TODO: Also support switch(get_class($variable))
+                            $fallthrough_context = $switch_variable_negated_condition($fallthrough_context, $case_cond_node);
+                        }
+                    }
+                } else {
+                    foreach ($switch_variable_cond_variable_set as $var_name) {
+                        // Add the variable types from the default to the
+                        // TODO: Handle the default not being the last case statement
+                        // TODO: Improve handling of possibly undefined variables
+                        $variable = $child_context->getScope()->getVariableByNameOrNull($var_name);
+                        if (!$variable) {
+                            continue;
+                        }
+                        if ($previous_child_context) {
+                            $old_variable = $previous_child_context->getScope()->getVariableByNameOrNull($var_name);
+
+                            if ($old_variable) {
+                                $variable = clone($variable);
+                                $variable->setUnionType($variable->getUnionType()->withUnionType($old_variable->getUnionType()));
+                                $child_context->addScopeVariable($variable);
+                            }
+                        }
+                    }
                 }
 
                 if ($case_stmts_node instanceof Node) {
@@ -1448,7 +1547,7 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                 }
                 ConfigPluginSet::instance()->postAnalyzeNode(
                     $this->code_base,
-                    $context,
+                    $fallthrough_context,
                     $child_node
                 );
             } finally {
@@ -1481,7 +1580,7 @@ class BlockAnalysisVisitor extends AnalysisVisitor
 
         if (count($child_context_list) > 0) {
             if (!$has_default) {
-                $child_context_list[] = $context;
+                $child_context_list[] = $fallthrough_context;
             }
             if (count($child_context_list) >= 2) {
                 // For case statements, we need to merge the contexts
@@ -1499,9 +1598,10 @@ class BlockAnalysisVisitor extends AnalysisVisitor
         return $this->postOrderAnalyze($context, $node);
     }
 
+    private const NOOP_SWITCH_COND_ANALYZER = [null, null, null];
     /**
      * @param Node|int|string|float $switch_case_node
-     * @return array{0:?Node,1:?Closure}
+     * @return array{0:?Node, 1:?Closure(Context, mixed): Context, 2:?Closure(Context, mixed): Context}
      */
     private function createSwitchConditionAnalyzer($switch_case_node): array
     {
@@ -1510,7 +1610,7 @@ class BlockAnalysisVisitor extends AnalysisVisitor
             if ($switch_kind === ast\AST_VAR) {
                 $switch_variable = (new ConditionVisitor($this->code_base, $this->context))->getVariableFromScope($switch_case_node, $this->context);
                 if (!$switch_variable) {
-                    return [null, null];
+                    return self::NOOP_SWITCH_COND_ANALYZER;
                 }
                 return [
                     $switch_case_node,
@@ -1521,6 +1621,13 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                         $visitor = new ConditionVisitor($this->code_base, $child_context);
                         return $visitor->updateVariableToBeEqual($switch_case_node, $cond_node, $child_context);
                     },
+                    /**
+                     * @param Node|string|int|float $cond_node
+                     */
+                    function (Context $child_context, $cond_node) use ($switch_case_node): Context {
+                        $visitor = new ConditionVisitor($this->code_base, $child_context);
+                        return $visitor->updateVariableToBeNotEqual($switch_case_node, $cond_node, $child_context);
+                    },
                 ];
             } elseif ($switch_kind === ast\AST_CALL) {
                 $name = $switch_case_node->children['expr']->children['name'] ?? null;
@@ -1529,14 +1636,14 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                     if ($name === 'get_class') {
                         $switch_variable_node = $switch_case_node->children['args']->children[0] ?? null;
                         if (!$switch_variable_node instanceof Node) {
-                            return [null, null];
+                            return self::NOOP_SWITCH_COND_ANALYZER;
                         }
                         if ($switch_variable_node->kind !== ast\AST_VAR) {
-                            return [null, null];
+                            return self::NOOP_SWITCH_COND_ANALYZER;
                         }
                         $switch_variable = (new ConditionVisitor($this->code_base, $this->context))->getVariableFromScope($switch_variable_node, $this->context);
                         if (!$switch_variable) {
-                            return [null, null];
+                            return self::NOOP_SWITCH_COND_ANALYZER;
                         }
                         return [
                             $switch_variable_node,
@@ -1550,6 +1657,7 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                                     $cond_node
                                 ) ?? $child_context;
                             },
+                            null,
                         ];
                     }
                 }
@@ -1564,12 +1672,19 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                         $visitor = new ConditionVisitor($this->code_base, $child_context);
                         return $visitor->analyzeAndUpdateToBeEqual($switch_case_node, $cond_node);
                     },
+                    /**
+                     * @param Node|string|int|float $cond_node
+                     */
+                    function (Context $child_context, $cond_node) use ($switch_case_node): Context {
+                        $visitor = new ConditionVisitor($this->code_base, $child_context);
+                        return $visitor->analyzeAndUpdateToBeNotEqual($switch_case_node, $cond_node);
+                    },
                 ];
             }
         } catch (IssueException $_) {
             // do nothing, we warn elsewhere
         }
-        return [null, null];
+        return self::NOOP_SWITCH_COND_ANALYZER;
     }
 
     /**
@@ -2042,6 +2157,9 @@ class BlockAnalysisVisitor extends AnalysisVisitor
                 $context,
                 [$context, $context_with_false_left_condition, $right_context]
             ))->combineChildContextList();
+            if ($right_node->kind === ast\AST_THROW) {
+                return $this->postOrderAnalyze($context_with_false_left_condition, $node);
+            }
         }
 
         return $this->postOrderAnalyze($context, $node);
@@ -2098,6 +2216,9 @@ class BlockAnalysisVisitor extends AnalysisVisitor
         }
 
         if ($right_node instanceof Node) {
+            if ($right_node->kind === ast\AST_THROW) {
+                return $this->postOrderAnalyze($context_with_true_left_condition, $node);
+            }
             $right_context = $this->analyzeAndGetUpdatedContext($context_with_false_left_condition, $node, $right_node);
             if (ScopeImpactCheckingVisitor::hasPossibleImpact($this->code_base, $context, $right_node)) {
                 // If the expression on the right side does have side effects (e.g. `$cond || $x = foo()`), then we need to merge all possibilities.

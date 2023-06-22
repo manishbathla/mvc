@@ -239,9 +239,11 @@ class Comment
                         $code_base,
                         $context,
                         Issue::CommentDuplicateParam,
-                        $context->getLineNumberStart(),
+                        $parameter->getLineno(),
                         $name
                     );
+                    // @phan-suppress-next-line PhanAccessMethodInternal, PhanPluginUnknownObjectMethodCall
+                    $parameter->addUnionType($this->parameter_map[$name]->getUnionType());
                 }
                 // Add it to the named map
                 $this->parameter_map[$name] = $parameter;
@@ -259,7 +261,7 @@ class Comment
                         $code_base,
                         $context,
                         Issue::CommentDuplicateMagicProperty,
-                        $context->getLineNumberStart(),
+                        $property->getLine(),
                         $name
                     );
                 }
@@ -276,7 +278,7 @@ class Comment
                         $code_base,
                         $context,
                         Issue::CommentDuplicateMagicMethod,
-                        $context->getLineNumberStart(),
+                        $method->getLine(),
                         $name
                     );
                 }
@@ -284,6 +286,7 @@ class Comment
                 $this->magic_method_map[$name] = $method;
             }
         }
+        // @phan-suppress-next-line PhanSideEffectFreeForeachBody applyOverride is annotated as @phan-pure due to the catch-all annotation, so phan treats this like it has no side effects.
         foreach ($phan_overrides as $key => $override_value) {
             $this->applyOverride($key, $override_value);
         }
@@ -730,7 +733,7 @@ class Comment
             $string  .= " * @var $variable\n";
         }
 
-        foreach (array_merge($this->parameter_map, $this->parameter_list) as $parameter) {
+        foreach (\array_merge($this->parameter_map, $this->parameter_list) as $parameter) {
             $string  .= " * @param $parameter\n";
         }
 

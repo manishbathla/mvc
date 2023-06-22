@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phan;
 
 use AssertionError;
+use Exception;
 use InvalidArgumentException;
 use Phan\Config\Initializer;
 use Phan\Daemon\ExitException;
@@ -28,23 +29,31 @@ use Phan\Output\PrinterFactory;
 use Phan\Plugin\ConfigPluginSet;
 use Phan\Plugin\Internal\MethodSearcherPlugin;
 use ReflectionExtension;
+use SplFileInfo;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Console\Terminal;
 
 use function array_map;
+use function array_merge;
 use function array_slice;
+use function array_unique;
+use function array_values;
 use function count;
+use function escapeshellarg;
 use function fwrite;
 use function getenv;
 use function in_array;
 use function is_array;
+use function is_executable;
 use function is_resource;
 use function is_string;
+use function shell_exec;
 use function str_repeat;
 use function strcasecmp;
 use function strlen;
+use function trim;
 
 use const DIRECTORY_SEPARATOR;
 use const EXIT_FAILURE;
@@ -70,7 +79,7 @@ class CLI
     /**
      * This should be updated to x.y.z-dev after every release, and x.y.z before a release.
      */
-    public const PHAN_VERSION = '2.6.1';
+    public const PHAN_VERSION = '2.7.3';
 
     /**
      * List of short flags passed to getopt
@@ -116,6 +125,7 @@ class CLI
         'file-list:',
         'file-list-only:',
         'force-polyfill-parser',
+        'force-polyfill-parser-with-original-tokens',
         'help',
         'help-annotations',
         'ignore-undeclared',
@@ -151,6 +161,7 @@ class CLI
         'markdown-issue-messages',
         'memory-limit:',
         'minimum-severity:',
+        'native-syntax-check:',
         'no-color',
         'no-progress-bar',
         'output:',
@@ -273,8 +284,16 @@ class CLI
                 $key = $parts[0];
                 $value = $parts[1] ?? '';  // php getopt() treats --processes and --processes= the same way
                 $key = \preg_replace('/^--?/', '', $key);
-                if ($value === '' && in_array($key . ':', self::GETOPT_LONG_OPTIONS, true)) {
-                    throw new UsageException("Missing required value for '$arg'", EXIT_FAILURE);
+                if ($value === '') {
+                    if (in_array($key . ':', self::GETOPT_LONG_OPTIONS, true)) {
+                        throw new UsageException("Missing required value for '$arg'", EXIT_FAILURE);
+                    }
+                    if (strlen($key) === 1 && strlen($parts[0]) === 2) {
+                        // @phan-suppress-next-line PhanParamSuspiciousOrder this is deliberate
+                        if (\strpos(self::GETOPT_SHORT_OPTIONS, "$key:") !== false) {
+                            throw new UsageException("Missing required value for '-$key'", EXIT_FAILURE);
+                        }
+                    }
                 }
                 throw new UsageException("Unknown option '$arg'" . self::getFlagSuggestionString($key), EXIT_FAILURE);
             }
@@ -351,8 +370,13 @@ class CLI
         }
         if (\array_key_exists('v', $opts) || \array_key_exists('version', $opts)) {
             \printf("Phan %s\n", self::PHAN_VERSION);
+
+            if (\PHP_VERSION_ID >= 70200 && !\getenv('PHAN_SUPPRESS_PHP_UPGRADE_NOTICE')) {
+                fwrite(STDERR, "(Consider upgrading to Phan 3, which has the latest features and bug fixes (supports execution with PHP 7.2+))\n");
+            }
             throw new ExitException('', EXIT_SUCCESS);
         }
+        self::restartWithoutProblematicExtensions();
         $this->warnSuspiciousShortOptions($argv);
 
         // Determine the root directory of the project from which
@@ -623,7 +647,16 @@ class CLI
                     break;
                 case 'y':
                 case 'minimum-severity':
-                    $minimum_severity = (int)$value;
+                    $minimum_severity = \strtolower($value);
+                    if ($minimum_severity === 'low') {
+                        $minimum_severity = Issue::SEVERITY_LOW;
+                    } elseif ($minimum_severity === 'normal') {
+                        $minimum_severity = Issue::SEVERITY_NORMAL;
+                    } elseif ($minimum_severity === 'critical') {
+                        $minimum_severity = Issue::SEVERITY_CRITICAL;
+                    } else {
+                        $minimum_severity = (int)$minimum_severity;
+                    }
                     break;
                 case 'target-php-version':
                     Config::setValue('target_php_version', $value);
@@ -650,6 +683,15 @@ class CLI
                 case 'language-server-min-diagnostics-delay-ms':
                     Config::setValue('language_server_min_diagnostics_delay_ms', (float)$value);
                     break;
+                case 'native-syntax-check':
+                    if ($value === '') {
+                        throw new UsageException(\sprintf("Invalid arguments to --native-syntax-check: args=%s\n", StringUtil::jsonEncode($value)), EXIT_FAILURE);
+                    }
+                    if (!is_array($value)) {
+                        $value = [$value];
+                    }
+                    self::addPHPBinariesForSyntaxCheck($value);
+                    break;
                 case 'disable-cache':
                     Config::setValue('cache_polyfill_asts', false);
                     break;
@@ -662,10 +704,7 @@ class CLI
                     if (!is_array($value)) {
                         $value = [$value];
                     }
-                    Config::setValue(
-                        'plugins',
-                        \array_unique(\array_merge(Config::getValue('plugins'), $value))
-                    );
+                    self::addPlugins($value);
                     break;
                 case 'use-fallback-parser':
                     Config::setValue('use_fallback_parser', true);
@@ -807,6 +846,10 @@ class CLI
                 case 'force-polyfill-parser':
                     Config::setValue('use_polyfill_parser', true);
                     break;
+                case 'force-polyfill-parser-with-original-tokens':
+                    Config::setValue('use_polyfill_parser', true);
+                    Config::setValue('__parser_keep_original_node', true);
+                    break;
                 case 'memory-limit':
                     if (\preg_match('@^([1-9][0-9]*)([KMG])?$@', $value, $match)) {
                         \ini_set('memory_limit', $value);
@@ -873,7 +916,6 @@ class CLI
             }
         }
         self::ensureASTParserExists();
-        self::restartWithoutProblematicExtensions();
         self::checkPluginsExist();
         self::checkValidFileConfig();
         if (\is_null($progress_bar)) {
@@ -923,8 +965,55 @@ class CLI
             && Config::getValue('dead_code_detection')) {
             throw new AssertionError("We cannot run dead code detection on more than one core.");
         }
+        if (\PHP_VERSION_ID >= 70200 && !\getenv('PHAN_SUPPRESS_PHP_UPGRADE_NOTICE')) {
+            fwrite(STDERR, "(Consider upgrading to Phan 3, which has the latest features and bug fixes (supports execution with PHP 7.2+). This notice can be disabled with PHAN_SUPPRESS_PHP_UPGRADE_NOTICE=1)\n");
+        }
         self::checkSaveBaselineOptionsAreValid();
         self::ensureServerRunsSingleAnalysisProcess();
+    }
+
+    /**
+     * @param list<string> $plugins plugins to add to the plugin list
+     */
+    private static function addPlugins(array $plugins): void
+    {
+        Config::setValue(
+            'plugins',
+            \array_unique(\array_merge(Config::getValue('plugins'), $plugins))
+        );
+    }
+
+    /**
+     * @param list<string> $binaries - various binaries, such as 'php72' and '/usr/bin/php'
+     * @throws UsageException
+     */
+    private static function addPHPBinariesForSyntaxCheck(array $binaries): void
+    {
+        $resolved_binaries = [];
+        foreach ($binaries as $binary) {
+            if ($binary === '') {
+                throw new UsageException(\sprintf("Invalid arguments to --native-syntax-check: args=%s\n", StringUtil::jsonEncode($binaries)), EXIT_FAILURE);
+            }
+            if (DIRECTORY_SEPARATOR === '\\') {
+                $cmd = 'where ' . escapeshellarg($binary);
+            } else {
+                $cmd = 'command -v ' . escapeshellarg($binary);
+            }
+            $resolved = (string) trim((string) shell_exec($cmd));
+            if ($resolved === '') {
+                throw new UsageException(\sprintf("Could not find PHP binary for --native-syntax-check: arg=%s\n", StringUtil::jsonEncode($binary)), EXIT_FAILURE);
+            }
+            if (!is_executable($resolved)) {
+                throw new UsageException(\sprintf("PHP binary for --native-syntax-check is not executable: arg=%s\n", StringUtil::jsonEncode($binary)), EXIT_FAILURE);
+            }
+            $resolved_binaries[] = $resolved;
+        }
+        self::addPlugins(['InvokePHPNativeSyntaxCheckPlugin']);
+        $plugin_config = Config::getValue('plugin_config') ?: [];
+        $old_resolved_binaries = $plugin_config['php_native_syntax_check_binaries'] ?? [];
+        $resolved_binaries = array_values(array_unique(array_merge($old_resolved_binaries, $resolved_binaries)));
+        $plugin_config['php_native_syntax_check_binaries'] = $resolved_binaries;
+        Config::setValue('plugin_config', $plugin_config);
     }
 
     /**
@@ -1435,7 +1524,7 @@ $init_help
 
  -y, --minimum-severity <level>
   Minimum severity level (low=0, normal=5, critical=10) to report.
-  Defaults to 0.
+  Defaults to `--minimum-severity 0` (i.e. `--minimum-severity low`)
 
  -c, --parent-constructor-required
   Comma-separated list of classes that require
@@ -1607,6 +1696,15 @@ Extended help:
   NOTE: This is a work in progress and limited to a small subset of issues
   (e.g. unused imports on their own line)
 
+ --force-polyfill-parser-with-original-tokens
+  Force tracking the original tolerant-php-parser and tokens in every node
+  generated by the polyfill as `\$node->tolerant_ast_node`, where possible.
+  This is slower and more memory intensive.
+  Official or third-party plugins implementing functionality such as
+  `--automatic-fix` may end up requiring this,
+  because the original tolerant-php-parser node contains the original formatting
+  and token locations.
+
  --find-signature <paramUnionType1->paramUnionType2->returnUnionType>
   Find a signature in the analyzed codebase that is similar to the argument.
   See `tool/phoogle` for examples.
@@ -1711,6 +1809,14 @@ Extended help:
   This can be increased to work around race conditions in clients processing Phan issues (e.g. if your editor/IDE shows outdated diagnostics)
   Defaults to 0. (no delay)
 
+ --native-syntax-check </path/to/php_binary>
+  If php_binary (e.g. `php72`, `/usr/bin/php`) can be found in `\$PATH`, enables `InvokePHPNativeSyntaxCheckPlugin`
+  and adds `php_binary` (resolved using `\$PATH`) to the `php_native_syntax_check_binaries` array of `plugin_config`
+  (treated here as initially being the empty array)
+  Phan exits if any php binary could not be found.
+
+  This can be repeated to run native syntax checks with multiple php versions.
+
  --require-config-exists
   Exit immediately with an error code if `.phan/config.php` does not exist.
 
@@ -1724,6 +1830,11 @@ EOB
         }
         if ($exit_code === null) {
             return;
+        }
+        if (\PHP_VERSION_ID >= 70200) {
+            if (!getenv('PHAN_SUPPRESS_PHP_UPGRADE_NOTICE')) {
+                \fprintf(STDERR, "\nPhan %s is installed (supporting execution with PHP 7.1+), but Phan 3 (supporting execution with PHP 7.2+) has the latest features and bug fixes.\n", CLI::PHAN_VERSION);
+            }
         }
         exit($exit_code);
     }
@@ -1825,7 +1936,7 @@ EOB
             return \preg_quote(\rtrim($option, ':'));
         }, self::GETOPT_LONG_OPTIONS)) . '))([^\w-]|$))';
         $section = \preg_replace_callback($long_flag_regex, $colorize_flag_cb, $section);
-        $short_flag_regex = '((\s|\b)(-[' . \str_replace(':', '', self::GETOPT_SHORT_OPTIONS) . '])([^\w-]))';
+        $short_flag_regex = '((\s|\b|\')(-[' . \str_replace(':', '', self::GETOPT_SHORT_OPTIONS) . '])([^\w-]))';
 
         $section = \preg_replace_callback($short_flag_regex, $colorize_flag_cb, $section);
 
@@ -1961,43 +2072,48 @@ EOB
             }
 
             $exclude_file_regex = Config::getValue('exclude_file_regex');
-            $filter_folder_or_file = /** @param mixed $unused_key */ static function (\SplFileInfo $file_info, $unused_key, \RecursiveIterator $iterator) use ($file_extensions, $exclude_file_regex): bool {
-                if (\in_array($file_info->getBaseName(), ['.', '..'], true)) {
-                    // Exclude '.' and '..'
-                    return false;
-                }
-                if ($file_info->isDir()) {
-                    if (!$iterator->hasChildren()) {
+            $filter_folder_or_file = /** @param mixed $unused_key */ static function (SplFileInfo $file_info, $unused_key, \RecursiveIterator $iterator) use ($file_extensions, $exclude_file_regex): bool {
+                try {
+                    if (\in_array($file_info->getBaseName(), ['.', '..'], true)) {
+                        // Exclude '.' and '..'
                         return false;
                     }
-                    // Compare exclude_file_regex against the relative path of the folder within the project
-                    // (E.g. src/subfolder/)
-                    if ($exclude_file_regex && self::isPathMatchedByRegex($exclude_file_regex, $file_info->getPathname() . '/')) {
-                        // E.g. for phan itself, excludes vendor/psr/log/Psr/Log/Test and vendor/symfony/console/Tests
+                    if ($file_info->isDir()) {
+                        if (!$iterator->hasChildren()) {
+                            return false;
+                        }
+                        // Compare exclude_file_regex against the relative path of the folder within the project
+                        // (E.g. src/subfolder/)
+                        if ($exclude_file_regex && self::isPathMatchedByRegex($exclude_file_regex, $file_info->getPathname() . '/')) {
+                            // E.g. for phan itself, excludes vendor/psr/log/Psr/Log/Test and vendor/symfony/console/Tests
+                            return false;
+                        }
+
+                        return true;
+                    }
+
+                    if (!in_array($file_info->getExtension(), $file_extensions, true)) {
+                        return false;
+                    }
+                    if (!$file_info->isFile()) {
+                        // Handle symlinks to invalid real paths
+                        $file_path = $file_info->getRealPath() ?: $file_info->__toString();
+                        CLI::printErrorToStderr("Unable to read file $file_path: SplFileInfo->isFile() is false for SplFileInfo->getType() == " . \var_export(self::getSplFileInfoType($file_info), true) . "\n");
+                        return false;
+                    }
+                    if (!$file_info->isReadable()) {
+                        $file_path = $file_info->getRealPath();
+                        CLI::printErrorToStderr("Unable to read file $file_path: SplFileInfo->isReadable() is false, getPerms()=" . \sprintf("%o(octal)", @$file_info->getPerms()) . "\n");
                         return false;
                     }
 
-                    return true;
-                }
-
-                if (!in_array($file_info->getExtension(), $file_extensions, true)) {
-                    return false;
-                }
-                if (!$file_info->isFile()) {
-                    // Handle symlinks to invalid real paths
-                    $file_path = $file_info->getRealPath() ?: $file_info->__toString();
-                    CLI::printErrorToStderr("Unable to read file $file_path: SplFileInfo->isFile() is false for SplFileInfo->getType() == " . \var_export(@$file_info->getType(), true) . "\n");
-                    return false;
-                }
-                if (!$file_info->isReadable()) {
-                    $file_path = $file_info->getRealPath();
-                    CLI::printErrorToStderr("Unable to read file $file_path: SplFileInfo->isReadable() is false, getPerms()=" . \sprintf("%o(octal)", @$file_info->getPerms()) . "\n");
-                    return false;
-                }
-
-                // Compare exclude_file_regex against the relative path within the project
-                // (E.g. src/foo.php)
-                if ($exclude_file_regex && self::isPathMatchedByRegex($exclude_file_regex, $file_info->getPathname())) {
+                    // Compare exclude_file_regex against the relative path within the project
+                    // (E.g. src/foo.php)
+                    if ($exclude_file_regex && self::isPathMatchedByRegex($exclude_file_regex, $file_info->getPathname())) {
+                        return false;
+                    }
+                } catch (Exception $e) {
+                    CLI::printErrorToStderr(\sprintf("Unexpected error checking if %s should be parsed: %s %s\n", $file_info->getPathname(), \get_class($e), $e->getMessage()));
                     return false;
                 }
 
@@ -2014,7 +2130,7 @@ EOB
             );
 
             $file_list = \array_keys(\iterator_to_array($iterator));
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             CLI::printWarningToStderr("Caught exception while listing files in '$directory_name': {$exception->getMessage()}\n");
         }
 
@@ -2027,6 +2143,15 @@ EOB
         }
         \uksort($normalized_file_list, 'strcmp');
         return \array_values($normalized_file_list);
+    }
+
+    private static function getSplFileInfoType(SplFileInfo $info): string
+    {
+        try {
+            return @$info->getType();
+        } catch (Exception $e) {
+            return "(unknown: {$e->getMessage()})";
+        }
     }
 
     /**
@@ -2612,11 +2737,18 @@ EOT
             }
         }
         if (self::shouldRestartToExclude('uopz')) {
+            // NOTE: uopz seems to cause instability when used and switched from enabled to disabled.
+            //
+            // TODO create and link to stubs if https://github.com/krakjoe/uopz/issues/123 is completed.
             $extensions_to_disable[] = 'uopz';
             fwrite(
                 STDERR,
-                "[info] Restarting with uopz disabled, it can cause unpredictable behavior." . PHP_EOL .
-                "[info] Set the environment variable PHAN_ALLOW_UOPZ to 1 to disable this message and to allow uopz." . PHP_EOL
+                <<<EOT
+[info] Restarting with uopz disabled, it can cause unpredictable behavior.
+[info] Set the environment variable PHAN_ALLOW_UOPZ to 1 to disable this message and to allow uopz.
+[info] If you are not using uopz to debug Phan, removing uopz from php.ini or setting the ini setting uopz.disable=1 is recommended before running Phan.
+
+EOT
             );
         }
         if (self::shouldRestartToExclude('grpc') && self::willUseMultipleProcesses()) {

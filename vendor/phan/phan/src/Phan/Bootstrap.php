@@ -17,6 +17,15 @@ ini_set("memory_limit", '-1');
 define('CLASS_DIR', __DIR__ . '/../');
 set_include_path(get_include_path() . PATH_SEPARATOR . CLASS_DIR);
 
+if (function_exists('uopz_allow_exit') && !ini_get('uopz.disable')) {
+    // This is safe to do in the uopz PECL module, it toggles a global variable.
+    try {
+        uopz_allow_exit(true); // @phan-suppress-current-line PhanUndeclaredFunction
+    } catch (Throwable $e) {
+        fprintf(STDERR, "uopz_allow_exit failed: %s" . PHP_EOL, $e->getMessage());
+    }
+}
+
 if (PHP_VERSION_ID < 70100) {
     fprintf(
         STDERR,
@@ -27,9 +36,27 @@ if (PHP_VERSION_ID < 70100) {
     fwrite(STDERR, "Exiting without analyzing code." . PHP_EOL);
     // The version of vendor libraries this depends on will also require php 7.1
     exit(1);
+} elseif (PHP_VERSION_ID >= 80000) {
+    if (!getenv('PHAN_SUPPRESS_PHP_UPGRADE_NOTICE')) {
+        fprintf(
+            STDERR,
+            "Phan %s does not support PHP 8.0+ (PHP %s is installed)" . PHP_EOL,
+            CLI::PHAN_VERSION,
+            PHP_VERSION
+        );
+        fwrite(
+            STDERR,
+            "Phan 3 or newer is required to properly parse and analyze PHP code when Phan is executed with PHP 8.0+." . PHP_EOL
+        );
+        fwrite(
+            STDERR,
+            "Executing anyway (Phan may crash)." . PHP_EOL
+        );
+    }
 }
 
-const LATEST_KNOWN_PHP_AST_VERSION = '1.0.5';
+// No Windows DLL downloads for php 7.1 and ast 1.0.5+
+const LATEST_KNOWN_PHP_AST_VERSION = PHP_VERSION_ID < 70200 ? '1.0.4' : '1.0.6';
 
 /**
  * Dump instructions on how to install php-ast
@@ -54,7 +81,7 @@ function phan_output_ast_installation_instructions(): void
                 LATEST_KNOWN_PHP_AST_VERSION,
                 PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
                 PHP_ZTS ? 'ts' : 'nts',
-                PHP_VERSION_ID <= 70100 ? 'vc14' : 'vc15',
+                PHP_VERSION_ID < 70200 ? 'vc14' : 'vc15',
                 PHP_INT_SIZE == 4 ? 'x86' : 'x64'
             );
             fwrite(STDERR, "(if that link doesn't work, check https://windows.php.net/downloads/pecl/releases/ast/ )" . PHP_EOL);
@@ -110,7 +137,7 @@ if (extension_loaded('ast')) {
     } elseif (PHP_VERSION_ID >= 80000 && version_compare($ast_version, '1.0.4') < 0) {
         fprintf(
             STDERR,
-            "WARNING: Phan 2.x requires php-ast 1.0.4+ to properly analyze ASTs for php 8.0+. php-ast %s and php %s is installed." . PHP_EOL,
+            "WARNING: Phan 2.x requires php-ast 1.0.6+ to properly analyze ASTs for php 8.0+. php-ast %s and php %s is installed." . PHP_EOL,
             $ast_version,
             PHP_VERSION
         );
@@ -118,13 +145,25 @@ if (extension_loaded('ast')) {
     } elseif (PHP_VERSION_ID >= 70400 && version_compare($ast_version, '1.0.2') < 0) {
         fprintf(
             STDERR,
-            "WARNING: Phan 2.x requires php-ast 1.0.2+ to properly analyze ASTs for php 7.4+. php-ast %s and php %s is installed." . PHP_EOL,
+            "WARNING: Phan 2.x requires php-ast 1.0.2+ to properly analyze ASTs for php 7.4+ (1.0.6+ is recommended). php-ast %s and php %s is installed." . PHP_EOL,
             $ast_version,
             PHP_VERSION
         );
         phan_output_ast_installation_instructions();
     }
 }
+// Load the more efficient spl_object_id polyfill before symfony/polyfill-php72 can be loaded.
+// Older releases of symfony/polyfill-php72 were buggy for 32-bit builds (https://github.com/symfony/polyfill/pull/248)
+if (!function_exists('spl_object_id')) {
+    require_once dirname(__DIR__) . '/spl_object_id.php';
+}
+
+// Load the more efficient spl_object_id polyfill before symfony/polyfill-php72 can be loaded.
+// Older releases of symfony/polyfill-php72 were buggy for 32-bit builds (https://github.com/symfony/polyfill/pull/248)
+if (!function_exists('spl_object_id')) {
+    require_once dirname(__DIR__) . '/spl_object_id.php';
+}
+
 // Use the composer autoloader
 $found_autoloader = false;
 foreach ([
@@ -175,6 +214,7 @@ set_exception_handler(static function (Throwable $throwable): void {
             fprintf(STDERR, "(Phan %s crashed due to an uncaught Throwable)\n", CLI::PHAN_VERSION);
         }
     }
+    fwrite(STDERR, "This bug may have been fixed in Phan 3, which has the latest features and bug fixes (supports execution with PHP 7.2+)\n");
     exit(EXIT_FAILURE);
 });
 
@@ -266,8 +306,9 @@ function phan_error_handler(int $errno, string $errstr, string $errfile, int $er
             return false;
         }
     }
-    // php-src/ext/standard/streamsfuncs.c suggests that this is the only error caused by signal handlers and there are no translations
-    if ($errno === E_WARNING && preg_match('/^stream_select.*unable to select/', $errstr)) {
+    // php-src/ext/standard/streamsfuncs.c suggests that this is the only error caused by signal handlers and there are no translations.
+    // In PHP 8.0, "Unable" becomes uppercase.
+    if ($errno === E_WARNING && preg_match('/^stream_select.*unable to select/i', $errstr)) {
         // Don't execute the PHP internal error handler
         return true;
     }
@@ -309,6 +350,7 @@ function phan_error_handler(int $errno, string $errstr, string $errfile, int $er
     }
 
     phan_print_backtrace(true);
+    fwrite(STDERR, "This bug may have been fixed in Phan 3, which has the latest features and bug fixes (supports execution with PHP 7.2+)\n");
 
     exit(EXIT_FAILURE);
 }
