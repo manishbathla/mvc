@@ -1619,12 +1619,12 @@
         "version_normalized": "3.5.4.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
+            "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
             "reference": "dceec07328401de6211037abbb18bda423677e26"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/dceec07328401de6211037abbb18bda423677e26",
+            "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/dceec07328401de6211037abbb18bda423677e26",
             "reference": "dceec07328401de6211037abbb18bda423677e26",
             "shasum": ""
         },
@@ -1728,7 +1728,8 @@
             "email",
             "mail",
             "mailer"
-        ]
+        ],
+        "abandoned": "symfony/mailer"
     },
     {
         "name": "symfony/config",
@@ -2494,12 +2495,12 @@
         "version_normalized": "1.7.0.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/webmozart/assert.git",
+            "url": "https://github.com/webmozarts/assert.git",
             "reference": "aed98a490f9a8f78468232db345ab9cf606cf598"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/webmozart/assert/zipball/aed98a490f9a8f78468232db345ab9cf606cf598",
+            "url": "https://api.github.com/repos/webmozarts/assert/zipball/aed98a490f9a8f78468232db345ab9cf606cf598",
             "reference": "aed98a490f9a8f78468232db345ab9cf606cf598",
             "shasum": ""
         },
